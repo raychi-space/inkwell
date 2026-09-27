@@ -38,7 +38,7 @@
 
 使用编辑器事务/节点映射保持上传占位与插入位置关联，不仅保存粘贴时的字符串下标。上传成功只更新仍存在且属于当前文档的占位节点；保存前确保所有需保留图片都已有持久地址。
 
-对应接口和权限以 [wellspring 图片契约](../../wellspring/docs/api/assets-v0.1.md) 为准；首次发布前及已发布文章的新工作稿图片仍不可被访客读取。
+对应接口和权限以 [wellspring 图片契约](https://github.com/raychi-space/wellspring/blob/main/docs/api/assets-v0.1.md) 为准；首次发布前及已发布文章的新工作稿图片仍不可被访客读取。
 
 ## 验收重点
 
