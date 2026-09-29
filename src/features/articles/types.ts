@@ -1,7 +1,7 @@
 export type Article = {
   id: string
   slug: string
-  type: 'ARTICLE' | 'POST' | 'THOUGHT'
+  type: 'ARTICLE' | 'POST'
   status: 'DRAFT' | 'PUBLISHED'
   version: number
   title: string
