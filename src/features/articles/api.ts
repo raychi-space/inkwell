@@ -3,8 +3,8 @@ import type { Article, Page, Uploaded } from './types'
 
 type ArticleInput = Pick<Article, 'version' | 'title' | 'slug' | 'summary' | 'bodyMarkdown' | 'tags' | 'coverUrl' | 'category'>
 
-export async function listArticles(): Promise<Page<Article>> {
-  return api('/api/v1/admin/contents?pageSize=50')
+export async function listArticles(page = 1): Promise<Page<Article>> {
+  return api(`/api/v1/admin/contents?page=${page}&pageSize=50`)
 }
 
 export async function getArticle(id: string): Promise<Article> {
