@@ -18,7 +18,7 @@ npm run dev
 
 格式与编辑器边界见[编辑器约定](docs/editor-v0.1.md)。本仓库独立构建，不读取相邻仓库的文件。
 
-模块内部职责见[模块说明](docs/module.md)，新一轮管理台目标见[产品任务说明](docs/product-scope-v0.2.md)；Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理，当前状态看[唯一进度表](https://github.com/raychi-space/raychi/blob/main/docs/progress.md)。
+模块内部职责见[模块说明](docs/module.md)，新一轮管理台目标见[产品任务说明](docs/product-scope-v0.2.md)；Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理，实时状态看[组织 Projects](https://github.com/orgs/raychi-space/projects/1)；[进度入口](https://github.com/raychi-space/raychi/blob/main/docs/progress.md)说明历史快照。
 
 ## 目录约束
 
