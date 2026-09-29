@@ -18,4 +18,4 @@ npm run dev
 
 格式与编辑器边界见[编辑器约定](docs/editor-v0.1.md)。本仓库独立构建，不读取相邻仓库的文件。
 
-本仓模块边界见[模块说明](docs/module.md)，Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理；当前状态看[唯一进度表](https://github.com/raychi-space/raychi/blob/main/docs/progress.md)。
+本仓模块边界见[模块说明](docs/module.md)，Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理；实时状态看[Raychi Project](https://github.com/orgs/raychi-space/projects/1)及对应 Issue/PR；Project 当前为私有。
