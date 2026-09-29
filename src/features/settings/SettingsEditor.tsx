@@ -1,9 +1,41 @@
 import { useEffect, useState } from 'react'
-import { getSettings, saveSettings, type HomepageProject, type HomepageSection, type SiteLink, type SiteSettings } from './api'
+import { siGithub, siX, siBilibili, siYoutube, siZhihu, siJuejin, siXiaohongshu, siMastodon } from 'simple-icons'
+import { getSettings, saveSettings, type HomepageProject, type HomepageSection, type SiteLink, type SiteSettings, type SocialAccount } from './api'
 import { errorMessage } from '../../shared/errors'
 
 const sectionNames: Record<HomepageSection['id'], string> = {
   featured: '精选文章', posts: '最近的帖子', writing: '最近的文章', projects: '最近在做', stats: '站点数据',
+}
+
+const socialPlatforms = [
+  { id: 'github', name: 'GitHub', path: siGithub.path },
+  { id: 'x', name: 'X', path: siX.path },
+  { id: 'bilibili', name: '哔哩哔哩', path: siBilibili.path },
+  { id: 'youtube', name: 'YouTube', path: siYoutube.path },
+  { id: 'zhihu', name: '知乎', path: siZhihu.path },
+  { id: 'juejin', name: '掘金', path: siJuejin.path },
+  { id: 'xiaohongshu', name: '小红书', path: siXiaohongshu.path },
+  { id: 'mastodon', name: 'Mastodon', path: siMastodon.path },
+] as const
+
+function SocialAccountsEditor({ accounts, onChange }: { accounts: SocialAccount[]; onChange: (accounts: SocialAccount[]) => void }) {
+  const update = (id: string, patch: Partial<SocialAccount>) => onChange(socialPlatforms.map(platform => ({
+    ...(accounts.find(account => account.platform === platform.id) ?? { platform: platform.id, enabled: false, href: '' }),
+    ...(platform.id === id ? patch : {}),
+  })))
+  return <fieldset className="settings-group"><legend>外部账户</legend>
+    <p className="settings-help">打开需要展示的平台，再填写该平台的完整网址。访客看到对应图标。</p>
+    <div className="social-account-list">{socialPlatforms.map(platform => {
+      const account = accounts.find(item => item.platform === platform.id)
+      return <div className="social-account-row" key={platform.id}>
+        <label className="social-account-toggle"><input type="checkbox" checked={account?.enabled ?? false}
+          onChange={event => update(platform.id, { enabled: event.target.checked })} />
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d={platform.path} /></svg><span>{platform.name}</span></label>
+        <input aria-label={`${platform.name} 链接`} type="url" maxLength={500} placeholder="https://…"
+          value={account?.href ?? ''} onChange={event => update(platform.id, { href: event.target.value })} />
+      </div>
+    })}</div>
+  </fieldset>
 }
 
 function SectionEditor({ title, sections, onChange }: { title: string; sections: HomepageSection[]; onChange: (sections: HomepageSection[]) => void }) {
@@ -62,6 +94,12 @@ export function SettingsEditor({ onBack }: { onBack: () => void }) {
 
   async function save() {
     if (!value) return
+    const invalidAccount = value.socialAccounts.find(account => account.enabled && !/^https?:\/\/[^\s]+$/i.test(account.href))
+    if (invalidAccount) {
+      const name = socialPlatforms.find(platform => platform.id === invalidAccount.platform)?.name ?? invalidAccount.platform
+      setNotice(`请先填写 ${name} 的完整 HTTP(S) 链接。`)
+      return
+    }
     setBusy(true)
     try { setValue(await saveSettings(value)); setNotice('站点设置已保存，访客刷新后即可看到。') }
     catch (error) { setNotice(errorMessage(error)) }
@@ -84,12 +122,17 @@ export function SettingsEditor({ onBack }: { onBack: () => void }) {
           onChange={e => setValue({ ...value, homepage: { ...value.homepage, focus: e.target.value } })} /></label>
       </fieldset>
       <ProjectEditor projects={value.homepage.projects} onChange={projects => setValue({ ...value, homepage: { ...value.homepage, projects } })} />
+      <fieldset className="settings-group"><legend>最近在做 · 说明</legend>
+        <label className="settings-single-field">区块引言<input maxLength={240} value={value.projectIntro}
+          onChange={e => setValue({ ...value, projectIntro: e.target.value })} /></label>
+      </fieldset>
       <SectionEditor title="首屏内容顺序与显示" sections={value.homepage.recentSections}
         onChange={recentSections => setValue({ ...value, homepage: { ...value.homepage, recentSections } })} />
       <SectionEditor title="页面下方顺序与显示" sections={value.homepage.bottomSections}
         onChange={bottomSections => setValue({ ...value, homepage: { ...value.homepage, bottomSections } })} />
       <LinkEditor title="联系方式" links={value.contacts} onChange={contacts => setValue({ ...value, contacts })} />
-      <LinkEditor title="外部账户" links={value.accounts} onChange={accounts => setValue({ ...value, accounts })} />
+      <SocialAccountsEditor accounts={value.socialAccounts} onChange={socialAccounts => setValue({ ...value, socialAccounts })} />
+      <LinkEditor title="其他外部链接" links={value.accounts} onChange={accounts => setValue({ ...value, accounts })} />
       <LinkEditor title="导航" links={value.navigation} onChange={navigation => setValue({ ...value, navigation })} />
       {notice && <p className="notice" role="status">{notice}</p>}
     </div>
