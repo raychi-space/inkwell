@@ -1,6 +1,6 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App'
+import App from './app/App'
 import '@mdxeditor/editor/style.css'
 import './style.css'
 
