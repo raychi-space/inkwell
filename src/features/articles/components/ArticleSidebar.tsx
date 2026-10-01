@@ -1,13 +1,14 @@
 type Props = {
-  active: 'content' | 'drafts' | 'settings'
+  active: 'content' | 'drafts' | 'settings' | 'ai'
   username: string | null
   onContent: () => void
   onDrafts: () => void
   onSettings: () => void
+  onAI: () => void
   onSignOut: () => void
 }
 
-export function ArticleSidebar({ active, username, onContent, onDrafts, onSettings, onSignOut }: Props) {
+export function ArticleSidebar({ active, username, onContent, onDrafts, onSettings, onAI, onSignOut }: Props) {
   return <aside className="sidebar">
     <button className="brand" onClick={onContent} aria-label="返回内容管理">
       <span className="brand-mark">R</span>
@@ -23,6 +24,7 @@ export function ArticleSidebar({ active, username, onContent, onDrafts, onSettin
       <button className={active === 'settings' ? 'active' : ''} aria-current={active === 'settings' ? 'page' : undefined} onClick={onSettings}>
         <span className="nav-symbol" aria-hidden="true">⚙</span>网站管理
       </button>
+      <button className={active === 'ai' ? 'active' : ''} aria-current={active === 'ai' ? 'page' : undefined} onClick={onAI}><span className="nav-symbol" aria-hidden="true">✦</span>助手管理</button>
     </nav>
     <div className="sidebar-foot"><span>{username}</span><button onClick={onSignOut}>退出登录</button></div>
   </aside>
