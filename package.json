@@ -13,7 +13,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "simple-icons": "16.33.0",
-    "yjs": "13.6.33"
+    "yjs": "13.6.33",
+    "lexical": "0.48.0"
   },
   "devDependencies": {
     "@types/node": "26.6.3",
