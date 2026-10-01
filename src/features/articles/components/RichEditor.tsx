@@ -9,17 +9,23 @@ import {
 } from '@mdxeditor/editor'
 import { upload } from '../api'
 import type { Article } from '../types'
+import type { EditorAgentAdapter } from '../../ai/types'
+import { createEditorAgentAdapter } from './editorAgentAdapter'
 import { errorMessage } from '../../../shared/errors'
 
-export function RichEditor({ article, editorRef, onDirty, onPending, onError }: {
+export function RichEditor({ article, editorRef, onDirty, onPending, onError, agentRef, readOnly = false }: {
   article: Article
+  agentRef?: RefObject<EditorAgentAdapter | null>
+  readOnly?: boolean
   editorRef: RefObject<MDXEditorMethods | null>
   onDirty: () => void
   onPending: (change: number) => void
   onError: (message: string) => void
 }) {
+  const agent = useMemo(() => createEditorAgentAdapter(() => editorRef.current), [article.id, editorRef])
+  if (agentRef) agentRef.current = agent.adapter
   const plugins = useMemo(() => [
-    headingsPlugin(), listsPlugin(), quotePlugin(), thematicBreakPlugin(),
+    agent.plugin(), headingsPlugin(), listsPlugin(), quotePlugin(), thematicBreakPlugin(),
     linkPlugin(), linkDialogPlugin(), tablePlugin(),
     codeBlockPlugin({ defaultCodeBlockLanguage: 'txt' }),
     codeMirrorPlugin({ codeBlockLanguages: { txt: 'Text', js: 'JavaScript', ts: 'TypeScript',
@@ -53,10 +59,12 @@ export function RichEditor({ article, editorRef, onDirty, onPending, onError }: 
       <InsertTable />
       <InsertCodeBlock />
     </> }),
-  ], [article.id, onPending, onError])
+  ], [article.id, onPending, onError, agent])
 
   return <MDXEditor
+    className={readOnly ? 'agent-editor-locked' : undefined}
     ref={editorRef}
+    readOnly={readOnly}
     markdown={article.bodyMarkdown}
     plugins={plugins}
     onChange={onDirty}
