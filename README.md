@@ -27,3 +27,7 @@ npm run dev
 - `src/shared/api/` 统一处理 HTTP、Cookie 和 CSRF；`src/shared/` 只放可复用且不依赖具体业务的工具。
 - 功能组件从自身功能目录或 `shared/` 导入；跨功能协作由 `app/` 完成。新增接口路径放在对应功能的 `api.ts`，不要散落在组件中。
 - `docs/` 存放技术约定；构建配置、环境示例和 CI 留在仓库根目录。
+
+## 写作助手
+
+[写作助手 v1](docs/writing-assistant-v1.md) 说明服务商/助手管理、连续对话、选区预览确认、摘要建议及第一期支持的选区范围。需 wellspring 启用独立 Agent 服务；正文修改和摘要建议由用户确认，生成不会保存或发布文章。
