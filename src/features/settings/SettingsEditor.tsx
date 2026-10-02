@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { siGithub, siX, siBilibili, siYoutube, siZhihu, siJuejin, siXiaohongshu, siMastodon } from 'simple-icons'
 import { getSettings, saveSettings, type HomepageProject, type SiteLink, type SiteSettings, type SocialAccount } from './api'
 import { errorMessage } from '../../shared/errors'
+import { ProviderSettings } from '../ai/ProviderSettings'
 
 const socialPlatforms = [
   { id: 'github', name: 'GitHub', path: siGithub.path },
@@ -92,7 +93,8 @@ export function SettingsEditor({ onSaved }: { onSaved: (value: SiteSettings) => 
     <header className="studio-head dashboard-head"><div><p className="eyebrow">SITE STUDIO</p><h1>网站管理</h1><p>管理个人介绍、项目与网站上的外部链接。</p></div>
       <div className="create-actions"><button className="primary" disabled={busy || !value} onClick={() => void save()}>{busy ? '正在保存…' : '保存设置'}</button></div></header>
     {notice && <p className="notice dashboard-notice" role="status">{notice}</p>}
-    {!value ? <div className="dashboard-card management-loading">{notice ? '暂时无法读取网站设置，请稍后再试。' : '正在加载网站设置…'}</div> : <div className="dashboard-card settings-page management-scroll">
+    <div className="management-scroll website-settings-stack">
+    {!value ? <div className="dashboard-card management-loading">{notice ? '暂时无法读取网站设置，请稍后再试。' : '正在加载网站设置…'}</div> : <div className="dashboard-card settings-page">
       <div className="fields">
         <label>站名<input value={value.siteName} onChange={e => setValue({ ...value, siteName: e.target.value })} /></label>
         <label>头像地址<input value={value.avatarUrl ?? ''} onChange={e => setValue({ ...value, avatarUrl: e.target.value || null })} placeholder="https://…" /></label>
@@ -112,5 +114,7 @@ export function SettingsEditor({ onSaved }: { onSaved: (value: SiteSettings) => 
       <SocialAccountsEditor accounts={value.socialAccounts} onChange={socialAccounts => setValue({ ...value, socialAccounts })} />
       <LinkEditor title="其他外部链接" links={value.accounts} onChange={accounts => setValue({ ...value, accounts })} />
     </div>}
+    <ProviderSettings />
+    </div>
   </main>
 }
