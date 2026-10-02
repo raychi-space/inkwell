@@ -9,6 +9,7 @@ import { ContentDashboard } from '../features/articles/components/ContentDashboa
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { categories, tags, addCategory, addTag } from '../features/taxonomy/api'
 import { SettingsEditor } from '../features/settings/SettingsEditor'
+import { getSettings } from '../features/settings/api'
 import { AgentSettings } from '../features/ai/AgentSettings'
 import { WritingAssistant } from '../features/ai/WritingAssistant'
 import { assistants as loadAssistants } from '../features/ai/api'
@@ -28,6 +29,11 @@ export default function App() {
 
 function Studio() {
   const [session, setSession] = useState<Session | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [siteName, setSiteName] = useState('')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { const value = localStorage.getItem('raychi.sidebar.collapsed'); return value === null ? window.matchMedia('(max-width:680px)').matches : value === 'true' } catch { return false }
+  })
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [articles, setArticles] = useState<Article[]>([])
@@ -78,7 +84,17 @@ function Studio() {
     if (!session?.authenticated) return
     void refresh()
     void refreshTaxonomy()
+    let active = true
+    void getSettings().then(value => { if (active) { setAvatarUrl(value.avatarUrl); setSiteName(value.siteName) } }).catch(() => { if (active) setAvatarUrl(null) })
+    return () => { active = false }
   }, [session?.authenticated])
+
+  function toggleSidebar() {
+    setSidebarCollapsed(value => {
+      try { localStorage.setItem('raychi.sidebar.collapsed', String(!value)) } catch { /* Session-only preference when storage is unavailable. */ }
+      return !value
+    })
+  }
 
   useEffect(() => {
     if (current?.type !== 'ARTICLE') return
@@ -258,11 +274,12 @@ function Studio() {
   if (session === null || !session.authenticated) return <LoginScreen username={username} password={password}
     busy={busy} notice={notice} onUsername={setUsername} onPassword={setPassword} onSubmit={signIn} />
 
-  return <div className="shell">
-    <ArticleSidebar active={view} username={session.username}
+  return <div className={'shell' + (sidebarCollapsed ? ' sidebar-collapsed' : '')}>
+    {!sidebarCollapsed && <button className="sidebar-backdrop" aria-label="收起侧边栏遮罩" onClick={toggleSidebar} />}
+    <ArticleSidebar active={view} username={session.username} siteName={siteName} avatarUrl={avatarUrl} collapsed={sidebarCollapsed} onToggle={toggleSidebar}
       onContent={() => showSection('content')} onDrafts={() => showSection('drafts')}
       onAI={() => { if (canLeave()) { setCurrent(null); setDirty(false); setView('ai'); setNotice('') } }} onSettings={showSettings} onSignOut={() => void signOut()} />
-    {view === 'ai' ? <AgentSettings /> : view === 'settings' ? <SettingsEditor onBack={() => showSection('content')} /> : current ? <main className="workspace studio-page editor-workspace">
+    {view === 'ai' ? <AgentSettings /> : view === 'settings' ? <SettingsEditor onSaved={value => { setAvatarUrl(value.avatarUrl); setSiteName(value.siteName) }} /> : current ? <main className="workspace studio-page editor-workspace">
         <header className="studio-head editor-head">
           <div><button className="back-link" onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}>← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}</button><p className="eyebrow">{current.status === 'PUBLISHED' ? '已发布' : '私人草稿'} · {typeNames[current.type]}{dirty ? ' · 尚未保存' : ''}</p>
             <h1>写{current.type === 'ARTICLE' ? '文章' : '帖子'}</h1></div>

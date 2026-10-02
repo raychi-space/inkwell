@@ -20,6 +20,10 @@ npm run dev
 
 模块内部职责见[模块说明](docs/module.md)，v0.2 范围见[任务文档 PR #3](https://github.com/raychi-space/inkwell/pull/3)；Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理；实时状态看[Raychi Project](https://github.com/orgs/raychi-space/projects/1)及对应 Issue/PR。
 
+## 管理页面
+
+[管理台使用说明](docs/management-ui.md) 介绍网站设置、可收缩的图标侧栏与头像账户菜单。内容管理、草稿箱、网站管理和助手管理使用一致的页面框架；桌面端页头与侧栏固定，内容区域独立滚动。
+
 ## 目录约束
 
 - `src/main.tsx` 仅挂载应用；`src/app/` 组合页面状态和功能组件。

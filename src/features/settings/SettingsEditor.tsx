@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react'
 import { siGithub, siX, siBilibili, siYoutube, siZhihu, siJuejin, siXiaohongshu, siMastodon } from 'simple-icons'
-import { getSettings, saveSettings, type HomepageProject, type HomepageSection, type SiteLink, type SiteSettings, type SocialAccount } from './api'
+import { getSettings, saveSettings, type HomepageProject, type SiteLink, type SiteSettings, type SocialAccount } from './api'
 import { errorMessage } from '../../shared/errors'
-
-const sectionNames: Record<HomepageSection['id'], string> = {
-  featured: '精选文章', posts: '最近的帖子', writing: '最近的文章', projects: '最近在做', stats: '站点数据',
-}
 
 const socialPlatforms = [
   { id: 'github', name: 'GitHub', path: siGithub.path },
@@ -35,20 +31,6 @@ function SocialAccountsEditor({ accounts, onChange }: { accounts: SocialAccount[
           value={account?.href ?? ''} onChange={event => update(platform.id, { href: event.target.value })} />
       </div>
     })}</div>
-  </fieldset>
-}
-
-function SectionEditor({ title, sections, onChange }: { title: string; sections: HomepageSection[]; onChange: (sections: HomepageSection[]) => void }) {
-  return <fieldset className="settings-group"><legend>{title}</legend>
-    {sections.map((section, index) => <div className="section-row" key={section.id}>
-      <label><input type="checkbox" checked={section.visible} onChange={e => onChange(sections.map(item => item.id === section.id ? { ...item, visible: e.target.checked } : item))} />{sectionNames[section.id]}</label>
-      <button type="button" aria-label={`上移${sectionNames[section.id]}`} disabled={index === 0} onClick={() => {
-        const next = [...sections]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; onChange(next)
-      }}>↑</button>
-      <button type="button" aria-label={`下移${sectionNames[section.id]}`} disabled={index === sections.length - 1} onClick={() => {
-        const next = [...sections]; [next[index + 1], next[index]] = [next[index], next[index + 1]]; onChange(next)
-      }}>↓</button>
-    </div>)}
   </fieldset>
 }
 
@@ -86,7 +68,7 @@ function LinkEditor({ title, links, onChange }: { title: string; links: SiteLink
   </fieldset>
 }
 
-export function SettingsEditor({ onBack }: { onBack: () => void }) {
+export function SettingsEditor({ onSaved }: { onSaved: (value: SiteSettings) => void }) {
   const [value, setValue] = useState<SiteSettings | null>(null)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
@@ -101,16 +83,16 @@ export function SettingsEditor({ onBack }: { onBack: () => void }) {
       return
     }
     setBusy(true)
-    try { setValue(await saveSettings(value)); setNotice('站点设置已保存，访客刷新后即可看到。') }
+    try { const saved = await saveSettings(value); setValue(saved); onSaved(saved); setNotice('站点设置已保存，访客刷新后即可看到。') }
     catch (error) { setNotice(errorMessage(error)) }
     finally { setBusy(false) }
   }
 
-  if (!value) return <main className="workspace"><div className="editor-page">{notice || '正在加载网站设置…'}</div></main>
-  return <main className="workspace">
-    <header className="editor-head"><div><p className="eyebrow">网站设置</p><h1>公开展示</h1></div>
-      <div className="actions"><button onClick={onBack}>返回内容</button><button className="primary" disabled={busy} onClick={() => void save()}>保存设置</button></div></header>
-    <div className="editor-page settings-page">
+  return <main className="workspace studio-page management-page">
+    <header className="studio-head dashboard-head"><div><p className="eyebrow">SITE STUDIO</p><h1>网站管理</h1><p>管理个人介绍、项目与网站上的外部链接。</p></div>
+      <div className="create-actions"><button className="primary" disabled={busy || !value} onClick={() => void save()}>{busy ? '正在保存…' : '保存设置'}</button></div></header>
+    {notice && <p className="notice dashboard-notice" role="status">{notice}</p>}
+    {!value ? <div className="dashboard-card management-loading">{notice ? '暂时无法读取网站设置，请稍后再试。' : '正在加载网站设置…'}</div> : <div className="dashboard-card settings-page management-scroll">
       <div className="fields">
         <label>站名<input value={value.siteName} onChange={e => setValue({ ...value, siteName: e.target.value })} /></label>
         <label>头像地址<input value={value.avatarUrl ?? ''} onChange={e => setValue({ ...value, avatarUrl: e.target.value || null })} placeholder="https://…" /></label>
@@ -126,15 +108,9 @@ export function SettingsEditor({ onBack }: { onBack: () => void }) {
         <label className="settings-single-field">区块引言<input maxLength={240} value={value.projectIntro}
           onChange={e => setValue({ ...value, projectIntro: e.target.value })} /></label>
       </fieldset>
-      <SectionEditor title="首屏内容顺序与显示" sections={value.homepage.recentSections}
-        onChange={recentSections => setValue({ ...value, homepage: { ...value.homepage, recentSections } })} />
-      <SectionEditor title="页面下方顺序与显示" sections={value.homepage.bottomSections}
-        onChange={bottomSections => setValue({ ...value, homepage: { ...value.homepage, bottomSections } })} />
       <LinkEditor title="联系方式" links={value.contacts} onChange={contacts => setValue({ ...value, contacts })} />
       <SocialAccountsEditor accounts={value.socialAccounts} onChange={socialAccounts => setValue({ ...value, socialAccounts })} />
       <LinkEditor title="其他外部链接" links={value.accounts} onChange={accounts => setValue({ ...value, accounts })} />
-      <LinkEditor title="导航" links={value.navigation} onChange={navigation => setValue({ ...value, navigation })} />
-      {notice && <p className="notice" role="status">{notice}</p>}
-    </div>
+    </div>}
   </main>
 }
