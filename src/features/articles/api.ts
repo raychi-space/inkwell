@@ -1,10 +1,22 @@
 import { api } from '../../shared/api/client'
 import type { Article, Page, Uploaded } from './types'
 
-type ArticleInput = Pick<Article, 'version' | 'title' | 'slug' | 'summary' | 'bodyMarkdown' | 'tags' | 'coverUrl' | 'category'>
+type ArticleInput = Pick<
+  Article,
+  'version' | 'title' | 'slug' | 'summary' | 'bodyMarkdown' | 'tags' | 'coverUrl' | 'category'
+>
 
-export async function listArticles(page = 1): Promise<Page<Article>> {
-  return api(`/api/v1/admin/contents?page=${page}&pageSize=50`)
+export type AdminFilters = {
+  status?: string
+  type?: string
+  category?: string
+  tag?: string
+  sort?: string
+}
+export async function listArticles(page = 1, filters: AdminFilters = {}): Promise<Page<Article>> {
+  const params = new URLSearchParams({ page: String(page), pageSize: '50' })
+  for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value)
+  return api(`/api/v1/admin/contents?${params}`)
 }
 
 export async function getArticle(id: string): Promise<Article> {
@@ -19,15 +31,21 @@ export async function saveArticle(id: string, input: ArticleInput): Promise<Arti
   return api(`/api/v1/admin/contents/${id}`, { method: 'PUT', body: JSON.stringify(input) })
 }
 
-export async function publishArticle(id: string, expectedVersion: number, assistantId?: string): Promise<Article> {
+export async function publishArticle(
+  id: string,
+  expectedVersion: number,
+  assistantId?: string,
+): Promise<Article> {
   return api(`/api/v1/admin/contents/${id}/publish`, {
-    method: 'POST', body: JSON.stringify({ expectedVersion, ...(assistantId ? { assistantId } : {}) }),
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion, ...(assistantId ? { assistantId } : {}) }),
   })
 }
 
 export async function unpublishArticle(id: string, expectedVersion: number): Promise<Article> {
   return api(`/api/v1/admin/contents/${id}/unpublish`, {
-    method: 'POST', body: JSON.stringify({ expectedVersion }),
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
   })
 }
 

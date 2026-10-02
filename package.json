@@ -7,7 +7,10 @@
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "tsc -b && vite build",
     "test:auth": "node --test tests/auth-session.test.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src",
+    "lint": "node scripts/check-boundaries.mjs"
   },
   "dependencies": {
     "@mdxeditor/editor": "4.3.0",
@@ -23,6 +26,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "prettier": "3.9.9",
     "typescript": "7.0.2",
     "vite": "8.3.1"
   }
