@@ -1,7 +1,7 @@
 import { usePublicationSummary } from '../features/articles/usePublicationSummary'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { MDXEditorMethods } from '@mdxeditor/editor'
-import { logout, SessionBoundary, type Session } from '../features/auth'
+import { logout, SessionBoundary, ChangePassword, type Session } from '../features/auth'
 import {
   getArticle,
   createArticle,
@@ -60,7 +60,7 @@ function Studio({
   checkSession,
 }: {
   session: Session
-  onSessionEnd: () => void
+  onSessionEnd: (notice?: string) => void
   checkSession: () => Promise<boolean>
 }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -80,7 +80,7 @@ function Studio({
     }
   })
   const [current, setCurrent] = useState<Article | null>(null)
-  const [view, setView] = useState<'content' | 'drafts' | 'settings' | 'ai'>('content')
+  const [view, setView] = useState<'content' | 'drafts' | 'settings' | 'ai' | 'password'>('content')
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [body, setBody] = useState('')
@@ -436,6 +436,14 @@ function Studio({
     setNotice('')
   }
 
+  async function showPassword() {
+    if (!(await checkSession()) || !canLeave()) return
+    setCurrent(null)
+    setDirty(false)
+    setView('password')
+    setNotice('')
+  }
+
   async function showAssistants() {
     if (!(await checkSession()) || !canLeave()) return
     setCurrent(null)
@@ -460,9 +468,15 @@ function Studio({
         onDrafts={() => showSection('drafts')}
         onAI={() => void showAssistants()}
         onSettings={() => void showSettings()}
+        onChangePassword={() => void showPassword()}
         onSignOut={() => void signOut()}
       />
-      {view === 'ai' ? (
+      {view === 'password' ? (
+        <ChangePassword
+          onComplete={() => onSessionEnd('密码已修改，请使用新密码重新登录。')}
+          onCancel={() => void showSection('content')}
+        />
+      ) : view === 'ai' ? (
         <AgentSettings />
       ) : view === 'settings' ? (
         <SettingsEditor
