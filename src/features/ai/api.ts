@@ -24,6 +24,6 @@ export const testProvider = (id: string, model: string) =>
     method: "POST",
     body: JSON.stringify({ model }),
   });
-export const createTurn = (body: TurnRequest) =>
-  api<Turn>(base + "/turns", { method: "POST", body: JSON.stringify(body) });
-export const getTurn = (id: string) => api<Turn>(base + "/turns/" + id);
+export const createTurn = (body: TurnRequest, signal?: AbortSignal) =>
+  api<Turn>(base + "/turns", { method: "POST", body: JSON.stringify(body), signal });
+export const getTurn = (id: string, signal?: AbortSignal) => api<Turn>(base + "/turns/" + id, { signal });
