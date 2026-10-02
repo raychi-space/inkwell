@@ -1,7 +1,10 @@
 export type SiteLink = { label: string; href: string }
 export type SocialAccount = { platform: string; enabled: boolean; href: string }
 export type HomeSection = { id: 'feed' | 'writing' | 'posts' | 'thoughts'; visible: boolean }
-export type HomepageSection = { id: 'featured' | 'posts' | 'writing' | 'projects' | 'stats'; visible: boolean }
+export type HomepageSection = {
+  id: 'featured' | 'posts' | 'writing' | 'projects' | 'stats'
+  visible: boolean
+}
 export type HomepageProject = { name: string; description: string; status: string; href: string }
 export type HomepageSettings = {
   focus: string

@@ -7,7 +7,8 @@ export async function getSession(): Promise<Session> {
 
 export async function login(username: string, password: string) {
   const result = await api<Session>('/api/v1/auth/login', {
-    method: 'POST', body: JSON.stringify({ username, password }),
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
   })
   resetAuthSession()
   await refreshCsrf()

@@ -5,13 +5,23 @@ import { LoginScreen } from './LoginScreen'
 import { onSessionExpired, resetAuthSession } from '../../../shared/api/client'
 import { errorMessage } from '../../../shared/lib/errors'
 
-export function SessionBoundary({ children }: {
-  children: (session: Session, onSessionEnd: () => void, checkSession: () => Promise<boolean>) => ReactNode
+export function SessionBoundary({
+  children,
+}: {
+  children: (
+    session: Session,
+    onSessionEnd: () => void,
+    checkSession: () => Promise<boolean>,
+  ) => ReactNode
 }) {
   const [session, setSession] = useState<Session | null>(null)
-  const [username, setUsername] = useState(''), [password, setPassword] = useState('')
-  const [busy, setBusy] = useState(false), [notice, setNotice] = useState('')
-  const sessionRef = useRef(session), revision = useRef(0), mounted = useRef(false)
+  const [username, setUsername] = useState(''),
+    [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false),
+    [notice, setNotice] = useState('')
+  const sessionRef = useRef(session),
+    revision = useRef(0),
+    mounted = useRef(false)
   const checking = useRef<Promise<boolean> | null>(null)
   sessionRef.current = session
 
@@ -33,7 +43,10 @@ export function SessionBoundary({ children }: {
         const value = await getSession()
         if (!mounted.current || version !== revision.current) return false
         if (!value.authenticated) endSession(!!sessionRef.current?.authenticated)
-        else { sessionRef.current = value; setSession(value) }
+        else {
+          sessionRef.current = value
+          setSession(value)
+        }
         return value.authenticated
       } catch (error) {
         if (mounted.current && version === revision.current) {
@@ -44,15 +57,22 @@ export function SessionBoundary({ children }: {
       }
     })()
     checking.current = work
-    void work.finally(() => { if (checking.current === work) checking.current = null })
+    void work.finally(() => {
+      if (checking.current === work) checking.current = null
+    })
     return work
   }, [endSession])
 
   useEffect(() => {
     mounted.current = true
-    const unsubscribe = onSessionExpired(() => { if (mounted.current) endSession(true) })
+    const unsubscribe = onSessionExpired(() => {
+      if (mounted.current) endSession(true)
+    })
     void checkSession()
-    const recheck = () => { if (sessionRef.current?.authenticated && document.visibilityState === 'visible') void checkSession() }
+    const recheck = () => {
+      if (sessionRef.current?.authenticated && document.visibilityState === 'visible')
+        void checkSession()
+    }
     window.addEventListener('focus', recheck)
     document.addEventListener('visibilitychange', recheck)
     return () => {
@@ -76,13 +96,31 @@ export function SessionBoundary({ children }: {
       setSession(value)
       setPassword('')
       setNotice('')
-    } catch (error) { if (mounted.current && version === revision.current) setNotice(errorMessage(error)) }
-    finally { if (mounted.current && version === revision.current) setBusy(false) }
+    } catch (error) {
+      if (mounted.current && version === revision.current) setNotice(errorMessage(error))
+    } finally {
+      if (mounted.current && version === revision.current) setBusy(false)
+    }
   }
 
-  if (session === null) return <main className="login-screen"><p role="status">正在检查登录状态…</p></main>
-  if (!session.authenticated) return <LoginScreen username={username} password={password} busy={busy} notice={notice}
-    onUsername={setUsername} onPassword={setPassword} onSubmit={signIn} />
+  if (session === null)
+    return (
+      <main className="login-screen">
+        <p role="status">正在检查登录状态…</p>
+      </main>
+    )
+  if (!session.authenticated)
+    return (
+      <LoginScreen
+        username={username}
+        password={password}
+        busy={busy}
+        notice={notice}
+        onUsername={setUsername}
+        onPassword={setPassword}
+        onSubmit={signIn}
+      />
+    )
   // Unmounting this subtree also discards cached protected data and pending editor state.
   return children(session, endSession, checkSession)
 }
