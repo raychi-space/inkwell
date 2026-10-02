@@ -324,6 +324,11 @@ a{color:inherit}
 .management-page .dashboard-head h1{font-family:Georgia,"Songti SC",serif;font-size:30px;line-height:1.2;margin:7px 0;font-weight:600}
 .management-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
 .management-loading{padding:28px;font-size:14px;color:var(--studio-muted)}
+.settings-placeholder{min-height:calc(100dvh - 170px)}
+.settings-placeholder>p{margin:0 0 20px;font-size:12px;color:var(--studio-muted)}
+.settings-placeholder-fields{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.settings-placeholder-fields span{display:block;height:58px;border-radius:7px;background:#f1f4ee}
+.settings-placeholder-fields span:nth-child(3){grid-column:1/-1;height:100px}
 .management-page .settings-page{width:100%;max-width:none;margin:0;padding:22px 24px}
 .management-page .settings-page>.fields{gap:14px;max-width:none;margin-bottom:20px}
 .management-page .settings-group{margin:18px 0;padding:16px;border-color:#e5ebe1;border-radius:10px;box-shadow:none}
@@ -411,6 +416,7 @@ a{color:inherit}
 .website-settings-stack,.agent-management-stack{gap:20px}
 @media(max-width:680px){
   .studio-page .dashboard-head h1{font-size:26px}
+  .settings-placeholder-fields{grid-template-columns:1fr}
   .studio-page .content-filters{padding:0 16px 16px}
   .studio-page .content-row{padding:16px}
   .management-page .fields input:not([type=checkbox]),.management-page .select-trigger{min-height:40px}
