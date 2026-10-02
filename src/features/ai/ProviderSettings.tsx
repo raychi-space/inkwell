@@ -5,6 +5,7 @@ import { Select } from '../../shared/components/Select'
 import { Icon } from '../../shared/components/Icon'
 import { errorMessage } from '../../shared/errors'
 import { useConfigSwitch } from './useConfigSwitch'
+import { ProviderLogo } from './ProviderLogo'
 
 const emptyProvider = { name: '', enabled: true, baseUrl: '', models: [] as string[] }
 
@@ -67,13 +68,13 @@ export function ProviderSettings() {
         <div className="entity-workspace">
           <div className="entity-list" aria-label="服务商列表">
             {allProviders.map(v => <button disabled={busy} className={`entity-row${providerOpen && providerId === v.id ? ' selected' : ''}`} aria-pressed={providerOpen && providerId === v.id} key={v.id} onClick={() => choose(providerDirty || !!newModel.trim(), '服务商', () => editProvider(v))}>
-              <span className="entity-avatar provider"><Icon name="server" /></span><span className="entity-text"><strong>{v.name}</strong><small>{v.models.length} 个模型 · {v.hasApiKey ? '密钥已配置' : '未配置密钥'}</small></span><span className={`entity-dot${v.enabled ? ' enabled' : ''}`} title={v.enabled ? '已启用' : '已停用'} /><span className="sr-only">{v.enabled ? '已启用' : '已停用'}</span>
+              <span className="entity-avatar provider"><ProviderLogo provider={v} /></span><span className="entity-text"><strong>{v.name}</strong><small>{v.models.length} 个模型 · {v.hasApiKey ? '密钥已配置' : '未配置密钥'}</small></span><span className={`entity-dot${v.enabled ? ' enabled' : ''}`} title={v.enabled ? '已启用' : '已停用'} /><span className="sr-only">{v.enabled ? '已启用' : '已停用'}</span>
             </button>)}
             {!allProviders.length && <p className="entity-list-empty">添加一个服务商，连接你的模型。</p>}
           </div>
           {!providerOpen ? <div className="entity-empty"><Icon name="server" size={30} /><h3>连接你的模型</h3><p>配置服务地址、密钥和模型 ID。</p></div> : <form className="entity-detail fields" onSubmit={event => void submitProvider(event)}>
             <fieldset disabled={busy} className="entity-form-fields">
-              <div className="entity-detail-heading"><div><h3>{providerId ? '编辑服务商' : '新建服务商'}</h3><span className="protocol-label">OpenAI 兼容接口</span></div><label className="toggle-field"><input type="checkbox" checked={p.enabled} onChange={e => updateProvider({ enabled: e.target.checked })} />启用服务商</label></div>
+              <div className="entity-detail-heading"><div className="provider-detail-title"><span className="entity-avatar provider"><ProviderLogo provider={p} /></span><div><h3>{providerId ? '编辑服务商' : '新建服务商'}</h3><span className="protocol-label">OpenAI 兼容接口</span></div></div><label className="toggle-field"><input type="checkbox" checked={p.enabled} onChange={e => updateProvider({ enabled: e.target.checked })} />启用服务商</label></div>
               <label>服务商名称<input required maxLength={100} value={p.name} placeholder="为这个连接起一个名字" onChange={e => updateProvider({ name: e.target.value })} /></label>
               <label>API 地址<input required type="url" value={p.baseUrl} placeholder="https://api.example.com/v1" onChange={e => updateProvider({ baseUrl: e.target.value })} /></label>
               <Select label="密钥操作" value={keyAction} onChange={action => { setKeyAction(action); setKey(''); setProviderDirty(true) }} options={[...(providerId ? [{ value: 'retain', label: '保留已保存密钥' }] : []), { value: 'replace', label: '设置或替换密钥' }, { value: 'clear', label: '不使用密钥 / 清除已保存密钥' }]} />
