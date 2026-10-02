@@ -19,3 +19,11 @@ export async function logout() {
   await api<void>('/api/v1/auth/logout', { method: 'POST' })
   resetAuthSession()
 }
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  await api<void>('/api/v1/auth/password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+  resetAuthSession()
+}

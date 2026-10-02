@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "tsc -b && vite build",
-    "test:auth": "node --test tests/auth-session.test.mjs",
+    "test:auth": "node --test tests/auth-session.test.mjs tests/password-validation.test.mjs",
     "preview": "vite preview",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
