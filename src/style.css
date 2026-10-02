@@ -422,3 +422,27 @@ a{color:inherit}
   .management-page .fields input:not([type=checkbox]),.management-page .select-trigger{min-height:40px}
   .entity-row{min-height:58px}
 }
+
+/* Writing metadata and taxonomy use the same quiet studio palette. */
+.metadata-heading h2{overflow-wrap:anywhere;line-height:1.5}
+.metadata-address{display:flex;gap:12px;align-items:center;color:#7b8979;font-size:11px;margin:0}
+.metadata-address code{font-size:11px;color:#516c54;overflow-wrap:anywhere}
+.published-summary{font-size:12px;color:#627560;line-height:1.7;margin:10px 0 0}
+.editor-taxonomy{flex:none;padding:12px 20px;border-bottom:1px solid #e9eee6;position:relative;z-index:12}
+.editor-taxonomy-fields{display:flex;gap:16px}
+.name-combobox{flex:1;min-width:0;position:relative;max-width:360px}
+.name-combobox>label{display:block;font-size:11px;font-weight:600;color:#647860;margin-bottom:6px}
+.name-combobox-input{display:flex;border:1px solid #dce4da;border-radius:6px;background:#fbfcf9;overflow:hidden}
+.name-combobox-input:focus-within{border-color:#98b494;box-shadow:0 0 0 2px #acc9a322}
+.name-combobox-input input{width:100%;min-width:0;border:0;background:transparent;font:inherit;font-size:12px;padding:8px 10px;outline:none;color:#354932}
+.name-combobox-input>button{border:0;background:transparent;padding:0 10px;color:#66855b;font-size:15px;cursor:pointer}
+.name-combobox-menu{position:absolute;top:100%;left:0;right:0;margin-top:5px;background:#fff;border:1px solid #dce6d7;border-radius:7px;box-shadow:0 8px 24px #29402715;overflow:hidden;z-index:40}
+.name-combobox-menu [role=listbox]{max-height:180px;overflow:auto}
+.name-combobox-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;color:#40593b;padding:9px 12px;font:inherit;font-size:12px;cursor:pointer}
+.name-combobox-menu button:hover,.name-combobox-menu button[aria-selected=true]{background:#edf4e9}
+.name-combobox-menu .name-create{border-top:1px solid #eef2e9;color:#5b814b}
+.name-combobox-menu p{padding:0 12px;font-size:11px;color:#83917b}
+.selected-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.selected-tags>span{display:flex;align-items:center;gap:5px;background:#eef4e9;border:1px solid #e1e9d9;color:#5a754d;border-radius:4px;padding:3px 7px;font-size:11px}
+.selected-tags button{border:0;background:transparent;color:#758c69;padding:0 2px;cursor:pointer}
+@media(max-width:680px){.editor-taxonomy-fields{flex-direction:column;gap:10px}.name-combobox{max-width:none}}

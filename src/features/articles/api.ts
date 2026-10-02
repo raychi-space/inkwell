@@ -19,9 +19,9 @@ export async function saveArticle(id: string, input: ArticleInput): Promise<Arti
   return api(`/api/v1/admin/contents/${id}`, { method: 'PUT', body: JSON.stringify(input) })
 }
 
-export async function publishArticle(id: string, expectedVersion: number): Promise<Article> {
+export async function publishArticle(id: string, expectedVersion: number, assistantId?: string): Promise<Article> {
   return api(`/api/v1/admin/contents/${id}/publish`, {
-    method: 'POST', body: JSON.stringify({ expectedVersion }),
+    method: 'POST', body: JSON.stringify({ expectedVersion, ...(assistantId ? { assistantId } : {}) }),
   })
 }
 
