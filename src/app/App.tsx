@@ -356,7 +356,7 @@ function Studio() {
     {view === 'ai' ? <AgentSettings /> : view === 'settings' ? <SettingsEditor initialValue={siteSettings} onLoaded={rememberSettings} onSaved={rememberSettings} /> : current ? <main className="workspace studio-page editor-workspace">
         <header className="studio-head editor-head">
           <div><button className="back-link" onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}>← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}</button><p className="eyebrow">{current.status === 'PUBLISHED' ? '已发布' : '私人草稿'} · {typeNames[current.type]}{dirty ? ' · 尚未保存' : ''}</p>
-            <h1>写{current.type === 'ARTICLE' ? '文章' : '帖子'}</h1></div>
+            <h1 title={title}>{current.type === 'ARTICLE' ? title || '写文章' : '写帖子'}</h1></div>
           <div className="actions">
             {current.type === 'ARTICLE' && <button disabled={agentBusy || agentLocked} onClick={() => setAssistantOpen(v => !v)}>{assistantOpen ? '收起助手' : '写作助手'}</button>}
             <button onClick={() => void save()} disabled={busy || taxonomyBusy > 0 || pendingUploads > 0 || agentLocked || agentBusy}>保存</button>
@@ -366,7 +366,7 @@ function Studio() {
         </header>
         <section className={"studio-grid editor-page" + (current.type !== 'ARTICLE' || !assistantOpen ? ' without-conversation' : '')}>
           <div className="editor-content-column">
-            <ContentMetadata article={current} title={title} summary={summary} summaryStatus={summaryStatus} />
+            <ContentMetadata article={current} summary={summary} summaryStatus={summaryStatus} />
           <div className="dashboard-card editor-main">
             <div className="card-head editor-label"><div><p className="eyebrow">WRITING SPACE</p><h2>正文</h2></div><span>{current.type === 'ARTICLE' ? '直接编辑排版后的内容 · 粘贴图片会自动上传' : 'Markdown 文字内容 · 不支持图片'}</span></div>
             <EditorTaxonomy article={current.type === 'ARTICLE'} category={category} categoryNames={categoryNames} tags={selectedTags}
