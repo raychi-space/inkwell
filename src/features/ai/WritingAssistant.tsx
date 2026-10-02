@@ -8,8 +8,8 @@ import type {
   SelectionSnapshot,
   TurnRequest,
 } from "./types";
-import { Select } from "../../shared/components/Select";
-import { errorMessage } from "../../shared/errors";
+import { Select } from "../../shared/ui/Select";
+import { errorMessage } from "../../shared/lib/errors";
 interface Props {
   adapterRef: RefObject<EditorAgentAdapter | null>;
   previewHost: RefObject<HTMLDivElement | null>;

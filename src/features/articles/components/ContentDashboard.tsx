@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Select } from '../../../shared/components/Select'
+import { Select } from '../../../shared/ui/Select'
+import { Card, CardHead } from '../../../shared/ui/Card'
+import { EmptyState } from '../../../shared/ui/EmptyState'
 import type { Article } from '../types'
 
 type Props = {
@@ -61,8 +63,9 @@ export function ContentDashboard({ mode, articles, categories, tags, busy, notic
     </header>
     {notice && <p className="notice dashboard-notice" role="status">{notice}</p>}
     <div className="studio-grid dashboard-grid">
-      <section className="dashboard-card recent-card" aria-labelledby="recent-title">
-        <div className="card-head"><div><p className="eyebrow">YOUR WRITING</p><h2 id="recent-title">{mode === 'published' ? '最近的内容' : '最近的草稿'}</h2></div><span>{visible.length} 篇</span></div>
+      <Card className="recent-card" aria-labelledby="recent-title">
+        <CardHead eyebrow="YOUR WRITING" title={<span id="recent-title">{mode === 'published' ? '最近的内容' : '最近的草稿'}</span>}
+          aside={<span>{visible.length} 篇</span>} />
         <div className="content-filters">
           <Select label="排序" value={sort} onChange={setSort} options={[
             { value: 'recent', label: '最近更新' }, { value: 'oldest', label: '最早更新' },
@@ -84,16 +87,18 @@ export function ContentDashboard({ mode, articles, categories, tags, busy, notic
             <span className="content-row-main"><span className="content-title">{article.title || article.bodyMarkdown.replace(/[#*_`~>]/g, '').trim().slice(0, 42) || `未命名${typeNames[article.type]}`}</span>
               <span className="content-meta"><span>{typeNames[article.type]}</span>{article.type === 'ARTICLE' && <><span>·</span><span>{article.category ?? '未分类'}</span></>}{article.tags.length > 0 && <span>· {article.tags.join('、')}</span>}</span></span>
             <span className="content-row-side"><span className={`status-pill ${article.status === 'PUBLISHED' ? 'published' : ''}`}>{article.status === 'PUBLISHED' ? '已发布' : '草稿'}</span><time dateTime={article.updatedAt}>{new Date(article.updatedAt).toLocaleDateString('zh-CN')}</time></span>
-          </button>) : <div className="list-empty"><strong>{scopedArticles.length ? '没有符合筛选条件的内容' : mode === 'published' ? '还没有已发布内容' : '还没有草稿'}</strong><p>{scopedArticles.length ? '试试调整筛选条件。' : '从上方选择一种类型，开始第一篇创作。'}</p></div>}
+          </button>) : <EmptyState
+            title={scopedArticles.length ? '没有符合筛选条件的内容' : mode === 'published' ? '还没有已发布内容' : '还没有草稿'}
+            hint={scopedArticles.length ? '试试调整筛选条件。' : '从上方选择一种类型，开始第一篇创作。'} />}
         </div>
-      </section>
-      <aside className="dashboard-card stats-card" aria-labelledby="stats-title">
-        <div className="card-head"><div><p className="eyebrow">OVERVIEW</p><h2 id="stats-title">统计数据</h2></div></div>
+      </Card>
+      <Card className="stats-card" aria-labelledby="stats-title">
+        <CardHead eyebrow="OVERVIEW" title={<span id="stats-title">统计数据</span>} />
         <div className="stat-feature"><strong>{words.toLocaleString('zh-CN')}</strong><span>正文总字数</span></div>
         <dl className="stats-list"><div><dt>{mode === 'published' ? '已发布内容' : '草稿总数'}</dt><dd>{scopedArticles.length}</dd></div>
           <div><dt>文章</dt><dd>{counts.ARTICLE}</dd></div><div><dt>帖子</dt><dd>{counts.POST}</dd></div></dl>
         <p className="stats-note">{mode === 'published' ? '阅读量待接入统计接口' : '草稿仅自己可见，发布后才会展示在网站上。'}</p>
-      </aside>
+      </Card>
     </div>
   </main>
 }

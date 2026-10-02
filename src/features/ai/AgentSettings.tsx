@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { providers, assistants, saveAssistant } from './api'
 import type { Provider, Assistant } from './types'
-import { Select } from '../../shared/components/Select'
-import { Icon } from '../../shared/components/Icon'
-import { errorMessage } from '../../shared/errors'
+import { Select } from '../../shared/ui/Select'
+import { Icon } from '../../shared/ui/Icon'
+import { errorMessage } from '../../shared/lib/errors'
 import { useConfigSwitch } from './useConfigSwitch'
 import { ProviderLogo } from './ProviderLogo'
 

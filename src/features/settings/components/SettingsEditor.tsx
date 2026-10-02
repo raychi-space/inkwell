@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { siGithub, siX, siBilibili, siYoutube, siZhihu, siJuejin, siXiaohongshu, siMastodon } from 'simple-icons'
-import { getSettings, saveSettings, type HomepageProject, type SiteLink, type SiteSettings, type SocialAccount } from './api'
-import { errorMessage } from '../../shared/errors'
-import { ProviderSettings } from '../ai/ProviderSettings'
+import { getSettings, saveSettings } from '../api'
+import type { HomepageProject, SiteLink, SiteSettings, SocialAccount } from '../types'
+import { errorMessage } from '../../../shared/lib/errors'
+import { ProviderSettings } from '../../ai/ProviderSettings'
 
 const socialPlatforms = [
   { id: 'github', name: 'GitHub', path: siGithub.path },
