@@ -358,13 +358,13 @@ function Studio() {
           <div><button className="back-link" onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}>← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}</button><p className="eyebrow">{current.status === 'PUBLISHED' ? '已发布' : '私人草稿'} · {typeNames[current.type]}{dirty ? ' · 尚未保存' : ''}</p>
             <h1 title={title}>{current.type === 'ARTICLE' ? title || '写文章' : '写帖子'}</h1></div>
           <div className="actions">
-            {current.type === 'ARTICLE' && <button disabled={agentBusy || agentLocked} onClick={() => setAssistantOpen(v => !v)}>{assistantOpen ? '收起助手' : '写作助手'}</button>}
+            {current.type === 'ARTICLE' && <button aria-expanded={assistantOpen} aria-controls="writing-conversation" disabled={agentBusy || agentLocked} onClick={() => setAssistantOpen(v => !v)}>{assistantOpen ? '收起助手' : '写作助手'}</button>}
             <button onClick={() => void save()} disabled={busy || taxonomyBusy > 0 || pendingUploads > 0 || agentLocked || agentBusy}>保存</button>
             <button className="primary" onClick={() => void publish()} disabled={busy || taxonomyBusy > 0 || pendingUploads > 0 || agentLocked || agentBusy}>{current.status === 'PUBLISHED' ? '发布更新' : '发布'}</button>
             {current.status === 'PUBLISHED' && <button onClick={() => void unpublish()} disabled={busy || agentLocked || agentBusy}>撤回</button>}
           </div>
         </header>
-        <section className={"studio-grid editor-page" + (current.type !== 'ARTICLE' || !assistantOpen ? ' without-conversation' : '')}>
+        <section className={"studio-grid editor-page" + (current.type !== 'ARTICLE' ? ' without-conversation' : !assistantOpen ? ' conversation-collapsed' : '')}>
           <div className="editor-content-column">
             <ContentMetadata article={current} summary={summary} summaryStatus={summaryStatus} />
           <div className="dashboard-card editor-main">
@@ -386,7 +386,9 @@ function Studio() {
             </div>
           </div>
           </div>
-          {current.type === 'ARTICLE' && assistantOpen && <WritingAssistant key={current.id} adapterRef={agentRef} previewHost={previewHost} title={title} available={availableAssistants} assistantId={availableAssistants.some(v => v.id === selectedAssistantId) ? selectedAssistantId : ''} onAssistantChange={setSelectedAssistantId} onLock={setAgentLocked} onBusy={setAgentBusy} />}
+          {current.type === 'ARTICLE' && <div id="writing-conversation" className="conversation-panel" inert={!assistantOpen} aria-hidden={!assistantOpen}>
+            <WritingAssistant key={current.id} adapterRef={agentRef} previewHost={previewHost} title={title} available={availableAssistants} assistantId={availableAssistants.some(v => v.id === selectedAssistantId) ? selectedAssistantId : ''} onAssistantChange={setSelectedAssistantId} onLock={setAgentLocked} onBusy={setAgentBusy} />
+          </div>}
         </section>
     </main> : <ContentDashboard key={view} mode={view === 'drafts' ? 'drafts' : 'published'}
       articles={articles} categories={categoryNames} tags={tagNames} busy={busy} notice={notice}

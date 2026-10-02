@@ -49,6 +49,8 @@ export function WritingAssistant({
   const historyHost = useRef<HTMLDivElement>(null);
   const callbacks = useRef({ onLock, onBusy, onAssistantChange });
   callbacks.current = { onLock, onBusy, onAssistantChange };
+  const selectionState = useRef({ selection, proposal });
+  selectionState.current = { selection, proposal };
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -59,6 +61,41 @@ export function WritingAssistant({
     };
   }, []);
   useEffect(() => { historyHost.current?.scrollTo({ top: historyHost.current.scrollHeight }); }, [entries]);
+  useEffect(() => {
+    let frame = 0;
+    function captureSelectedText() {
+      frame = 0;
+      if (flight.current || selectionState.current.proposal) return;
+      const host = previewHost.current;
+      const range = window.getSelection();
+      if (!host || !range || range.isCollapsed || !range.anchorNode || !range.focusNode ||
+        !host.contains(range.anchorNode) || !host.contains(range.focusNode) ||
+        !host.contains(document.activeElement) || !document.activeElement?.closest('.editable-prose')) return;
+      const value = adapterRef.current?.captureSelection();
+      if (!value) {
+        const previous = selectionState.current.selection;
+        if (previous) adapterRef.current?.releaseSelection(previous.selectionId);
+        setSelection(null);
+        setRetry(null);
+        setNotice("暂不支持此选区。请选择普通无格式段落中的文字。");
+        return;
+      }
+      if (value.selectionId === selectionState.current.selection?.selectionId) return;
+      setSelection(value);
+      setRetry(null);
+      setNotice("");
+    }
+    function selectionChanged() {
+      if (frame) cancelAnimationFrame(frame);
+      // Read after Lexical has committed mouse and keyboard selection changes.
+      frame = requestAnimationFrame(captureSelectedText);
+    }
+    document.addEventListener('selectionchange', selectionChanged);
+    return () => {
+      document.removeEventListener('selectionchange', selectionChanged);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [adapterRef, previewHost]);
   useEffect(() => {
     if (proposal?.kind === "replacement" && previewHost.current) {
       const anchor = adapterRef.current?.getAnchor(proposal.selectionId);
@@ -83,19 +120,6 @@ export function WritingAssistant({
     if (selection) adapterRef.current?.releaseSelection(selection.selectionId);
     setSelection(null);
     callbacks.current.onLock(false);
-  }
-  function capture() {
-    if (flight.current || proposal) return;
-    const value = adapterRef.current?.captureSelection();
-    if (!value) {
-      setNotice(
-        "请先选择普通无格式段落中的文字。表格、图片、链接及复杂块选区暂不支持。",
-      );
-      return;
-    }
-    setSelection(value);
-    setRetry(null);
-    setNotice("已捕获选区，可在右侧填写修改要求。");
   }
   function recordDecision(value: string) {
     setEntries((v) => {
@@ -207,6 +231,12 @@ export function WritingAssistant({
     if (!assistantId || flight.current || proposal) return;
     const content = message.trim();
     if (!content) { setNotice("请输入消息。"); return; }
+    if (selection && !adapterRef.current?.validateSelection(selection.selectionId)) {
+      clearSelection();
+      setRetry(null);
+      setNotice("原文已变化，请重新选择后发送。");
+      return;
+    }
     const request: TurnRequest = {
       requestId: crypto.randomUUID(), assistantId, mode: "chat", message: content,
       history: (entries.at(-1)?.role === "user" ? entries.slice(0, -1) : entries).slice(-40),
@@ -270,16 +300,15 @@ export function WritingAssistant({
         }} options={available.map(v => ({ value: v.id, label: v.name }))} />
       </header>
       <div className="agent-history" ref={historyHost} aria-live="polite" aria-label="对话记录">
-        {!entries.length && <div className="conversation-empty"><strong>聊聊这篇文章</strong><p>{available.length ? "默认正常对话。引用选区后，明确提出修改要求，助手才会提供待确认的改写建议。" : "请先在助手管理中配置并启用助手。"}</p></div>}
+        {!entries.length && <div className="conversation-empty"><strong>聊聊这篇文章</strong><p>{available.length ? "正文中选中的文字会自动添加到这里。默认正常对话，明确提出修改要求后，助手才会提供待确认的改写建议。" : "请先在助手管理中配置并启用助手。"}</p></div>}
         {entries.map((v, i) => <div key={i} className={"agent-message " + v.role}><small>{v.role === "user" ? "你" : "助手"}</small><p>{v.content}</p></div>)}
       </div>
       <div className="conversation-composer">
-        {selection && <div className="agent-selection"><small>已引用选区</small><p>{selection.beforeMarkdown.slice(0, 100)}{selection.beforeMarkdown.length > 100 ? "…" : ""}</p><button disabled={pending || !!proposal} onClick={clearSelection}>移除引用</button></div>}
+        {selection && <div className="agent-selection" role="region" aria-label="已选中选区"><small>已选中选区</small><p>{selection.beforeMarkdown.slice(0, 100)}{selection.beforeMarkdown.length > 100 ? "…" : ""}</p><button disabled={pending || !!proposal} onClick={clearSelection}>移除引用</button></div>}
         <label>消息<textarea rows={3} value={message} onChange={e => setMessage(e.target.value)} disabled={pending || !!proposal} placeholder="聊聊想法，或明确告诉助手怎样改写引用的选区…" onKeyDown={e => {
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) { e.preventDefault(); submit(); }
         }} /></label>
         <div className="agent-actions">
-          <button disabled={pending || !!proposal} onMouseDown={e => e.preventDefault()} onClick={capture}>引用选区</button>
           <button className="primary" disabled={pending || !!proposal || !assistantId} onClick={submit}>发送</button>
         </div>
         {notice && <p role="status" className="notice">{notice}</p>}
