@@ -80,6 +80,14 @@ export function createEditorAgentAdapter(
         const first = nodes[0].getTopLevelElementOrThrow();
         const last = nodes[nodes.length - 1].getTopLevelElementOrThrow();
         const anchor = editor!.getElementByKey(first.getKey());
+        const existing = [...targets.entries()][0];
+        if (existing && existing[1].bookmark.anchor.is(selection.anchor) &&
+          existing[1].bookmark.focus.is(selection.focus) && existing[1].before === before) {
+          captured = { selectionId: existing[0], beforeMarkdown,
+            contextBefore: first.getPreviousSibling()?.getTextContent().slice(-500) ?? "",
+            contextAfter: last.getNextSibling()?.getTextContent().slice(0, 500) ?? "" };
+          return;
+        }
         targets.clear();
         targets.set(selectionId, {
           bookmark: selection.clone(),

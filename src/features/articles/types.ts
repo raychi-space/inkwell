@@ -15,6 +15,8 @@ export type Article = {
   updatedAt: string
   publishedAt: string | null
   publicUpdatedAt: string | null
+  summaryStatus?: 'NONE' | 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'SKIPPED' | 'CANCELLED'
+  summaryError?: string | null
 }
 
 export type Page<T> = { items: T[]; page: number; pageSize: number; total: number }
