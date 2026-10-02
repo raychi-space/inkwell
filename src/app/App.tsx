@@ -1,6 +1,6 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { MDXEditorMethods } from '@mdxeditor/editor'
-import { getSession, login, logout, LoginScreen, type Session } from '../features/auth'
+import { logout, SessionBoundary, type Session } from '../features/auth'
 import { listArticles, getArticle, createArticle, saveArticle, publishArticle, unpublishArticle, ArticleSidebar, ContentDashboard, RichEditor, type Article } from '../features/articles'
 import { categories, tags, addCategory, addTag } from '../features/taxonomy'
 import { SettingsEditor, getSettings, type SiteSettings } from '../features/settings'
@@ -19,11 +19,10 @@ const typeNames = { ARTICLE: '文章', POST: '帖子' }
 
 export default function App() {
   if (import.meta.env.DEV && new URLSearchParams(location.search).has('editor-agent-fixture')) return <Suspense fallback={<p>加载中</p>}><AgentEditorFixture /></Suspense>
-  return <Studio />
+  return <SessionBoundary>{(session, onSessionEnd, checkSession) => <Studio key={session.username} session={session} onSessionEnd={onSessionEnd} checkSession={checkSession} />}</SessionBoundary>
 }
 
-function Studio() {
-  const [session, setSession] = useState<Session | null>(null)
+function Studio({ session, onSessionEnd, checkSession }: { session: Session; onSessionEnd: () => void; checkSession: () => Promise<boolean> }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [siteName, setSiteName] = useState('')
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
@@ -33,8 +32,6 @@ function Studio() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { const value = localStorage.getItem('raychi.sidebar.collapsed'); return value === null ? window.matchMedia('(max-width:680px)').matches : value === 'true' } catch { return false }
   })
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [articles, setArticles] = useState<Article[]>([])
   const [current, setCurrent] = useState<Article | null>(null)
   const [view, setView] = useState<'content' | 'drafts' | 'settings' | 'ai'>('content')
@@ -106,11 +103,6 @@ function Studio() {
   const changePending = useCallback((n: number) => { transfers.current = Math.max(0, transfers.current + n); setPendingUploads(transfers.current) }, [])
 
   useEffect(() => {
-    getSession().then(setSession).catch(error => setNotice(errorMessage(error)))
-  }, [])
-
-  useEffect(() => {
-    if (!session?.authenticated) return
     void refresh()
     void refreshTaxonomy()
     let active = true
@@ -315,44 +307,38 @@ function Studio() {
     finally { setBusy(false) }
   }
 
-  async function signIn(event: FormEvent) {
-    event.preventDefault()
-    setBusy(true)
-    try { setSession(await login(username, password)); setPassword(''); setNotice('') }
-    catch (error) { setNotice(errorMessage(error)) }
-    finally { setBusy(false) }
-  }
-
   async function signOut() {
     if (!canLeave()) return
-    try { await logout(); setSession({ authenticated: false, username: null }); setCurrent(null); setSiteSettings(null); setAvatarUrl(null); setSiteName('') }
+    try { await logout(); onSessionEnd() }
     catch (error) { setNotice(errorMessage(error)) }
   }
 
-  function showSection(section: 'content' | 'drafts') {
-    if (!canLeave()) return
+  async function showSection(section: 'content' | 'drafts') {
+    if (!await checkSession() || !canLeave()) return
     setCurrent(null)
     setDirty(false)
     setView(section)
     setNotice('')
   }
 
-  function showSettings() {
-    if (!canLeave()) return
+  async function showSettings() {
+    if (!await checkSession() || !canLeave()) return
     setCurrent(null)
     setDirty(false)
     setView('settings')
     setNotice('')
   }
 
-  if (session === null || !session.authenticated) return <LoginScreen username={username} password={password}
-    busy={busy} notice={notice} onUsername={setUsername} onPassword={setPassword} onSubmit={signIn} />
+  async function showAssistants() {
+    if (!await checkSession() || !canLeave()) return
+    setCurrent(null); setDirty(false); setView('ai'); setNotice('')
+  }
 
   return <div className={'shell' + (sidebarCollapsed ? ' sidebar-collapsed' : '')}>
     {!sidebarCollapsed && <button className="sidebar-backdrop" aria-label="收起侧边栏遮罩" onClick={toggleSidebar} />}
     <ArticleSidebar active={view} username={session.username} siteName={siteName} avatarUrl={avatarUrl} collapsed={sidebarCollapsed} onToggle={toggleSidebar}
       onContent={() => showSection('content')} onDrafts={() => showSection('drafts')}
-      onAI={() => { if (canLeave()) { setCurrent(null); setDirty(false); setView('ai'); setNotice('') } }} onSettings={showSettings} onSignOut={() => void signOut()} />
+      onAI={() => void showAssistants()} onSettings={() => void showSettings()} onSignOut={() => void signOut()} />
     {view === 'ai' ? <AgentSettings /> : view === 'settings' ? <SettingsEditor initialValue={siteSettings} onLoaded={rememberSettings} onSaved={rememberSettings} /> : current ? <main className="workspace studio-page editor-workspace">
         <header className="studio-head editor-head">
           <div><button className="back-link" onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}>← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}</button><p className="eyebrow">{current.status === 'PUBLISHED' ? '已发布' : '私人草稿'} · {typeNames[current.type]}{dirty ? ' · 尚未保存' : ''}</p>
