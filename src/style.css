@@ -366,3 +366,29 @@ a{color:inherit}
 @media(max-width:1000px){.entity-workspace{grid-template-columns:210px minmax(0,1fr)}.entity-section>.card-head,.entity-detail.fields{padding:21px}.entity-detail-heading{align-items:start;flex-wrap:wrap}.entity-form-actions{flex-wrap:wrap}}
 @media(max-width:800px){.entity-workspace{grid-template-columns:1fr}.entity-list{border-right:0;border-bottom:1px solid #e9eee6;min-height:0;max-height:180px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.entity-list-empty{grid-column:1/-1}.field-pair{grid-template-columns:1fr}.management-page .settings-page{padding:20px}.management-page .dashboard-head{gap:20px}}
 @media(max-width:680px){.shell,.shell.sidebar-collapsed{display:block;height:auto;min-height:100dvh;overflow:visible}.shell>.workspace{margin-left:64px;width:calc(100% - 64px)}.sidebar{position:fixed;left:0;top:0;bottom:0;width:218px;max-height:100dvh}.sidebar-collapsed .sidebar{width:64px}.sidebar-collapsed .sidebar-brand .brand{padding:22px 7px}.sidebar-collapsed .brand-mark{width:40px;height:40px}.sidebar-collapsed .studio-nav{padding:18px 6px;display:grid}.sidebar-collapsed .studio-nav button{width:100%;padding:13px 7px}.sidebar .studio-nav{display:grid}.sidebar-foot{display:block}.sidebar-collapsed .sidebar-foot{padding:12px 5px}.sidebar-collapsed .account-trigger{padding:8px;display:flex}.sidebar-collapsed .account-avatar{width:32px;height:32px}.sidebar-backdrop{display:block;position:fixed;inset:0;border:0;background:#13251b66;z-index:35}.management-page .dashboard-head h1{font-size:30px}.management-page{padding:26px 16px 32px}.management-page .settings-page{padding:16px}.management-page .settings-page>.fields{grid-template-columns:1fr}.management-page .settings-page>.fields label:nth-child(3){grid-column:auto}.management-page .settings-group{padding:16px}.entity-section>.card-head{padding:20px 16px;flex-wrap:wrap}.entity-detail.fields{padding:20px 16px}.entity-list{grid-template-columns:1fr;max-height:160px}.model-add,.provider-test{grid-template-columns:1fr;flex-direction:column}.model-add .secondary-button{align-self:start}.entity-form-actions .primary{width:100%}.account-popover{max-width:calc(100vw - 24px)}}
+
+/* Keep the icon rail anchored while the surrounding sidebar changes width. */
+.shell{transition:grid-template-columns 240ms cubic-bezier(.2,.7,.2,1)}
+.sidebar-brand .brand,.sidebar-collapsed .sidebar-brand .brand{height:102px;padding:28px 17px;justify-content:flex-start;overflow:hidden;white-space:nowrap}
+.sidebar-brand .brand-mark,.sidebar-collapsed .brand-mark{width:42px;height:42px}
+.sidebar-label{flex-shrink:0;white-space:nowrap;opacity:1;visibility:visible;transition:opacity 160ms ease,visibility 160ms ease}
+.brand-name{width:116px}.brand-name strong{overflow:hidden;text-overflow:ellipsis}
+.sidebar-collapsed .sidebar-label{opacity:0;visibility:hidden;pointer-events:none}
+.studio-nav,.sidebar-collapsed .studio-nav{padding:24px 10px;gap:7px;overflow-x:hidden}
+.studio-nav button,.sidebar-collapsed .studio-nav button{justify-content:flex-start;padding:13px 16px;height:48px;overflow:hidden;white-space:nowrap}
+.sidebar-foot,.sidebar-collapsed .sidebar-foot{padding:14px 10px}
+.sidebar-foot .account-trigger,.sidebar-collapsed .account-trigger{justify-content:flex-start;padding:9px;height:56px;overflow:hidden}
+.account-name{flex:0 0 100px}.account-avatar{width:36px;height:36px}
+.website-settings-stack{display:flex;flex-direction:column;gap:24px;padding-bottom:2px}
+.website-settings-stack>.settings-page,.website-settings-stack>.management-loading{flex-shrink:0}
+.provider-notice{margin:16px 28px}
+@media(max-width:680px){
+  .sidebar{transition:width 240ms cubic-bezier(.2,.7,.2,1)}
+  .sidebar-brand .brand,.sidebar-collapsed .sidebar-brand .brand{padding:28px 11px}
+  .studio-nav,.sidebar-collapsed .studio-nav{padding:24px 4px}
+  .sidebar-foot,.sidebar-collapsed .sidebar-foot{padding:14px 4px}
+  .sidebar-collapsed .account-trigger{padding:9px}
+  .sidebar-collapsed .account-avatar{width:36px;height:36px}
+  .provider-notice{margin:16px}
+}
+@media(prefers-reduced-motion:reduce){.shell,.sidebar,.sidebar-label{transition:none}}
