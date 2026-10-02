@@ -5,6 +5,7 @@ import { Select } from '../../shared/components/Select'
 import { Icon } from '../../shared/components/Icon'
 import { errorMessage } from '../../shared/errors'
 import { useConfigSwitch } from './useConfigSwitch'
+import { ProviderLogo } from './ProviderLogo'
 
 const emptyAssistant = { name: '', enabled: true, providerId: '', model: '', systemPrompt: '', fixedContext: '', maxOutputTokens: 1024, historyTurns: 6, maxContextChars: 131072, timeoutMs: 30000 }
 
@@ -53,7 +54,7 @@ export function AgentSettings() {
         <div className="entity-workspace">
           <div className="entity-list" aria-label="助手列表">
             {allAssistants.map(v => <button disabled={busy} className={`entity-row${assistantOpen && assistantId === v.id ? ' selected' : ''}`} aria-pressed={assistantOpen && assistantId === v.id} key={v.id} onClick={() => choose(assistantDirty, '助手', () => editAssistant(v))}>
-              <span className="entity-avatar"><Icon name="assistant" /></span><span className="entity-text"><strong>{v.name}</strong><small>{v.model}</small></span><span className={`entity-dot${v.enabled ? ' enabled' : ''}`} title={v.enabled ? '已启用' : '已停用'} /><span className="sr-only">{v.enabled ? '已启用' : '已停用'}</span>
+              <span className="entity-avatar provider"><ProviderLogo provider={allProviders.find(p => p.id === v.providerId)} /></span><span className="entity-text"><strong>{v.name}</strong><small>{v.model}</small></span><span className={`entity-dot${v.enabled ? ' enabled' : ''}`} title={v.enabled ? '已启用' : '已停用'} /><span className="sr-only">{v.enabled ? '已启用' : '已停用'}</span>
             </button>)}
             {!allAssistants.length && <p className="entity-list-empty">还没有助手，点击右上角创建。</p>}
           </div>
@@ -62,7 +63,7 @@ export function AgentSettings() {
               <div className="entity-detail-heading"><h3>{assistantId ? '编辑助手' : '新建助手'}</h3><label className="toggle-field"><input type="checkbox" checked={a.enabled} onChange={e => updateAssistant({ enabled: e.target.checked })} />启用助手</label></div>
               <label>助手名称<input required maxLength={100} placeholder="例如：写作搭档" value={a.name} onChange={e => updateAssistant({ name: e.target.value })} /></label>
               <div className="field-pair">
-                <Select label="模型服务商" value={a.providerId} onChange={id => updateAssistant({ providerId: id, model: allProviders.find(v => v.id === id)?.models[0] ?? '' })} options={[{ value: '', label: '请选择服务商' }, ...allProviders.map(v => ({ value: v.id, label: v.name + (v.enabled ? '' : '（停用）') }))]} />
+                <Select label="模型服务商" value={a.providerId} onChange={id => updateAssistant({ providerId: id, model: allProviders.find(v => v.id === id)?.models[0] ?? '' })} options={[{ value: '', label: '请选择服务商' }, ...allProviders.map(v => ({ value: v.id, label: v.name + (v.enabled ? '' : '（停用）'), icon: <ProviderLogo provider={v} size={18} /> }))]} />
                 <Select label="助手模型" value={a.model} onChange={model => updateAssistant({ model })} options={[{ value: '', label: '请选择模型' }, ...selectedModels.map(v => ({ value: v, label: v }))]} />
               </div>
               {!allProviders.length && <p className="settings-help">请先到网站管理最下方添加模型服务商。</p>}
