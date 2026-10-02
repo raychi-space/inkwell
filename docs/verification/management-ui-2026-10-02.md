@@ -2,6 +2,8 @@
 
 [inkwell#12](https://github.com/raychi-space/inkwell/issues/12) · [PR #11](https://github.com/raychi-space/inkwell/pull/11) · [raychi#15](https://github.com/raychi-space/raychi/issues/15)
 
+后续反馈将模型服务商移至网站管理最下方，并修复侧栏过渡；当前布局与验证见[后续记录](management-refinement-2026-10-02.md)。本文保留此前候选版本的验证历史。
+
 ## 版本与环境
 
 - 网站管理、侧栏与共享样式：`a7631ef6d3b087ac67823fe62ee948622b99cb39`。
