@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createTurn, getTurn } from './api'
 import type { TurnRequest } from './types'
-import { errorMessage } from '../../shared/errors'
+import { errorMessage } from '../../shared/lib/errors'
 
 interface Props {
   documentId: string | null

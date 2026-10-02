@@ -1,5 +1,5 @@
 import type { Article } from '../types'
-import { Select } from '../../../shared/components/Select'
+import { Select } from '../../../shared/ui/Select'
 
 interface Props {
   article: Article

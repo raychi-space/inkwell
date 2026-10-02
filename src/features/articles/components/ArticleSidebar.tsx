@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Icon } from '../../../shared/components/Icon'
+import { Icon } from '../../../shared/ui/Icon'
 
 type Props = {
   active: 'content' | 'drafts' | 'settings' | 'ai'
