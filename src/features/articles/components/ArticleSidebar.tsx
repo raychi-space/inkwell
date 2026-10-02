@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../../shared/ui/Icon'
 
 type Props = {
-  active: 'content' | 'drafts' | 'settings' | 'ai'
+  active: 'content' | 'drafts' | 'settings' | 'ai' | 'password'
   username: string | null
   siteName: string
   avatarUrl: string | null
@@ -12,6 +12,7 @@ type Props = {
   onDrafts: () => void
   onSettings: () => void
   onAI: () => void
+  onChangePassword: () => void
   onSignOut: () => void
 }
 
@@ -120,6 +121,16 @@ export function ArticleSidebar(p: Props) {
               <strong>{p.username ?? '站主'}</strong>
               <small>当前登录账户</small>
             </div>
+            <button
+              className="account-logout"
+              onClick={() => {
+                setMenuOpen(false)
+                p.onChangePassword()
+              }}
+            >
+              <Icon name="settings" size={17} />
+              修改密码
+            </button>
             <button
               ref={logoutButton}
               className="account-logout"

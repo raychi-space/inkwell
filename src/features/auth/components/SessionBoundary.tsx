@@ -10,7 +10,7 @@ export function SessionBoundary({
 }: {
   children: (
     session: Session,
-    onSessionEnd: () => void,
+    onSessionEnd: (notice?: string) => void,
     checkSession: () => Promise<boolean>,
   ) => ReactNode
 }) {
@@ -25,14 +25,14 @@ export function SessionBoundary({
   const checking = useRef<Promise<boolean> | null>(null)
   sessionRef.current = session
 
-  const endSession = useCallback((expired = false) => {
+  const endSession = useCallback((expired = false, notice = '') => {
     revision.current++
     resetAuthSession()
     sessionRef.current = { authenticated: false, username: null }
     setSession(sessionRef.current)
     setPassword('')
     setBusy(false)
-    setNotice(expired ? '登录已失效，请重新登录。' : '')
+    setNotice(expired ? '登录已失效，请重新登录。' : notice)
   }, [])
 
   const checkSession = useCallback((): Promise<boolean> => {
@@ -122,5 +122,5 @@ export function SessionBoundary({
       />
     )
   // Unmounting this subtree also discards cached protected data and pending editor state.
-  return children(session, endSession, checkSession)
+  return children(session, (notice) => endSession(false, notice), checkSession)
 }
