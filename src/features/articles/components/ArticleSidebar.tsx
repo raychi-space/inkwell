@@ -39,13 +39,13 @@ export function ArticleSidebar(p: Props) {
     <div className="sidebar-brand">
       <button className="brand" onClick={p.collapsed ? p.onToggle : p.onContent} aria-label={p.collapsed ? '展开侧边栏' : '返回内容管理'} title={p.collapsed ? '展开侧边栏' : '返回内容管理'}>
         <span className="brand-mark">R</span>
-        {!p.collapsed && <span className="brand-name"><strong>{p.siteName || '墨池'}</strong><small>墨池 · 内容工作台</small></span>}
+        <span className="brand-name sidebar-label" aria-hidden={p.collapsed}><strong>{p.siteName || '墨池'}</strong><small>墨池 · 内容工作台</small></span>
       </button>
       {!p.collapsed && <button className="sidebar-collapse" onClick={p.onToggle} aria-label="收起侧边栏" title="收起侧边栏"><Icon name="collapse" size={17} /></button>}
     </div>
     <nav className="studio-nav" aria-label="管理导航">
       {entries.map(entry => <button key={entry.id} className={p.active === entry.id ? 'active' : ''} aria-label={entry.label} title={p.collapsed ? entry.label : undefined} aria-current={p.active === entry.id ? 'page' : undefined} onClick={entry.action}>
-        <Icon name={entry.icon} />{!p.collapsed && <span>{entry.label}</span>}
+        <Icon name={entry.icon} /><span className="sidebar-label" aria-hidden={p.collapsed}>{entry.label}</span>
       </button>)}
     </nav>
     <div className="sidebar-foot" ref={account} onKeyDown={event => {
@@ -53,7 +53,7 @@ export function ArticleSidebar(p: Props) {
     }}>
       <button className="account-trigger" ref={accountButton} onClick={() => setMenuOpen(v => !v)} aria-label={`${p.username ?? '站主'}，账户菜单`} aria-expanded={menuOpen} aria-controls="sidebar-account-menu" title={p.collapsed ? '账户菜单' : undefined}>
         <span className="account-avatar">{p.avatarUrl && !imageFailed ? <img src={p.avatarUrl} alt="" onError={() => setImageFailed(true)} /> : <Icon name="user" size={19} />}</span>
-        {!p.collapsed && <><span className="account-name"><strong>{p.username ?? '站主'}</strong><small>站主账户</small></span><Icon name="chevron" size={15} /></>}
+        <span className="account-name sidebar-label" aria-hidden={p.collapsed}><strong>{p.username ?? '站主'}</strong><small>站主账户</small></span><span className="sidebar-label" aria-hidden={p.collapsed}><Icon name="chevron" size={15} /></span>
       </button>
       {menuOpen && <div className="account-popover" id="sidebar-account-menu">
         <div className="account-popover-heading"><strong>{p.username ?? '站主'}</strong><small>当前登录账户</small></div>
