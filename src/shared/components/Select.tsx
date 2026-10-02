@@ -83,7 +83,7 @@ export function Select({ label, value, options, onChange, hint }: Props) {
     {open && <div ref={menuRef} id={`${id}-list`} className={`select-menu${opensUp ? ' up' : ''}`} role="listbox" aria-labelledby={`${id}-label`}>
       {options.map((option, index) => <div id={`${id}-option-${index}`} key={option.value} role="option"
         aria-selected={option.value === value} className={`select-option${index === activeIndex ? ' focused' : ''}`}
-        onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(index)}>
+        onMouseMove={() => setActiveIndex(index)} onClick={() => choose(index)}>
         <span className="select-value">{option.icon}<span>{option.label}</span></span>{option.value === value && <span aria-hidden="true">✓</span>}
       </div>)}
     </div>}
