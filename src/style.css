@@ -2906,3 +2906,24 @@ a {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.password-form {
+  max-width: 540px;
+  padding: 24px;
+}
+.password-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.password-form label {
+  display: grid;
+  gap: 8px;
+}
+.password-form input {
+  width: 100%;
+  min-width: 0;
+}
