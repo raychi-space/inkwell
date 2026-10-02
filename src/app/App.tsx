@@ -1,25 +1,18 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import type { MDXEditorMethods } from '@mdxeditor/editor'
-import { getSession, login, logout } from '../features/auth/api'
-import type { Session } from '../features/auth/types'
-import type { Article } from '../features/articles/types'
-import { listArticles, getArticle, createArticle, saveArticle, publishArticle, unpublishArticle } from '../features/articles/api'
-import { ArticleSidebar } from '../features/articles/components/ArticleSidebar'
-import { ContentDashboard } from '../features/articles/components/ContentDashboard'
-import { LoginScreen } from '../features/auth/LoginScreen'
-import { categories, tags, addCategory, addTag } from '../features/taxonomy/api'
-import { SettingsEditor } from '../features/settings/SettingsEditor'
-import { getSettings, type SiteSettings } from '../features/settings/api'
+import { getSession, login, logout, LoginScreen, type Session } from '../features/auth'
+import { listArticles, getArticle, createArticle, saveArticle, publishArticle, unpublishArticle, ArticleSidebar, ContentDashboard, RichEditor, type Article } from '../features/articles'
+import { categories, tags, addCategory, addTag } from '../features/taxonomy'
+import { SettingsEditor, getSettings, type SiteSettings } from '../features/settings'
 import { AgentSettings } from '../features/ai/AgentSettings'
 import { WritingAssistant } from '../features/ai/WritingAssistant'
 import { assistants as loadAssistants } from '../features/ai/api'
 import type { Assistant, EditorAgentAdapter } from '../features/ai/types'
-import { errorMessage } from '../shared/errors'
+import { errorMessage } from '../shared/lib/errors'
 import { ContentMetadata } from '../features/articles/components/ContentMetadata'
 import { useAutomaticSummary } from '../features/ai/useAutomaticSummary'
 
 const AgentEditorFixture = lazy(() => import('../features/articles/components/AgentEditorFixture').then(module => ({ default: module.AgentEditorFixture })))
-const RichEditor = lazy(() => import('../features/articles/components/RichEditor').then(module => ({ default: module.RichEditor })))
 const typeNames = { ARTICLE: '文章', POST: '帖子' }
 
 export default function App() {
