@@ -1,6 +1,5 @@
 import { api } from '../../shared/api/client'
-
-export type Name = { name: string }
+import type { Name } from './types'
 
 export const categories = () => api<Name[]>('/api/v1/public/categories')
 export const tags = () => api<Name[]>('/api/v1/public/tags')

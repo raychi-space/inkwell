@@ -1,4 +1,4 @@
-import { Icon } from '../../shared/components/Icon'
+import { Icon } from '../../shared/ui/Icon'
 import { providerBrand, type ProviderIdentity } from './providerBrand'
 
 const assets = import.meta.glob('./assets/providers/*.svg', { eager: true, query: '?url', import: 'default' }) as Record<string, string>

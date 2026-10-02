@@ -11,7 +11,7 @@ import { upload } from '../api'
 import type { Article } from '../types'
 import type { EditorAgentAdapter } from '../../ai/types'
 import { createEditorAgentAdapter } from './editorAgentAdapter'
-import { errorMessage } from '../../../shared/errors'
+import { errorMessage } from '../../../shared/lib/errors'
 
 export function RichEditor({ article, editorRef, onDirty, onPending, onError, onReady, agentRef, readOnly = false }: {
   article: Article
