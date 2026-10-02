@@ -6,15 +6,17 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "tsc -b && vite build",
+    "test:auth": "node --test tests/auth-session.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
     "@mdxeditor/editor": "4.3.0",
+    "lexical": "0.48.0",
+    "mdast-util-from-markdown": "2.0.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "simple-icons": "16.33.0",
-    "yjs": "13.6.33",
-    "lexical": "0.48.0"
+    "yjs": "13.6.33"
   },
   "devDependencies": {
     "@types/node": "26.6.3",

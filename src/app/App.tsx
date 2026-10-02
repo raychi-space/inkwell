@@ -1,6 +1,6 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { MDXEditorMethods } from '@mdxeditor/editor'
-import { getSession, login, logout, LoginScreen, type Session } from '../features/auth'
+import { logout, SessionBoundary, type Session } from '../features/auth'
 import { listArticles, getArticle, createArticle, saveArticle, publishArticle, unpublishArticle, ArticleSidebar, ContentDashboard, RichEditor, type Article } from '../features/articles'
 import { categories, tags, addCategory, addTag } from '../features/taxonomy'
 import { SettingsEditor, getSettings, type SiteSettings } from '../features/settings'
@@ -10,18 +10,19 @@ import { assistants as loadAssistants } from '../features/ai/api'
 import type { Assistant, EditorAgentAdapter } from '../features/ai/types'
 import { errorMessage } from '../shared/lib/errors'
 import { ContentMetadata } from '../features/articles/components/ContentMetadata'
-import { useAutomaticSummary } from '../features/ai/useAutomaticSummary'
+import { EditorTaxonomy } from '../features/articles/components/EditorTaxonomy'
+import { documentTitle } from '../features/articles/documentTitle'
+import { ApiError } from '../shared/api/client'
 
 const AgentEditorFixture = lazy(() => import('../features/articles/components/AgentEditorFixture').then(module => ({ default: module.AgentEditorFixture })))
 const typeNames = { ARTICLE: '文章', POST: '帖子' }
 
 export default function App() {
   if (import.meta.env.DEV && new URLSearchParams(location.search).has('editor-agent-fixture')) return <Suspense fallback={<p>加载中</p>}><AgentEditorFixture /></Suspense>
-  return <Studio />
+  return <SessionBoundary>{(session, onSessionEnd, checkSession) => <Studio key={session.username} session={session} onSessionEnd={onSessionEnd} checkSession={checkSession} />}</SessionBoundary>
 }
 
-function Studio() {
-  const [session, setSession] = useState<Session | null>(null)
+function Studio({ session, onSessionEnd, checkSession }: { session: Session; onSessionEnd: () => void; checkSession: () => Promise<boolean> }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [siteName, setSiteName] = useState('')
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
@@ -31,20 +32,16 @@ function Studio() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { const value = localStorage.getItem('raychi.sidebar.collapsed'); return value === null ? window.matchMedia('(max-width:680px)').matches : value === 'true' } catch { return false }
   })
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [articles, setArticles] = useState<Article[]>([])
   const [current, setCurrent] = useState<Article | null>(null)
   const [view, setView] = useState<'content' | 'drafts' | 'settings' | 'ai'>('content')
   const [title, setTitle] = useState('')
-  const [slug, setSlug] = useState('')
   const [summary, setSummary] = useState('')
   const [body, setBody] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [category, setCategory] = useState('未分类')
   const [categoryNames, setCategoryNames] = useState<string[]>([])
   const [tagNames, setTagNames] = useState<string[]>([])
-  const [newCategory, setNewCategory] = useState('')
   const [newTag, setNewTag] = useState('')
   const [coverUrl, setCoverUrl] = useState('')
   const [dirty, setDirty] = useState(false)
@@ -59,26 +56,53 @@ function Studio() {
   const agentRef = useRef<EditorAgentAdapter>(null)
   const previewHost = useRef<HTMLDivElement>(null)
   const editorRef = useRef<MDXEditorMethods>(null)
-  const [documentRevision, setDocumentRevision] = useState(0)
+  const [taxonomyBusy, setTaxonomyBusy] = useState(0)
+  const nameWrites = useRef(new Map<string, Promise<string>>())
   const [selectedAssistantId, setSelectedAssistantId] = useState('')
   const [availableAssistants, setAvailableAssistants] = useState<Assistant[]>([])
   const [assistantNotice, setAssistantNotice] = useState('')
-  const editorReady = useCallback(() => setDocumentRevision(v => v + 1), [])
-  const applySummary = useCallback((value: string) => { setSummary(value); setDirty(true) }, [])
-  const automaticSummary = useAutomaticSummary({
-    documentId: current?.type === 'ARTICLE' ? current.id : null, assistantId: availableAssistants.some(v => v.id === selectedAssistantId) ? selectedAssistantId : '', title, summary,
-    initialBody: current?.bodyMarkdown ?? '', revision: documentRevision, persisting: busy || pendingUploads > 0, isPersisting: () => saving.current || transfers.current > 0,
-    getMarkdown: () => editorRef.current?.getMarkdown() ?? null, onApply: applySummary,
-  })
-  const markDirty = useCallback(() => { setDirty(true); setDocumentRevision(v => v + 1) }, [])
+  const editorReady = useCallback(() => {
+    const markdown = editorRef.current?.getMarkdown()
+    if (markdown !== undefined) setTitle(value => documentTitle(markdown, value))
+  }, [])
+  const markDirty = useCallback(() => {
+    setDirty(true)
+    const markdown = editorRef.current?.getMarkdown()
+    if (markdown !== undefined) setTitle(documentTitle(markdown))
+  }, [])
+  const currentRef = useRef(current)
+  currentRef.current = current
+  // Poll persisted publication work only; typing, pausing and draft saving never create model tasks.
+  useEffect(() => {
+    if (!current || !['PENDING', 'RUNNING'].includes(current.summaryStatus ?? '') || busy) return
+    let active = true
+    let timer = 0
+    const id = current.id
+    async function poll() {
+      try {
+        const fresh = await getArticle(id)
+        const before = currentRef.current
+        if (!active || saving.current || before?.id !== id) return
+        // Only the server's summary update may advance the local version silently.
+        if (fresh.updatedAt !== before.updatedAt || fresh.publicUpdatedAt !== before.publicUpdatedAt) {
+          setNotice('内容已在其他位置更新，请重新打开后继续编辑。'); return
+        }
+        setCurrent(fresh)
+        setSummary(fresh.summary)
+        if (['PENDING', 'RUNNING'].includes(fresh.summaryStatus ?? '')) timer = window.setTimeout(() => void poll(), 1500)
+      } catch { if (active) timer = window.setTimeout(() => void poll(), 3000) }
+    }
+    timer = window.setTimeout(() => void poll(), 1000)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [current?.id, current?.summaryStatus, busy])
+  const summaryStatus = assistantNotice || ({
+    NONE: '发布后自动生成摘要', PENDING: '已发布，摘要等待生成', RUNNING: '正在生成已发布内容的摘要…',
+    SUCCEEDED: '摘要已自动生成并保存', FAILED: '摘要生成失败，原摘要已保留；再次发布可重试',
+    SKIPPED: '配置并启用助手后，发布时自动生成摘要', CANCELLED: '已撤回，摘要任务已取消',
+  }[current?.summaryStatus ?? 'NONE'])
   const changePending = useCallback((n: number) => { transfers.current = Math.max(0, transfers.current + n); setPendingUploads(transfers.current) }, [])
 
   useEffect(() => {
-    getSession().then(setSession).catch(error => setNotice(errorMessage(error)))
-  }, [])
-
-  useEffect(() => {
-    if (!session?.authenticated) return
     void refresh()
     void refreshTaxonomy()
     let active = true
@@ -138,19 +162,20 @@ function Studio() {
 
   function edit(article: Article) {
     setCurrent(article)
-    setTitle(article.title)
-    setSlug(article.slug.startsWith('draft-') ? '' : article.slug)
+    setTitle(documentTitle(article.bodyMarkdown, article.title))
     setSummary(article.summary)
     setBody(article.bodyMarkdown)
     setSelectedTags(article.tags)
     setCategory(article.category ?? '未分类')
     setCoverUrl(article.coverUrl ?? '')
+    setNewTag('')
     setDirty(false)
     setNotice('')
     setView(article.status === 'PUBLISHED' ? 'content' : 'drafts')
   }
 
   function canLeave() {
+    if (busy || taxonomyBusy > 0) { setNotice('请等待当前保存或分类标签操作完成。'); return false }
     if (pendingUploads > 0) { setNotice('请等待图片上传完成。'); return false }
     return !dirty || window.confirm('当前修改尚未保存，确定离开吗？')
   }
@@ -172,14 +197,41 @@ function Studio() {
     finally { setBusy(false) }
   }
 
-  async function addName(kind: 'category' | 'tag') {
-    const name = (kind === 'category' ? newCategory : newTag).trim()
-    if (!name) return
+  function resolveName(kind: 'category' | 'tag', raw: string): Promise<string> {
+    const name = raw.trim()
+    if (!name) return Promise.resolve(kind === 'category' ? '未分类' : '')
+    const names = kind === 'category' ? categoryNames : tagNames
+    const existing = names.find(value => value === name)
+    if (existing) return Promise.resolve(existing)
+    const key = kind + ':' + name
+    const pending = nameWrites.current.get(key)
+    if (pending) return pending
+    setTaxonomyBusy(value => value + 1)
+    const work = (async () => {
+      let actual: string
+      try { actual = (await (kind === 'category' ? addCategory(name) : addTag(name))).name }
+      catch (error) {
+        if (!(error instanceof ApiError) || error.code !== 'NAME_CONFLICT') throw error
+        const all = await (kind === 'category' ? categories() : tags())
+        const normalized = (value: string) => kind === 'category' ? value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase() : value
+        const matched = all.find(item => normalized(item.name) === normalized(name))
+        if (!matched) throw error
+        actual = matched.name
+      }
+      if (kind === 'category') setCategoryNames(values => [...new Set([...values, actual])].sort())
+      else setTagNames(values => [...new Set([...values, actual])].sort())
+      return actual
+    })().finally(() => { nameWrites.current.delete(key); setTaxonomyBusy(value => value - 1) })
+    nameWrites.current.set(key, work)
+    return work
+  }
+
+  async function commitName(kind: 'category' | 'tag', value: string) {
     try {
-      if (kind === 'category') { await addCategory(name); setCategory(name); setNewCategory('') }
-      else { await addTag(name); setSelectedTags([...selectedTags, name]); setNewTag('') }
+      const actual = await resolveName(kind, value)
+      if (kind === 'category') setCategory(actual)
+      else { setSelectedTags(values => [...new Set([...values, actual])]); setNewTag('') }
       setDirty(true)
-      await refreshTaxonomy()
     } catch (error) { setNotice(errorMessage(error)) }
   }
 
@@ -193,14 +245,31 @@ function Studio() {
     saving.current = true
     setBusy(true)
     try {
-      const saved = await saveArticle(current.id, {
-        version: current.version, title, slug: slug || current.slug,
+      const resolvedCategory = current.type === 'ARTICLE' ? await resolveName('category', category) : null
+      const pendingTag = newTag.trim() ? await resolveName('tag', newTag) : ''
+      const resolvedTags = [...new Set([...selectedTags, ...(pendingTag ? [pendingTag] : [])])]
+      const input = {
+        version: current.version, title: current.type === 'ARTICLE' ? documentTitle(markdown, documentTitle(current.bodyMarkdown) ? '' : current.title) : title, slug: current.slug,
         summary, bodyMarkdown: markdown,
-        tags: selectedTags,
-        category: current.type === 'POST' ? null : category,
+        tags: resolvedTags,
+        category: resolvedCategory,
         coverUrl: current.type === 'ARTICLE' ? coverUrl || null : null,
-      })
+      }
+      let saved: Article
+      try { saved = await saveArticle(current.id, input) }
+      catch (error) {
+        if (!(error instanceof ApiError) || error.code !== 'ARTICLE_VERSION_CONFLICT') throw error
+        const fresh = await getArticle(current.id)
+        if (fresh.updatedAt !== current.updatedAt || fresh.publicUpdatedAt !== current.publicUpdatedAt) throw error
+        // A background summary completed during saving; preserve it and retry only this version change.
+        saved = await saveArticle(current.id, { ...input, version: fresh.version, summary: fresh.summary })
+      }
       setCurrent(saved)
+      setTitle(saved.title)
+      setSummary(saved.summary)
+      setCategory(saved.category ?? '未分类')
+      setSelectedTags(saved.tags)
+      setNewTag('')
       setDirty(false)
       setNotice('工作稿已保存，公开内容未改变。')
       await refresh()
@@ -214,10 +283,10 @@ function Studio() {
     if (!saved) return
     setBusy(true)
     try {
-      const published = await publishArticle(saved.id, saved.version)
+      const published = await publishArticle(saved.id, saved.version, current?.type === 'ARTICLE' ? selectedAssistantId : undefined)
       setCurrent(published)
       setView('content')
-      setNotice('文章已发布，访客现在可以阅读。')
+      setNotice(current?.type === 'ARTICLE' ? '文章已发布，摘要将在后台自动生成。' : '帖子已发布，访客现在可以阅读。')
       await refresh()
     } catch (error) { setNotice(errorMessage(error)) }
     finally { setBusy(false) }
@@ -238,66 +307,59 @@ function Studio() {
     finally { setBusy(false) }
   }
 
-  async function signIn(event: FormEvent) {
-    event.preventDefault()
-    setBusy(true)
-    try { setSession(await login(username, password)); setPassword(''); setNotice('') }
-    catch (error) { setNotice(errorMessage(error)) }
-    finally { setBusy(false) }
-  }
-
   async function signOut() {
     if (!canLeave()) return
-    try { await logout(); setSession({ authenticated: false, username: null }); setCurrent(null); setSiteSettings(null); setAvatarUrl(null); setSiteName('') }
+    try { await logout(); onSessionEnd() }
     catch (error) { setNotice(errorMessage(error)) }
   }
 
-  function showSection(section: 'content' | 'drafts') {
-    if (!canLeave()) return
+  async function showSection(section: 'content' | 'drafts') {
+    if (!await checkSession() || !canLeave()) return
     setCurrent(null)
     setDirty(false)
     setView(section)
     setNotice('')
   }
 
-  function showSettings() {
-    if (!canLeave()) return
+  async function showSettings() {
+    if (!await checkSession() || !canLeave()) return
     setCurrent(null)
     setDirty(false)
     setView('settings')
     setNotice('')
   }
 
-  if (session === null || !session.authenticated) return <LoginScreen username={username} password={password}
-    busy={busy} notice={notice} onUsername={setUsername} onPassword={setPassword} onSubmit={signIn} />
+  async function showAssistants() {
+    if (!await checkSession() || !canLeave()) return
+    setCurrent(null); setDirty(false); setView('ai'); setNotice('')
+  }
 
   return <div className={'shell' + (sidebarCollapsed ? ' sidebar-collapsed' : '')}>
     {!sidebarCollapsed && <button className="sidebar-backdrop" aria-label="收起侧边栏遮罩" onClick={toggleSidebar} />}
     <ArticleSidebar active={view} username={session.username} siteName={siteName} avatarUrl={avatarUrl} collapsed={sidebarCollapsed} onToggle={toggleSidebar}
       onContent={() => showSection('content')} onDrafts={() => showSection('drafts')}
-      onAI={() => { if (canLeave()) { setCurrent(null); setDirty(false); setView('ai'); setNotice('') } }} onSettings={showSettings} onSignOut={() => void signOut()} />
+      onAI={() => void showAssistants()} onSettings={() => void showSettings()} onSignOut={() => void signOut()} />
     {view === 'ai' ? <AgentSettings /> : view === 'settings' ? <SettingsEditor initialValue={siteSettings} onLoaded={rememberSettings} onSaved={rememberSettings} /> : current ? <main className="workspace studio-page editor-workspace">
         <header className="studio-head editor-head">
           <div><button className="back-link" onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}>← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}</button><p className="eyebrow">{current.status === 'PUBLISHED' ? '已发布' : '私人草稿'} · {typeNames[current.type]}{dirty ? ' · 尚未保存' : ''}</p>
-            <h1>写{current.type === 'ARTICLE' ? '文章' : '帖子'}</h1></div>
+            <h1 title={title}>{current.type === 'ARTICLE' ? title || '写文章' : '写帖子'}</h1></div>
           <div className="actions">
-            {current.type === 'ARTICLE' && <button disabled={agentBusy || agentLocked} onClick={() => setAssistantOpen(v => !v)}>{assistantOpen ? '收起助手' : '写作助手'}</button>}
-            <button onClick={() => void save()} disabled={busy || pendingUploads > 0 || agentLocked || agentBusy}>保存</button>
-            <button className="primary" onClick={() => void publish()} disabled={busy || pendingUploads > 0 || agentLocked || agentBusy}>{current.status === 'PUBLISHED' ? '发布更新' : '发布'}</button>
+            {current.type === 'ARTICLE' && <button aria-expanded={assistantOpen} aria-controls="writing-conversation" disabled={agentBusy || agentLocked} onClick={() => setAssistantOpen(v => !v)}>{assistantOpen ? '收起助手' : '写作助手'}</button>}
+            <button onClick={() => void save()} disabled={busy || taxonomyBusy > 0 || pendingUploads > 0 || agentLocked || agentBusy}>保存</button>
+            <button className="primary" onClick={() => void publish()} disabled={busy || taxonomyBusy > 0 || pendingUploads > 0 || agentLocked || agentBusy}>{current.status === 'PUBLISHED' ? '发布更新' : '发布'}</button>
             {current.status === 'PUBLISHED' && <button onClick={() => void unpublish()} disabled={busy || agentLocked || agentBusy}>撤回</button>}
           </div>
         </header>
-        <section className={"studio-grid editor-page" + (current.type !== 'ARTICLE' || !assistantOpen ? ' without-conversation' : '')}>
+        <section className={"studio-grid editor-page" + (current.type !== 'ARTICLE' ? ' without-conversation' : !assistantOpen ? ' conversation-collapsed' : '')}>
           <div className="editor-content-column">
-            <ContentMetadata article={current} title={title} slug={slug} summary={summary} coverUrl={coverUrl} category={category}
-              categoryNames={categoryNames} tagNames={tagNames} selectedTags={selectedTags} newCategory={newCategory} newTag={newTag}
-              summaryStatus={assistantNotice || automaticSummary.status} manualSummary={automaticSummary.paused}
-              onTitle={value => { setTitle(value); setDirty(true) }} onSlug={value => { setSlug(value); setDirty(true) }}
-              onSummary={value => { automaticSummary.pause(); setSummary(value); setDirty(true) }} onCover={value => { setCoverUrl(value); setDirty(true) }}
-              onCategory={value => { setCategory(value); setDirty(true) }} onTags={value => { setSelectedTags(value); setDirty(true) }}
-              onNewCategory={setNewCategory} onNewTag={setNewTag} onAddCategory={() => void addName('category')} onAddTag={() => void addName('tag')} onResumeSummary={automaticSummary.resume} />
+            <ContentMetadata article={current} summary={summary} summaryStatus={summaryStatus} />
           <div className="dashboard-card editor-main">
             <div className="card-head editor-label"><div><p className="eyebrow">WRITING SPACE</p><h2>正文</h2></div><span>{current.type === 'ARTICLE' ? '直接编辑排版后的内容 · 粘贴图片会自动上传' : 'Markdown 文字内容 · 不支持图片'}</span></div>
+            <EditorTaxonomy article={current.type === 'ARTICLE'} category={category} categoryNames={categoryNames} tags={selectedTags}
+              tagNames={tagNames} tagInput={newTag} busy={busy || taxonomyBusy > 0 || agentLocked}
+              onCategory={value => { setCategory(value); setDirty(true) }} onCategoryCommit={value => commitName('category', value)}
+              onTagInput={value => { setNewTag(value); setDirty(true) }} onTagCommit={value => commitName('tag', value)}
+              onRemoveTag={value => { setSelectedTags(values => values.filter(tag => tag !== value)); setDirty(true) }} />
             <div className="editor-writing-area" ref={previewHost}>
             {current.type === 'ARTICLE' ? <div className="editor-surface">
               <Suspense fallback={<p className="upload-state">正在加载编辑器…</p>}>
@@ -310,7 +372,9 @@ function Studio() {
             </div>
           </div>
           </div>
-          {current.type === 'ARTICLE' && assistantOpen && <WritingAssistant key={current.id} adapterRef={agentRef} previewHost={previewHost} title={title} available={availableAssistants} assistantId={availableAssistants.some(v => v.id === selectedAssistantId) ? selectedAssistantId : ''} onAssistantChange={setSelectedAssistantId} onLock={setAgentLocked} onBusy={setAgentBusy} />}
+          {current.type === 'ARTICLE' && <div id="writing-conversation" className="conversation-panel" inert={!assistantOpen} aria-hidden={!assistantOpen}>
+            <WritingAssistant key={current.id} adapterRef={agentRef} previewHost={previewHost} title={title} available={availableAssistants} assistantId={availableAssistants.some(v => v.id === selectedAssistantId) ? selectedAssistantId : ''} onAssistantChange={setSelectedAssistantId} onLock={setAgentLocked} onBusy={setAgentBusy} />
+          </div>}
         </section>
     </main> : <ContentDashboard key={view} mode={view === 'drafts' ? 'drafts' : 'published'}
       articles={articles} categories={categoryNames} tags={tagNames} busy={busy} notice={notice}
