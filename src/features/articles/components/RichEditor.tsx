@@ -1,4 +1,4 @@
-import { useMemo, type RefObject } from 'react'
+import { useEffect, useMemo, type RefObject } from 'react'
 import {
   MDXEditor, type MDXEditorMethods,
   headingsPlugin, listsPlugin, quotePlugin, thematicBreakPlugin,
@@ -13,17 +13,19 @@ import type { EditorAgentAdapter } from '../../ai/types'
 import { createEditorAgentAdapter } from './editorAgentAdapter'
 import { errorMessage } from '../../../shared/errors'
 
-export function RichEditor({ article, editorRef, onDirty, onPending, onError, agentRef, readOnly = false }: {
+export function RichEditor({ article, editorRef, onDirty, onPending, onError, onReady, agentRef, readOnly = false }: {
   article: Article
   agentRef?: RefObject<EditorAgentAdapter | null>
   readOnly?: boolean
   editorRef: RefObject<MDXEditorMethods | null>
+  onReady?: () => void
   onDirty: () => void
   onPending: (change: number) => void
   onError: (message: string) => void
 }) {
   const agent = useMemo(() => createEditorAgentAdapter(() => editorRef.current), [article.id, editorRef])
   if (agentRef) agentRef.current = agent.adapter
+  useEffect(() => { onReady?.() }, [article.id, onReady])
   const plugins = useMemo(() => [
     agent.plugin(), headingsPlugin(), listsPlugin(), quotePlugin(), thematicBreakPlugin(),
     linkPlugin(), linkDialogPlugin(), tablePlugin(),

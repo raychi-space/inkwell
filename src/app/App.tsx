@@ -9,11 +9,14 @@ import { ContentDashboard } from '../features/articles/components/ContentDashboa
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { categories, tags, addCategory, addTag } from '../features/taxonomy/api'
 import { SettingsEditor } from '../features/settings/SettingsEditor'
+import { getSettings, type SiteSettings } from '../features/settings/api'
 import { AgentSettings } from '../features/ai/AgentSettings'
 import { WritingAssistant } from '../features/ai/WritingAssistant'
-import type { EditorAgentAdapter } from '../features/ai/types'
+import { assistants as loadAssistants } from '../features/ai/api'
+import type { Assistant, EditorAgentAdapter } from '../features/ai/types'
 import { errorMessage } from '../shared/errors'
-import { Select } from '../shared/components/Select'
+import { ContentMetadata } from '../features/articles/components/ContentMetadata'
+import { useAutomaticSummary } from '../features/ai/useAutomaticSummary'
 
 const AgentEditorFixture = lazy(() => import('../features/articles/components/AgentEditorFixture').then(module => ({ default: module.AgentEditorFixture })))
 const RichEditor = lazy(() => import('../features/articles/components/RichEditor').then(module => ({ default: module.RichEditor })))
@@ -26,6 +29,15 @@ export default function App() {
 
 function Studio() {
   const [session, setSession] = useState<Session | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [siteName, setSiteName] = useState('')
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
+  const rememberSettings = useCallback((value: SiteSettings) => {
+    setSiteSettings(value); setAvatarUrl(value.avatarUrl); setSiteName(value.siteName)
+  }, [])
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { const value = localStorage.getItem('raychi.sidebar.collapsed'); return value === null ? window.matchMedia('(max-width:680px)').matches : value === 'true' } catch { return false }
+  })
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [articles, setArticles] = useState<Article[]>([])
@@ -44,7 +56,9 @@ function Studio() {
   const [coverUrl, setCoverUrl] = useState('')
   const [dirty, setDirty] = useState(false)
   const [pendingUploads, setPendingUploads] = useState(0)
+  const transfers = useRef(0)
   const [busy, setBusy] = useState(false)
+  const saving = useRef(false)
   const [notice, setNotice] = useState('')
   const [assistantOpen, setAssistantOpen] = useState(true)
   const [agentLocked, setAgentLocked] = useState(false)
@@ -52,9 +66,19 @@ function Studio() {
   const agentRef = useRef<EditorAgentAdapter>(null)
   const previewHost = useRef<HTMLDivElement>(null)
   const editorRef = useRef<MDXEditorMethods>(null)
-  const [, setDocumentRevision] = useState(0)
+  const [documentRevision, setDocumentRevision] = useState(0)
+  const [selectedAssistantId, setSelectedAssistantId] = useState('')
+  const [availableAssistants, setAvailableAssistants] = useState<Assistant[]>([])
+  const [assistantNotice, setAssistantNotice] = useState('')
+  const editorReady = useCallback(() => setDocumentRevision(v => v + 1), [])
+  const applySummary = useCallback((value: string) => { setSummary(value); setDirty(true) }, [])
+  const automaticSummary = useAutomaticSummary({
+    documentId: current?.type === 'ARTICLE' ? current.id : null, assistantId: availableAssistants.some(v => v.id === selectedAssistantId) ? selectedAssistantId : '', title, summary,
+    initialBody: current?.bodyMarkdown ?? '', revision: documentRevision, persisting: busy || pendingUploads > 0, isPersisting: () => saving.current || transfers.current > 0,
+    getMarkdown: () => editorRef.current?.getMarkdown() ?? null, onApply: applySummary,
+  })
   const markDirty = useCallback(() => { setDirty(true); setDocumentRevision(v => v + 1) }, [])
-  const changePending = useCallback((n: number) => setPendingUploads(v => Math.max(0, v + n)), [])
+  const changePending = useCallback((n: number) => { transfers.current = Math.max(0, transfers.current + n); setPendingUploads(transfers.current) }, [])
 
   useEffect(() => {
     getSession().then(setSession).catch(error => setNotice(errorMessage(error)))
@@ -64,7 +88,31 @@ function Studio() {
     if (!session?.authenticated) return
     void refresh()
     void refreshTaxonomy()
-  }, [session?.authenticated])
+    let active = true
+    void getSettings().then(value => { if (active) rememberSettings(value) }).catch(() => { if (active) setAvatarUrl(null) })
+    return () => { active = false }
+  }, [session?.authenticated, rememberSettings])
+
+  function toggleSidebar() {
+    setSidebarCollapsed(value => {
+      try { localStorage.setItem('raychi.sidebar.collapsed', String(!value)) } catch { /* Session-only preference when storage is unavailable. */ }
+      return !value
+    })
+  }
+
+  useEffect(() => {
+    if (current?.type !== 'ARTICLE') return
+    let active = true
+    setAvailableAssistants([])
+    setAssistantNotice('')
+    void loadAssistants().then(items => {
+      if (!active) return
+      const enabled = items.filter(item => item.enabled)
+      setAvailableAssistants(enabled)
+      setSelectedAssistantId(id => enabled.some(item => item.id === id) ? id : enabled[0]?.id ?? '')
+    }).catch(error => { if (active) { setSelectedAssistantId(''); setAssistantNotice(errorMessage(error)) } })
+    return () => { active = false }
+  }, [current?.id])
 
   useEffect(() => {
     const leave = (event: BeforeUnloadEvent) => {
@@ -149,6 +197,7 @@ function Studio() {
     if (current.type !== 'ARTICLE' && /!\[[^\]]*\]\s*\(|<\s*img\b/i.test(markdown)) {
       setNotice('帖子和思考不支持图片，请删除图片引用后再保存。'); return null
     }
+    saving.current = true
     setBusy(true)
     try {
       const saved = await saveArticle(current.id, {
@@ -164,7 +213,7 @@ function Studio() {
       await refresh()
       return saved
     } catch (error) { setNotice(errorMessage(error)); return null }
-    finally { setBusy(false) }
+    finally { saving.current = false; setBusy(false) }
   }
 
   async function publish() {
@@ -206,7 +255,7 @@ function Studio() {
 
   async function signOut() {
     if (!canLeave()) return
-    try { await logout(); setSession({ authenticated: false, username: null }); setCurrent(null) }
+    try { await logout(); setSession({ authenticated: false, username: null }); setCurrent(null); setSiteSettings(null); setAvatarUrl(null); setSiteName('') }
     catch (error) { setNotice(errorMessage(error)) }
   }
 
@@ -229,11 +278,12 @@ function Studio() {
   if (session === null || !session.authenticated) return <LoginScreen username={username} password={password}
     busy={busy} notice={notice} onUsername={setUsername} onPassword={setPassword} onSubmit={signIn} />
 
-  return <div className="shell">
-    <ArticleSidebar active={view} username={session.username}
+  return <div className={'shell' + (sidebarCollapsed ? ' sidebar-collapsed' : '')}>
+    {!sidebarCollapsed && <button className="sidebar-backdrop" aria-label="收起侧边栏遮罩" onClick={toggleSidebar} />}
+    <ArticleSidebar active={view} username={session.username} siteName={siteName} avatarUrl={avatarUrl} collapsed={sidebarCollapsed} onToggle={toggleSidebar}
       onContent={() => showSection('content')} onDrafts={() => showSection('drafts')}
       onAI={() => { if (canLeave()) { setCurrent(null); setDirty(false); setView('ai'); setNotice('') } }} onSettings={showSettings} onSignOut={() => void signOut()} />
-    {view === 'ai' ? <AgentSettings /> : view === 'settings' ? <SettingsEditor onBack={() => showSection('content')} /> : current ? <main className="workspace studio-page editor-workspace">
+    {view === 'ai' ? <AgentSettings /> : view === 'settings' ? <SettingsEditor initialValue={siteSettings} onLoaded={rememberSettings} onSaved={rememberSettings} /> : current ? <main className="workspace studio-page editor-workspace">
         <header className="studio-head editor-head">
           <div><button className="back-link" onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}>← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}</button><p className="eyebrow">{current.status === 'PUBLISHED' ? '已发布' : '私人草稿'} · {typeNames[current.type]}{dirty ? ' · 尚未保存' : ''}</p>
             <h1>写{current.type === 'ARTICLE' ? '文章' : '帖子'}</h1></div>
@@ -244,40 +294,30 @@ function Studio() {
             {current.status === 'PUBLISHED' && <button onClick={() => void unpublish()} disabled={busy || agentLocked || agentBusy}>撤回</button>}
           </div>
         </header>
-        <section className="studio-grid editor-page">
+        <section className={"studio-grid editor-page" + (current.type !== 'ARTICLE' || !assistantOpen ? ' without-conversation' : '')}>
+          <div className="editor-content-column">
+            <ContentMetadata article={current} title={title} slug={slug} summary={summary} coverUrl={coverUrl} category={category}
+              categoryNames={categoryNames} tagNames={tagNames} selectedTags={selectedTags} newCategory={newCategory} newTag={newTag}
+              summaryStatus={assistantNotice || automaticSummary.status} manualSummary={automaticSummary.paused}
+              onTitle={value => { setTitle(value); setDirty(true) }} onSlug={value => { setSlug(value); setDirty(true) }}
+              onSummary={value => { automaticSummary.pause(); setSummary(value); setDirty(true) }} onCover={value => { setCoverUrl(value); setDirty(true) }}
+              onCategory={value => { setCategory(value); setDirty(true) }} onTags={value => { setSelectedTags(value); setDirty(true) }}
+              onNewCategory={setNewCategory} onNewTag={setNewTag} onAddCategory={() => void addName('category')} onAddTag={() => void addName('tag')} onResumeSummary={automaticSummary.resume} />
           <div className="dashboard-card editor-main">
             <div className="card-head editor-label"><div><p className="eyebrow">WRITING SPACE</p><h2>正文</h2></div><span>{current.type === 'ARTICLE' ? '直接编辑排版后的内容 · 粘贴图片会自动上传' : 'Markdown 文字内容 · 不支持图片'}</span></div>
             <div className="editor-writing-area" ref={previewHost}>
             {current.type === 'ARTICLE' ? <div className="editor-surface">
               <Suspense fallback={<p className="upload-state">正在加载编辑器…</p>}>
                 <RichEditor key={current.id} article={current} editorRef={editorRef}
-                  agentRef={agentRef} readOnly={agentLocked} onDirty={markDirty} onPending={changePending} onError={setNotice} />
+                  agentRef={agentRef} readOnly={agentLocked} onReady={editorReady} onDirty={markDirty} onPending={changePending} onError={setNotice} />
               </Suspense>
             </div> : <textarea className="markdown-editor" aria-label="正文 Markdown" rows={18} value={body} onChange={e => { setBody(e.target.value); setDirty(true) }} placeholder="从这里开始写…" />}
             {pendingUploads > 0 && <p className="upload-state" role="status">正在上传 {pendingUploads} 张图片…</p>}
             {notice && <p className="notice" role="status">{notice}</p>}
             </div>
           </div>
-          <div className="editor-side">
-          {current.type === 'ARTICLE' && assistantOpen && <WritingAssistant key={current.id} adapterRef={agentRef} previewHost={previewHost} title={title} summary={summary} onSummary={value => { setSummary(value); setDirty(true) }} onLock={setAgentLocked} onBusy={setAgentBusy} canSummarize={true} />}
-          <aside className="dashboard-card metadata-panel" aria-label="内容信息">
-            <p className="eyebrow">DETAILS</p><h2>内容信息</h2>
-            <div className="fields">
-              <label>标题{current.type !== 'ARTICLE' && '（可选）'}<input value={title} onChange={e => { setTitle(e.target.value); setDirty(true) }} placeholder={current.type === 'ARTICLE' ? '给文章一个标题' : '可以留空'} /></label>
-              {current.type === 'ARTICLE' && <><label>地址别名<input value={slug} onChange={e => { setSlug(e.target.value); setDirty(true) }} disabled={!!current.publishedAt} placeholder="例如 my-first-article" /></label>
-                <label>摘要<textarea value={summary} onChange={e => { setSummary(e.target.value); setDirty(true) }} rows={3} placeholder="简要介绍这篇内容" /></label>
-                <label>封面地址（可选）<input value={coverUrl} onChange={e => { setCoverUrl(e.target.value); setDirty(true) }} placeholder="图片地址" /></label></>}
-              {current.type !== 'POST' && <Select label="分类" value={category}
-                onChange={value => { setCategory(value); setDirty(true) }}
-                options={[...new Set(['未分类', ...categoryNames])].map(name => ({ value: name, label: name }))}
-                hint="未选择时使用“未分类”" />}
-            </div>
-            {current.type !== 'POST' && <div className="taxonomy-add"><input aria-label="新分类名称" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="新分类名称" /><button onClick={() => void addName('category')}>添加</button></div>}
-            <div className="taxonomy-options"><strong>标签</strong>{tagNames.map(name => <label key={name}><input type="checkbox" checked={selectedTags.includes(name)} onChange={e => { setSelectedTags(e.target.checked ? [...selectedTags, name] : selectedTags.filter(tag => tag !== name)); setDirty(true) }} />{name}</label>)}
-              <div className="taxonomy-add"><input aria-label="新标签名称" value={newTag} onChange={e => setNewTag(e.target.value)} placeholder="新标签名称" /><button onClick={() => void addName('tag')}>添加</button></div></div>
-            <div className="metadata-note">保存会更新工作稿；发布后访客才能看到最新内容。</div>
-          </aside>
           </div>
+          {current.type === 'ARTICLE' && assistantOpen && <WritingAssistant key={current.id} adapterRef={agentRef} previewHost={previewHost} title={title} available={availableAssistants} assistantId={availableAssistants.some(v => v.id === selectedAssistantId) ? selectedAssistantId : ''} onAssistantChange={setSelectedAssistantId} onLock={setAgentLocked} onBusy={setAgentBusy} />}
         </section>
     </main> : <ContentDashboard key={view} mode={view === 'drafts' ? 'drafts' : 'published'}
       articles={articles} categories={categoryNames} tags={tagNames} busy={busy} notice={notice}

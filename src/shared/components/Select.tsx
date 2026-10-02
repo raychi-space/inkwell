@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
-export type SelectOption = { value: string; label: string }
+export type SelectOption = { value: string; label: string; icon?: ReactNode }
 
 type Props = {
   label: string
@@ -78,13 +78,13 @@ export function Select({ label, value, options, onChange, hint }: Props) {
       aria-expanded={open} aria-haspopup="listbox"
       aria-activedescendant={open ? `${id}-option-${activeIndex}` : undefined}
       onClick={() => open ? setOpen(false) : openMenu()} onKeyDown={onKeyDown}>
-      <span>{selected?.label ?? '请选择'}</span><span className="select-chevron" aria-hidden="true" />
+      <span className="select-value">{selected?.icon}<span>{selected?.label ?? '请选择'}</span></span><span className="select-chevron" aria-hidden="true" />
     </button>
     {open && <div ref={menuRef} id={`${id}-list`} className={`select-menu${opensUp ? ' up' : ''}`} role="listbox" aria-labelledby={`${id}-label`}>
       {options.map((option, index) => <div id={`${id}-option-${index}`} key={option.value} role="option"
         aria-selected={option.value === value} className={`select-option${index === activeIndex ? ' focused' : ''}`}
-        onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(index)}>
-        <span>{option.label}</span>{option.value === value && <span aria-hidden="true">✓</span>}
+        onMouseMove={() => setActiveIndex(index)} onClick={() => choose(index)}>
+        <span className="select-value">{option.icon}<span>{option.label}</span></span>{option.value === value && <span aria-hidden="true">✓</span>}
       </div>)}
     </div>}
     {hint && <small className="select-hint">{hint}</small>}
