@@ -4,7 +4,7 @@ import type { Article, Page, Uploaded } from './types'
 type ArticleInput = Pick<
   Article,
   'version' | 'title' | 'slug' | 'summary' | 'bodyMarkdown' | 'tags' | 'coverUrl' | 'category'
->
+> & { publicationMetadata?: boolean }
 
 export type AdminFilters = {
   status?: string
@@ -35,10 +35,15 @@ export async function publishArticle(
   id: string,
   expectedVersion: number,
   assistantId?: string,
+  metadataReviewed = false,
 ): Promise<Article> {
   return api(`/api/v1/admin/contents/${id}/publish`, {
     method: 'POST',
-    body: JSON.stringify({ expectedVersion, ...(assistantId ? { assistantId } : {}) }),
+    body: JSON.stringify({
+      expectedVersion,
+      metadataReviewed,
+      ...(assistantId ? { assistantId } : {}),
+    }),
   })
 }
 
