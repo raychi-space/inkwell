@@ -47,28 +47,13 @@ export function EditorTaxonomy({
           names={tagNames}
           selected={tags}
           maxLength={40}
-          disabled={busy || tags.length >= 20}
+          disabled={busy}
+          limitReached={tags.length >= 20}
           onChange={onTagInput}
           onCommit={onTagCommit}
+          onRemove={onRemoveTag}
         />
       </div>
-      {tags.length > 0 && (
-        <div className="selected-tags" aria-label="已选标签">
-          {tags.map((tag) => (
-            <span key={tag}>
-              {tag}
-              <button
-                type="button"
-                aria-label={'移除标签 ' + tag}
-                disabled={busy}
-                onClick={() => onRemoveTag(tag)}
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
     </section>
   )
 }

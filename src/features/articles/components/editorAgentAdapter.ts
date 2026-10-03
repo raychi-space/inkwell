@@ -45,6 +45,13 @@ export function createEditorAgentAdapter(methods: () => MDXEditorMethods | null)
   }
   const adapter: EditorAgentAdapter = {
     getCurrentMarkdown: () => methods()?.getMarkdown() ?? '',
+    applyDocument(before, markdown) {
+      const current = methods()
+      if (!current || current.getMarkdown() !== before)
+        throw new Error('正文已变化，请重新生成修改建议。')
+      current.setMarkdown(markdown)
+      targets.clear()
+    },
     captureSelection() {
       if (!editor?.getRootElement()?.isConnected) return null
       let captured: SelectionSnapshot | null = null

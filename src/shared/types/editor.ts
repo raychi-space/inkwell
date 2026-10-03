@@ -7,6 +7,7 @@ export interface SelectionSnapshot {
 export interface EditorAgentAdapter {
   captureSelection(): SelectionSnapshot | null
   getCurrentMarkdown(): string
+  applyDocument(before: string, markdown: string): void
   validateSelection(selectionId: string): boolean
   applyReplacement(selectionId: string, markdown: string): void
   releaseSelection(selectionId: string): void

@@ -5,14 +5,13 @@ import { errorMessage } from '../../shared/lib/errors'
 
 export function useAdminContents(page: number, filters: AdminFilters) {
   const [result, setResult] = useState<Page<Article> | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const { status, type, category, tag, sort } = filters
   useEffect(() => {
     let active = true
     setLoading(true)
     setError('')
-    setResult(null)
     void listArticles(page, { status, type, category, tag, sort })
       .then((value) => {
         if (active) setResult(value)

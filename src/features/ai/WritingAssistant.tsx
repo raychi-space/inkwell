@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
-import { createTurn, getTurn } from './api'
+import { createTurn, streamTurn } from './api'
 import type {
   Assistant,
   EditorAgentAdapter,
@@ -13,6 +13,8 @@ import { AssistantAvatar } from './AssistantAvatar'
 import { Select } from '../../shared/ui/Select'
 import { errorMessage } from '../../shared/lib/errors'
 interface Props {
+  username?: string
+  userAvatar?: string | null
   adapterRef: RefObject<EditorAgentAdapter | null>
   previewHost: RefObject<HTMLDivElement | null>
   title: string
@@ -23,11 +25,15 @@ interface Props {
   onBusy: (value: boolean) => void
 }
 interface Entry {
+  requestId?: string
+  name?: string
   icon?: string
   role: 'user' | 'assistant'
   content: string
 }
 export function WritingAssistant({
+  username = '你',
+  userAvatar,
   adapterRef,
   previewHost,
   title,
@@ -46,6 +52,8 @@ export function WritingAssistant({
     [retry, setRetry] = useState<TurnRequest | null>(null)
   const [previewTop, setPreviewTop] = useState(0)
   const [expanded, setExpanded] = useState(false)
+  const streamAbort = useRef<AbortController | null>(null)
+  const documentTarget = useRef<{ id: string; before: string } | null>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
   const mounted = useRef(true),
     flight = useRef(false),
@@ -59,6 +67,7 @@ export function WritingAssistant({
   useEffect(() => {
     mounted.current = true
     return () => {
+      streamAbort.current?.abort()
       mounted.current = false
       epoch.current++
       callbacks.current.onLock(false)
@@ -176,37 +185,52 @@ export function WritingAssistant({
         { role: 'user', content: request.message },
       ])
     try {
-      const created = await createTurn(request)
-      let task = await getTurn(created.turnId)
-      while (task.status === 'pending' || task.status === 'running') {
-        await new Promise((r) => setTimeout(r, 1000))
+      const abort = new AbortController()
+      streamAbort.current = abort
+      const timeout = window.setTimeout(() => abort.abort(), 180000)
+      const updateReply = (content: string) => {
         if (!mounted.current || runEpoch !== epoch.current) return
-        task = await getTurn(task.turnId)
+        const assistant = available.find((a) => a.id === request.assistantId)
+        setEntries((values) => {
+          const entry: Entry = {
+            role: 'assistant',
+            requestId: request.requestId,
+            name: assistant?.name ?? '助手',
+            icon: assistant?.icon,
+            content,
+          }
+          const index = values.findIndex(
+            (value) => value.role === 'assistant' && value.requestId === request.requestId,
+          )
+          return index < 0
+            ? [...values, entry]
+            : values.map((value, i) => (i === index ? entry : value))
+        })
+      }
+      let task
+      try {
+        const created = await createTurn(request, abort.signal)
+        task = await streamTurn(
+          created.turnId,
+          (value) => {
+            if (value.partialReply !== undefined) updateReply(value.partialReply || '正在思考…')
+          },
+          abort.signal,
+        )
+      } finally {
+        window.clearTimeout(timeout)
+        streamAbort.current = null
       }
       if (!mounted.current || runEpoch !== epoch.current) return
       if (task.status === 'failed') {
-        setEntries((v) => [
-          ...v,
-          {
-            role: 'assistant',
-            icon: available.find((a) => a.id === request.assistantId)?.icon,
-            content: '本轮失败：' + (task.error?.message ?? '执行失败。'),
-          },
-        ])
+        updateReply('本轮失败：' + (task.error?.message ?? '执行失败。'))
         clearSelection()
         setNotice(task.error?.message ?? '执行失败。')
         return
       }
       const result = task.result
       if (!result) throw new Error('任务结果缺失。')
-      setEntries((v) => [
-        ...v,
-        {
-          role: 'assistant',
-          icon: available.find((a) => a.id === request.assistantId)?.icon,
-          content: result.reply || '已生成建议，请确认。',
-        },
-      ])
+      updateReply(result.reply || '已生成建议，请确认。')
       setNotice('')
       const proposed = result.proposal
       if (proposed?.kind === 'replacement') {
@@ -221,6 +245,23 @@ export function WritingAssistant({
         }
         if (proposed.newText === request.context.selection.beforeMarkdown) {
           clearSelection()
+          setNotice('没有修改。')
+          return
+        }
+        callbacks.current.onLock(true)
+        setProposal(proposed)
+      } else if (proposed?.kind === 'document') {
+        setPreviewTop(previewHost.current?.scrollTop ?? 0)
+        const target = documentTarget.current
+        if (
+          !target ||
+          target.id !== proposed.documentId ||
+          adapterRef.current?.getCurrentMarkdown() !== target.before
+        ) {
+          setNotice('正文已变化，请重新生成修改建议。')
+          return
+        }
+        if (target.before === proposed.newText) {
           setNotice('没有修改。')
           return
         }
@@ -261,6 +302,15 @@ export function WritingAssistant({
       setNotice('原文已变化，请重新选择后发送。')
       return
     }
+    if (!adapterRef.current) {
+      setNotice('编辑器正在加载，请稍后发送。')
+      return
+    }
+    const documentId = crypto.randomUUID()
+    documentTarget.current = {
+      id: documentId,
+      before: adapterRef.current?.getCurrentMarkdown() ?? '',
+    }
     const request: TurnRequest = {
       requestId: crypto.randomUUID(),
       assistantId,
@@ -271,6 +321,7 @@ export function WritingAssistant({
         .map(({ role, content }) => ({ role, content })),
       context: {
         title,
+        documentId,
         documentMarkdown: adapterRef.current?.getCurrentMarkdown() ?? '',
         ...(selection ? { selection } : {}),
       },
@@ -285,6 +336,9 @@ export function WritingAssistant({
       if (proposal.kind === 'replacement') {
         if (!adapterRef.current) throw new Error('编辑器已重新加载，请重新选择。')
         adapterRef.current.applyReplacement(proposal.selectionId, proposal.newText)
+      } else if (proposal.kind === 'document' && documentTarget.current) {
+        if (!adapterRef.current) throw new Error('编辑器已重新加载，请重新生成。')
+        adapterRef.current.applyDocument(documentTarget.current.before, proposal.newText)
       } else throw new Error('结果类型不匹配。')
       recordDecision('已接受')
     } catch (e) {
@@ -292,17 +346,21 @@ export function WritingAssistant({
       recordDecision('已过期')
     }
   }
-  const preview = proposal?.kind === 'replacement' && (
+  const preview = (proposal?.kind === 'replacement' || proposal?.kind === 'document') && (
     <section
       className="agent-replacement-preview"
       style={{ top: previewTop }}
-      aria-label="选区修改建议"
+      aria-label={proposal.kind === 'document' ? '全文修改建议' : '选区修改建议'}
     >
-      <h3>选区修改建议</h3>
+      <h3>{proposal.kind === 'document' ? '全文修改建议' : '选区修改建议'}</h3>
       <div className="agent-preview-diff">
         <div className="proposal-before">
           <strong>原文</strong>
-          <pre>{selection?.beforeMarkdown}</pre>
+          <pre>
+            {proposal.kind === 'document'
+              ? documentTarget.current?.before
+              : selection?.beforeMarkdown}
+          </pre>
         </div>
         <div className="proposal-after">
           <strong>{proposal.newText === '' ? '删除选区' : '新文'}</strong>
@@ -322,8 +380,8 @@ export function WritingAssistant({
       <header className="conversation-head">
         <h2>写作对话</h2>
         <Select
+          floating
           label="选择助手"
-          labelIcon={<Icon name="assistant" size={18} />}
           disabled={pending || !!proposal}
           value={assistantId}
           onChange={(id) => {
@@ -344,18 +402,32 @@ export function WritingAssistant({
             <strong>聊聊这篇文章</strong>
             <p>
               {available.length
-                ? '正文中选中的文字会自动添加到这里。默认正常对话，明确提出修改要求后，助手才会提供待确认的改写建议。'
+                ? '助手可以阅读当前全文。直接提出写作或修改要求即可，也可以选中文字进行局部修改；修改建议确认后应用。'
                 : '请先在助手管理中配置并启用助手。'}
             </p>
           </div>
         )}
         {entries.map((v, i) => (
-          <div key={i} className={'agent-message ' + v.role}>
-            <small>
-              {v.role === 'assistant' && <AssistantAvatar icon={v.icon} size={16} />}
-              {v.role === 'user' ? '你' : '助手'}
-            </small>
-            <p>{v.content}</p>
+          <div key={i} className={'chat-entry ' + v.role}>
+            <div className="chat-identity">
+              {v.role === 'assistant' ? (
+                <AssistantAvatar icon={v.icon} size={20} />
+              ) : userAvatar ? (
+                <img
+                  src={userAvatar}
+                  alt=""
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
+              ) : (
+                <Icon name="user" size={20} />
+              )}
+              <span>{v.role === 'user' ? username : (v.name ?? '助手')}</span>
+            </div>
+            <div className={'agent-message ' + v.role}>
+              <p>{v.content}</p>
+            </div>
           </div>
         ))}
       </div>
