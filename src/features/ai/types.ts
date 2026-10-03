@@ -25,8 +25,9 @@ export interface Assistant {
   maxContextChars: number
   timeoutMs: number
 }
-export type WritingMode = 'chat' | 'rewrite' | 'summarize'
+export type WritingMode = 'chat' | 'rewrite' | 'summarize' | 'metadata'
 export type Proposal =
+  | { kind: 'metadata'; title: string; summary: string; slug: string }
   | { kind: 'replacement'; selectionId: string; newText: string }
   | { kind: 'summary'; summary: string }
 export interface TurnRequest {
