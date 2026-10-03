@@ -1,4 +1,5 @@
-import { usePublicationSummary } from '../features/articles/usePublicationSummary'
+import { usePublicationFlow } from './usePublicationFlow'
+import { PublicationDialog } from '../features/articles/components/PublicationDialog'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { MDXEditorMethods } from '@mdxeditor/editor'
 import { logout, SessionBoundary, ChangePassword, type Session } from '../features/auth'
@@ -21,7 +22,6 @@ import { WritingAssistant } from '../features/ai/WritingAssistant'
 import { assistants as loadAssistants } from '../features/ai/api'
 import type { Assistant, EditorAgentAdapter } from '../features/ai/types'
 import { errorMessage } from '../shared/lib/errors'
-import { ContentMetadata } from '../features/articles/components/ContentMetadata'
 import { EditorTaxonomy } from '../features/articles/components/EditorTaxonomy'
 import { documentTitle } from '../features/articles/documentTitle'
 import { ApiError } from '../shared/api/client'
@@ -106,28 +106,32 @@ function Studio({
   const nameWrites = useRef(new Map<string, Promise<string>>())
   const [selectedAssistantId, setSelectedAssistantId] = useState('')
   const [availableAssistants, setAvailableAssistants] = useState<Assistant[]>([])
-  const [assistantNotice, setAssistantNotice] = useState('')
   const editorReady = useCallback(() => {
     const markdown = editorRef.current?.getMarkdown()
-    if (markdown !== undefined) setTitle((value) => documentTitle(markdown, value))
+    if (markdown !== undefined) setTitle((value) => value || documentTitle(markdown))
   }, [])
   const markDirty = useCallback(() => {
     setDirty(true)
     const markdown = editorRef.current?.getMarkdown()
     if (markdown !== undefined) setTitle(documentTitle(markdown))
   }, [])
-  usePublicationSummary({ current, busy, saving, setCurrent, setSummary, setNotice })
-  const summaryStatus =
-    assistantNotice ||
-    {
-      NONE: '发布后自动生成摘要',
-      PENDING: '已发布，摘要等待生成',
-      RUNNING: '正在生成已发布内容的摘要…',
-      SUCCEEDED: '摘要已自动生成并保存',
-      FAILED: '摘要生成失败，原摘要已保留；再次发布可重试',
-      SKIPPED: '配置并启用助手后，发布时自动生成摘要',
-      CANCELLED: '已撤回，摘要任务已取消',
-    }[current?.summaryStatus ?? 'NONE']
+  const publication = usePublicationFlow({
+    current,
+    dirty,
+    assistantId: selectedAssistantId,
+    saveDraft: save,
+    onStored: (article) => {
+      setCurrent(article)
+      setTitle(article.title)
+      setSummary(article.summary)
+    },
+    onPublished: (article) => {
+      setCurrent(article)
+      setView('content')
+      setNotice('已发布，访客现在可以阅读。')
+    },
+    onNotice: setNotice,
+  })
   const changePending = useCallback((n: number) => {
     transfers.current = Math.max(0, transfers.current + n)
     setPendingUploads(transfers.current)
@@ -163,7 +167,6 @@ function Studio({
     if (current?.type !== 'ARTICLE') return
     let active = true
     setAvailableAssistants([])
-    setAssistantNotice('')
     void loadAssistants()
       .then((items) => {
         if (!active) return
@@ -176,7 +179,7 @@ function Studio({
       .catch((error) => {
         if (active) {
           setSelectedAssistantId('')
-          setAssistantNotice(errorMessage(error))
+          setNotice(errorMessage(error))
         }
       })
     return () => {
@@ -186,11 +189,11 @@ function Studio({
 
   useEffect(() => {
     const leave = (event: BeforeUnloadEvent) => {
-      if (dirty || pendingUploads > 0) event.preventDefault()
+      if (dirty || pendingUploads > 0 || publication.pending) event.preventDefault()
     }
     window.addEventListener('beforeunload', leave)
     return () => window.removeEventListener('beforeunload', leave)
-  }, [dirty, pendingUploads])
+  }, [dirty, pendingUploads, publication.pending])
 
   async function refreshTaxonomy() {
     try {
@@ -204,7 +207,7 @@ function Studio({
 
   function edit(article: Article) {
     setCurrent(article)
-    setTitle(documentTitle(article.bodyMarkdown, article.title))
+    setTitle(article.title || documentTitle(article.bodyMarkdown))
     setSummary(article.summary)
     setBody(article.bodyMarkdown)
     setSelectedTags(article.tags)
@@ -217,7 +220,7 @@ function Studio({
   }
 
   function canLeave() {
-    if (busy || taxonomyBusy > 0) {
+    if (busy || publication.pending || publication.opened || taxonomyBusy > 0) {
       setNotice('请等待当前保存或分类标签操作完成。')
       return false
     }
@@ -323,9 +326,10 @@ function Studio({
       const input = {
         version: current.version,
         title:
-          current.type === 'ARTICLE'
+          current.type === 'ARTICLE' && dirty
             ? documentTitle(markdown, documentTitle(current.bodyMarkdown) ? '' : current.title)
             : title,
+        publicationMetadata: !dirty,
         slug: current.slug,
         summary,
         bodyMarkdown: markdown,
@@ -370,22 +374,18 @@ function Studio({
   }
 
   async function publish() {
+    if (current?.type === 'ARTICLE') {
+      await publication.prepare(true)
+      return
+    }
     const saved = await save()
     if (!saved) return
     setBusy(true)
     try {
-      const published = await publishArticle(
-        saved.id,
-        saved.version,
-        current?.type === 'ARTICLE' ? selectedAssistantId : undefined,
-      )
+      const published = await publishArticle(saved.id, saved.version)
       setCurrent(published)
       setView('content')
-      setNotice(
-        current?.type === 'ARTICLE'
-          ? '文章已发布，摘要将在后台自动生成。'
-          : '帖子已发布，访客现在可以阅读。',
-      )
+      setNotice('帖子已发布，访客现在可以阅读。')
     } catch (error) {
       setNotice(errorMessage(error))
     } finally {
@@ -513,9 +513,16 @@ function Studio({
                 </button>
               )}
               <button
-                onClick={() => void save()}
+                onClick={() =>
+                  void (current.type === 'ARTICLE' ? publication.prepare(false) : save())
+                }
                 disabled={
-                  busy || taxonomyBusy > 0 || pendingUploads > 0 || agentLocked || agentBusy
+                  busy ||
+                  publication.pending ||
+                  taxonomyBusy > 0 ||
+                  pendingUploads > 0 ||
+                  agentLocked ||
+                  agentBusy
                 }
               >
                 保存
@@ -524,7 +531,12 @@ function Studio({
                 className="primary"
                 onClick={() => void publish()}
                 disabled={
-                  busy || taxonomyBusy > 0 || pendingUploads > 0 || agentLocked || agentBusy
+                  busy ||
+                  publication.pending ||
+                  taxonomyBusy > 0 ||
+                  pendingUploads > 0 ||
+                  agentLocked ||
+                  agentBusy
                 }
               >
                 {current.status === 'PUBLISHED' ? '发布更新' : '发布'}
@@ -532,13 +544,26 @@ function Studio({
               {current.status === 'PUBLISHED' && (
                 <button
                   onClick={() => void unpublish()}
-                  disabled={busy || agentLocked || agentBusy}
+                  disabled={busy || publication.pending || agentLocked || agentBusy}
                 >
                   撤回
                 </button>
               )}
             </div>
           </header>
+          {publication.opened && (
+            <PublicationDialog
+              fields={publication.fields}
+              phase={publication.phase}
+              error={publication.error}
+              pending={publication.pending}
+              addressLocked={!!current.publishedAt}
+              onChange={publication.setFields}
+              onClose={publication.close}
+              onRetry={() => void publication.prepare(true)}
+              onSubmit={() => void publication.submit()}
+            />
+          )}
           <section
             className={
               'studio-grid editor-page' +
@@ -550,7 +575,6 @@ function Studio({
             }
           >
             <div className="editor-content-column">
-              <ContentMetadata article={current} summary={summary} summaryStatus={summaryStatus} />
               <div className="dashboard-card editor-main">
                 <div className="card-head editor-label">
                   <div>
@@ -570,7 +594,7 @@ function Studio({
                   tags={selectedTags}
                   tagNames={tagNames}
                   tagInput={newTag}
-                  busy={busy || taxonomyBusy > 0 || agentLocked}
+                  busy={busy || publication.pending || taxonomyBusy > 0 || agentLocked}
                   onCategory={(value) => {
                     setCategory(value)
                     setDirty(true)
@@ -595,7 +619,7 @@ function Studio({
                           article={current}
                           editorRef={editorRef}
                           agentRef={agentRef}
-                          readOnly={agentLocked}
+                          readOnly={agentLocked || busy || publication.pending}
                           onReady={editorReady}
                           onDirty={markDirty}
                           onPending={changePending}
@@ -633,7 +657,7 @@ function Studio({
               <div
                 id="writing-conversation"
                 className="conversation-panel"
-                inert={!assistantOpen}
+                inert={!assistantOpen || busy || publication.pending}
                 aria-hidden={!assistantOpen}
               >
                 <WritingAssistant

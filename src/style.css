@@ -2927,3 +2927,57 @@ a {
   width: 100%;
   min-width: 0;
 }
+
+.publication-dialog {
+  width: min(600px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid #d6ddd8;
+  border-radius: 16px;
+  padding: 28px;
+  color: inherit;
+  background: #fff;
+}
+.publication-dialog::backdrop {
+  background: rgb(18 28 24 / 45%);
+}
+.publication-dialog fieldset {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+  display: grid;
+  gap: 16px;
+}
+.publication-dialog label {
+  display: grid;
+  gap: 8px;
+}
+.publication-dialog input,
+.publication-dialog textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+.publication-dialog .actions {
+  justify-content: flex-end;
+}
+.publication-dialog {
+  box-sizing: border-box;
+}
+.publication-dialog input,
+.publication-dialog textarea {
+  padding: 10px 12px;
+  border: 1px solid #cbd7ce;
+  border-radius: 8px;
+  background: #fbfcfa;
+  color: inherit;
+  font: inherit;
+  line-height: 1.5;
+}
+.publication-dialog input[readonly] {
+  background: #edf1ed;
+  color: #64716a;
+}
+.publication-dialog small {
+  line-height: 1.6;
+  color: #64716a;
+}
