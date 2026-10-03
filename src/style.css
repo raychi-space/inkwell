@@ -2981,3 +2981,293 @@ a {
   line-height: 1.6;
   color: #64716a;
 }
+
+/* Keep writing controls outside the document's independent scroll area. */
+.editor-workspace .editor-writing-area {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.editor-workspace .editor-writing-area .editor-surface {
+  flex: 1;
+  min-height: 0;
+  height: 0;
+}
+.editor-workspace .editor-surface > .mdxeditor {
+  height: 100%;
+  min-height: 0;
+}
+.editor-workspace .editor-surface .mdxeditor-root-contenteditable {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.editor-workspace .editor-surface .editable-prose {
+  min-height: 0;
+}
+.editor-workspace .editor-writing-area > .notice,
+.editor-workspace .editor-writing-area > .upload-state {
+  flex-shrink: 0;
+}
+@media (max-width: 680px) {
+  .editor-workspace .editor-content-column {
+    height: clamp(420px, 80dvh, 720px);
+    min-height: 0;
+  }
+  .editor-workspace .editor-main {
+    min-height: 0;
+  }
+}
+
+/* Compact writing headers and conversation controls. */
+.editor-main .editor-label {
+  align-items: center;
+  padding: 12px 18px;
+  gap: 12px;
+}
+.editor-label > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.editor-label .eyebrow,
+.editor-label h2 {
+  margin: 0;
+}
+.editor-label > span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.writing-assistant {
+  position: relative;
+}
+.writing-assistant .conversation-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  position: relative;
+  z-index: 45;
+}
+.writing-assistant .conversation-head h2 {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.conversation-head .icon-label-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-left: auto;
+  flex: 1;
+}
+.icon-label-select > .select-label {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin: 0;
+}
+.conversation-head .select-trigger {
+  min-width: 0;
+  padding: 7px 9px;
+  flex: 1;
+}
+.conversation-head .select-value,
+.conversation-head .select-value > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.conversation-head .select-menu {
+  right: 0;
+  left: auto;
+  width: min(280px, calc(100vw - 100px));
+}
+.conversation-head .select-option .select-value > span {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.writing-assistant .agent-history {
+  background: #f4f6f8;
+  padding: 16px;
+}
+.agent-message {
+  width: fit-content;
+  max-width: 92%;
+  border: 1px solid #e4e8ed;
+  border-radius: 12px;
+  background: #fff;
+}
+.agent-message.user {
+  margin-left: auto;
+  background: #2463c5;
+  color: #fff;
+  border-color: #2463c5;
+}
+.agent-message.user small {
+  color: #e1ebff;
+}
+.agent-message.assistant {
+  margin-right: auto;
+  background: #fff;
+}
+.conversation-composer {
+  max-height: 65%;
+  padding: 12px 14px;
+}
+.composer-input {
+  position: relative;
+}
+.conversation-composer textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  padding: 10px 12px 32px;
+  height: 96px;
+  max-height: none;
+}
+.conversation-composer.expanded textarea {
+  height: min(360px, 40dvh);
+}
+.composer-expand {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 3px;
+  border: 0;
+  background: #eef2f0;
+  color: #496255;
+  border-radius: 5px;
+}
+.conversation-toast {
+  position: absolute;
+  top: 66px;
+  left: 12px;
+  right: 12px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #dbe2e8;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  box-shadow: 0 6px 22px #192d4026;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.conversation-toast > span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.conversation-toast button {
+  flex-shrink: 0;
+  padding: 4px;
+}
+.conversation-toast .toast-close {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+}
+@media (max-width: 1100px) {
+  .editor-label .eyebrow {
+    display: none;
+  }
+}
+
+.assistant-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.assistant-icon-picker {
+  border: 1px solid var(--line, #dce4da);
+  border-radius: 10px;
+}
+.assistant-icon-picker summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 12px;
+}
+.icon-picker-change {
+  margin-left: auto;
+  font-size: 12px;
+  color: #52765b;
+}
+.icon-picker-panel {
+  padding: 0 12px 12px;
+  display: grid;
+  gap: 12px;
+}
+.icon-picker-tabs {
+  display: flex;
+  gap: 8px;
+}
+.icon-picker-tabs button {
+  flex: 1;
+}
+.assistant-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+  gap: 6px;
+  max-height: 260px;
+  overflow: auto;
+}
+.assistant-icon-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px;
+  font-size: 11px;
+  min-width: 0;
+}
+.assistant-icon-grid button[aria-pressed='true'],
+.icon-picker-tabs button[aria-pressed='true'] {
+  background: #e8f0e9;
+  border-color: #386347;
+  color: #24452f;
+}
+.agent-message small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.icon-picker-tabs button,
+.assistant-icon-grid button {
+  appearance: none;
+  border: 1px solid #dce4da;
+  border-radius: 8px;
+  background: #fff;
+  color: #425747;
+  font-family: inherit;
+  cursor: pointer;
+}
+.icon-picker-tabs button {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.assistant-icon-grid button:hover {
+  background: #f3f7f2;
+  border-color: #91ac94;
+}
+.assistant-icon-grid button:focus-visible,
+.icon-picker-tabs button:focus-visible {
+  outline: 2px solid #386347;
+  outline-offset: 2px;
+}

@@ -7,10 +7,12 @@ type Props = {
   value: string
   options: SelectOption[]
   onChange: (value: string) => void
+  labelIcon?: ReactNode
+  disabled?: boolean
   hint?: string
 }
 
-export function Select({ label, value, options, onChange, hint }: Props) {
+export function Select({ label, value, options, onChange, hint, labelIcon, disabled }: Props) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [opensUp, setOpensUp] = useState(false)
@@ -98,11 +100,13 @@ export function Select({ label, value, options, onChange, hint }: Props) {
   }
 
   return (
-    <div className="studio-select" ref={rootRef}>
+    <div className={'studio-select' + (labelIcon ? ' icon-label-select' : '')} ref={rootRef}>
       <span className="select-label" id={`${id}-label`}>
-        {label}
+        {labelIcon}
+        <span className={labelIcon ? 'sr-only' : undefined}>{label}</span>
       </span>
       <button
+        disabled={disabled}
         ref={buttonRef}
         id={`${id}-button`}
         type="button"
