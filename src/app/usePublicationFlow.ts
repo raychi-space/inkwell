@@ -12,6 +12,7 @@ export function usePublicationFlow({
   dirty,
   assistantId,
   saveDraft,
+  resolveTaxonomy,
   onStored,
   onPublished,
   onNotice,
@@ -20,6 +21,7 @@ export function usePublicationFlow({
   dirty: boolean
   assistantId: string
   saveDraft: () => Promise<Article | null>
+  resolveTaxonomy: () => Promise<{ category: string | null; tags: string[] }>
   onStored: (article: Article) => void
   onPublished: (article: Article) => void
   onNotice: (message: string) => void
@@ -132,6 +134,8 @@ export function usePublicationFlow({
       const stored = await saveArticle(article.id, {
         ...article,
         ...fields,
+        ...(article.type === 'POST' ? { title: '', summary: '' } : {}),
+        ...(await resolveTaxonomy()),
         publicationMetadata: true,
       })
       prepared.current = stored

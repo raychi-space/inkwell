@@ -91,7 +91,18 @@ export function ContentDashboard({
           <CardHead
             eyebrow="YOUR WRITING"
             title={
-              <span id="recent-title">{mode === 'published' ? '最近的内容' : '最近的草稿'}</span>
+              <span className="recent-title-group">
+                <span id="recent-title">{mode === 'published' ? '最近的内容' : '最近的草稿'}</span>
+                <span className="content-loading-slot">
+                  {loading && (
+                    <span
+                      className="content-loading-icon"
+                      role="status"
+                      aria-label="正在加载内容"
+                    />
+                  )}
+                </span>
+              </span>
             }
             aside={<span>{result?.total ?? 0} 篇</span>}
           />
@@ -140,11 +151,10 @@ export function ContentDashboard({
           <div
             className="content-list"
             tabIndex={0}
+            aria-busy={loading}
             aria-label={mode === 'published' ? '已发布内容列表' : '草稿列表'}
           >
-            {loading ? (
-              <p role="status">正在加载内容…</p>
-            ) : visible.length ? (
+            {visible.length ? (
               visible.map((article) => (
                 <button className="content-row" key={article.id} onClick={() => onOpen(article.id)}>
                   <span className="content-row-main">
@@ -179,7 +189,7 @@ export function ContentDashboard({
                   </span>
                 </button>
               ))
-            ) : (
+            ) : !loading && !error ? (
               <EmptyState
                 title={
                   scopedArticles.length
@@ -194,13 +204,13 @@ export function ContentDashboard({
                     : '从上方选择一种类型，开始第一篇创作。'
                 }
               />
-            )}
+            ) : null}
           </div>
           <nav aria-label="管理内容分页" className="actions">
             <button disabled={loading || page <= 1} onClick={() => setPage((value) => value - 1)}>
               上一页
             </button>
-            <span>第 {page} 页</span>
+            <span>第 {result?.page ?? page} 页</span>
             <button
               disabled={loading || !result || page * result.pageSize >= result.total}
               onClick={() => setPage((value) => value + 1)}

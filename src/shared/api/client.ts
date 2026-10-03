@@ -51,7 +51,7 @@ export function resetCsrf() {
   csrfToken = null
 }
 
-export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function apiResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const version = sessionVersion
   const protectedPath = path.startsWith('/api/v1/admin/') || path === '/api/v1/auth/logout'
   const signal = protectedPath
@@ -104,6 +104,11 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       data?.message ?? `请求失败（${response.status}）。`,
     )
   }
+  return response
+}
+
+export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await apiResponse(path, options)
   if (response.status === 204) return undefined as T
   return (await response.json()) as T
 }
