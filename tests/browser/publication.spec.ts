@@ -11,7 +11,7 @@ test('save silently prepares metadata; preview edits publish only after confirma
     else if (path.endsWith('/public/settings') || path.endsWith('/admin/settings')) body = { siteName: '写作测试', avatarUrl: null }
     else if (path.endsWith('/categories')) body = { items: [{ name: '未分类' }] }
     else if (path.endsWith('/tags')) body = { items: [] }
-    else if (path.endsWith('/ai/assistants')) body = { items: [{ id: 'assistant', enabled: true, name: '测试助手' }] }
+    else if (path.endsWith('/ai/assistants')) { await new Promise(resolve => setTimeout(resolve, 800)); body = { items: [{ id: 'assistant', enabled: true, name: '测试助手' }] } }
     else if (path.endsWith('/ai/turns') && req.method() === 'POST') { turns++; polls = 0; expect(req.postDataJSON().mode).toBe('metadata'); body = { turnId: 'turn', status: 'pending' } }
     else if (path.endsWith('/ai/turns/turn')) { polls++; body = polls < 2 ? { status: 'running' } : fail ? { status: 'failed', error: { message: '模型暂时不可用' } } : { status: 'succeeded', result: { proposal: { kind: 'metadata', title: '生成标题', summary: '生成摘要', slug: 'first-five-english-title-words' } } } }
     else if (path.endsWith('/contents')) body = { items: [article], total: 1, page: 1, pageSize: 50 }
@@ -24,6 +24,7 @@ test('save silently prepares metadata; preview edits publish only after confirma
   await page.goto('/')
   await page.getByText('正文标题', { exact: true }).click()
   await expect(page.getByText('发布信息', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '发布', exact: true })).toBeDisabled()
   await expect(page.locator('[contenteditable=true]').first()).toBeVisible()
   await page.getByRole('button', { name: '保存', exact: true }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)

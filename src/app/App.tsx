@@ -106,6 +106,7 @@ function Studio({
   const nameWrites = useRef(new Map<string, Promise<string>>())
   const [selectedAssistantId, setSelectedAssistantId] = useState('')
   const [availableAssistants, setAvailableAssistants] = useState<Assistant[]>([])
+  const [assistantsLoading, setAssistantsLoading] = useState(false)
   const editorReady = useCallback(() => {
     const markdown = editorRef.current?.getMarkdown()
     if (markdown !== undefined) setTitle((value) => value || documentTitle(markdown))
@@ -167,6 +168,7 @@ function Studio({
     if (current?.type !== 'ARTICLE') return
     let active = true
     setAvailableAssistants([])
+    setAssistantsLoading(true)
     void loadAssistants()
       .then((items) => {
         if (!active) return
@@ -181,6 +183,9 @@ function Studio({
           setSelectedAssistantId('')
           setNotice(errorMessage(error))
         }
+      })
+      .finally(() => {
+        if (active) setAssistantsLoading(false)
       })
     return () => {
       active = false
@@ -518,6 +523,7 @@ function Studio({
                 }
                 disabled={
                   busy ||
+                  (current.type === 'ARTICLE' && assistantsLoading) ||
                   publication.pending ||
                   taxonomyBusy > 0 ||
                   pendingUploads > 0 ||
@@ -532,6 +538,7 @@ function Studio({
                 onClick={() => void publish()}
                 disabled={
                   busy ||
+                  (current.type === 'ARTICLE' && assistantsLoading) ||
                   publication.pending ||
                   taxonomyBusy > 0 ||
                   pendingUploads > 0 ||
