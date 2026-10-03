@@ -8,6 +8,8 @@ import type {
   SelectionSnapshot,
   TurnRequest,
 } from './types'
+import { Icon } from '../../shared/ui/Icon'
+import { AssistantAvatar } from './AssistantAvatar'
 import { Select } from '../../shared/ui/Select'
 import { errorMessage } from '../../shared/lib/errors'
 interface Props {
@@ -21,6 +23,7 @@ interface Props {
   onBusy: (value: boolean) => void
 }
 interface Entry {
+  icon?: string
   role: 'user' | 'assistant'
   content: string
 }
@@ -42,6 +45,8 @@ export function WritingAssistant({
   const [pending, setPending] = useState(false),
     [retry, setRetry] = useState<TurnRequest | null>(null)
   const [previewTop, setPreviewTop] = useState(0)
+  const [expanded, setExpanded] = useState(false)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
   const mounted = useRef(true),
     flight = useRef(false),
     decision = useRef(false),
@@ -184,6 +189,7 @@ export function WritingAssistant({
           ...v,
           {
             role: 'assistant',
+            icon: available.find((a) => a.id === request.assistantId)?.icon,
             content: '本轮失败：' + (task.error?.message ?? '执行失败。'),
           },
         ])
@@ -195,7 +201,11 @@ export function WritingAssistant({
       if (!result) throw new Error('任务结果缺失。')
       setEntries((v) => [
         ...v,
-        { role: 'assistant', content: result.reply || '已生成建议，请确认。' },
+        {
+          role: 'assistant',
+          icon: available.find((a) => a.id === request.assistantId)?.icon,
+          content: result.reply || '已生成建议，请确认。',
+        },
       ])
       setNotice('')
       const proposed = result.proposal
@@ -256,7 +266,9 @@ export function WritingAssistant({
       assistantId,
       mode: 'chat',
       message: content,
-      history: (entries.at(-1)?.role === 'user' ? entries.slice(0, -1) : entries).slice(-40),
+      history: (entries.at(-1)?.role === 'user' ? entries.slice(0, -1) : entries)
+        .slice(-40)
+        .map(({ role, content }) => ({ role, content })),
       context: {
         title,
         documentMarkdown: adapterRef.current?.getCurrentMarkdown() ?? '',
@@ -311,13 +323,19 @@ export function WritingAssistant({
         <h2>写作对话</h2>
         <Select
           label="选择助手"
+          labelIcon={<Icon name="assistant" size={18} />}
+          disabled={pending || !!proposal}
           value={assistantId}
           onChange={(id) => {
             if (!pending && !proposal) {
               callbacks.current.onAssistantChange(id)
             }
           }}
-          options={available.map((v) => ({ value: v.id, label: v.name }))}
+          options={available.map((v) => ({
+            value: v.id,
+            label: v.name,
+            icon: <AssistantAvatar icon={v.icon} size={18} />,
+          }))}
         />
       </header>
       <div className="agent-history" ref={historyHost} aria-live="polite" aria-label="对话记录">
@@ -333,12 +351,15 @@ export function WritingAssistant({
         )}
         {entries.map((v, i) => (
           <div key={i} className={'agent-message ' + v.role}>
-            <small>{v.role === 'user' ? '你' : '助手'}</small>
+            <small>
+              {v.role === 'assistant' && <AssistantAvatar icon={v.icon} size={16} />}
+              {v.role === 'user' ? '你' : '助手'}
+            </small>
             <p>{v.content}</p>
           </div>
         ))}
       </div>
-      <div className="conversation-composer">
+      <div className={'conversation-composer' + (expanded ? ' expanded' : '')}>
         {selection && (
           <div className="agent-selection" role="region" aria-label="已选中选区">
             <small>已选中选区</small>
@@ -351,42 +372,63 @@ export function WritingAssistant({
             </button>
           </div>
         )}
-        <label>
-          消息
+        <div className="composer-input">
           <textarea
-            rows={3}
+            ref={composerRef}
+            aria-label="消息"
+            rows={expanded ? 10 : 3}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             disabled={pending || !!proposal}
-            placeholder="聊聊想法，或明确告诉助手怎样改写引用的选区…"
+            placeholder={expanded ? '输入长消息，回车换行…' : '输入消息，回车发送…'}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) {
+              if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return
+              if (
+                e.key === 'Enter' &&
+                (e.metaKey || e.ctrlKey || (!expanded && !e.shiftKey && !e.altKey))
+              ) {
                 e.preventDefault()
                 submit()
               }
             }}
           />
-        </label>
+          <button
+            type="button"
+            className="composer-expand"
+            aria-label={expanded ? '收起输入框' : '展开输入框'}
+            title={expanded ? '收起输入框' : '展开输入框'}
+            aria-expanded={expanded}
+            onClick={() => {
+              setExpanded((value) => !value)
+              composerRef.current?.focus()
+            }}
+          >
+            <Icon name={expanded ? 'contract' : 'expand'} size={16} />
+          </button>
+        </div>
         <div className="agent-actions">
           <button
             className="primary"
             disabled={pending || !!proposal || !assistantId}
             onClick={submit}
           >
-            发送
+            {pending ? '发送中…' : '发送'}
           </button>
         </div>
-        {notice && (
-          <p role="status" className="notice">
-            {notice}
-          </p>
-        )}
-        {retry && (
-          <button disabled={pending || !!proposal} onClick={() => void execute(retry, true)}>
-            重试本次提交
-          </button>
-        )}
       </div>
+      {notice && (
+        <div className="conversation-toast" role="status">
+          <span>{notice}</span>
+          {retry && (
+            <button disabled={pending || !!proposal} onClick={() => void execute(retry, true)}>
+              重试
+            </button>
+          )}
+          <button className="toast-close" aria-label="关闭提示" onClick={() => setNotice('')}>
+            <Icon name="close" size={14} />
+          </button>
+        </div>
+      )}
       {preview && previewHost.current && createPortal(preview, previewHost.current)}
     </section>
   )
