@@ -118,7 +118,7 @@ export function RichEditor({
 
   return (
     <MDXEditor
-      className={readOnly ? 'agent-editor-locked' : undefined}
+      className={'mdxeditor-full-height' + (readOnly ? ' agent-editor-locked' : '')}
       ref={editorRef}
       readOnly={readOnly}
       markdown={article.bodyMarkdown}

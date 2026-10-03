@@ -5,9 +5,11 @@ import { Select } from '../../shared/ui/Select'
 import { Icon } from '../../shared/ui/Icon'
 import { errorMessage } from '../../shared/lib/errors'
 import { useConfigSwitch } from './useConfigSwitch'
+import { AssistantAvatar, AssistantIconPicker } from './AssistantAvatar'
 import { ProviderLogo } from './ProviderLogo'
 
 const emptyAssistant = {
+  icon: 'lucide:bot',
   name: '',
   enabled: true,
   providerId: '',
@@ -43,6 +45,7 @@ export function AgentSettings() {
   function editAssistant(value: Assistant) {
     setAssistantId(value.id)
     setA({
+      icon: value.icon ?? 'lucide:bot',
       name: value.name,
       enabled: value.enabled,
       providerId: value.providerId,
@@ -136,7 +139,7 @@ export function AgentSettings() {
                   onClick={() => choose(assistantDirty, '助手', () => editAssistant(v))}
                 >
                   <span className="entity-avatar provider">
-                    <ProviderLogo provider={allProviders.find((p) => p.id === v.providerId)} />
+                    <AssistantAvatar icon={v.icon} />
                   </span>
                   <span className="entity-text">
                     <strong>{v.name}</strong>
@@ -186,6 +189,10 @@ export function AgentSettings() {
                       onChange={(e) => updateAssistant({ name: e.target.value })}
                     />
                   </label>
+                  <AssistantIconPicker
+                    value={a.icon}
+                    onChange={(icon) => updateAssistant({ icon })}
+                  />
                   <div className="field-pair">
                     <Select
                       label="模型服务商"

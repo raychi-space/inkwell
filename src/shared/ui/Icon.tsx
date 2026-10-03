@@ -8,6 +8,8 @@ const paths = {
   collapse: 'm14 6-6 6 6 6',
   plus: 'M12 5v14 M5 12h14',
   server: 'M4 4h16v6H4z M4 14h16v6H4z M8 7h.01 M8 17h.01',
+  expand: 'M8 3H3v5 M16 3h5v5 M3 16v5h5 M21 16v5h-5 M3 3l6 6 M21 3l-6 6 M3 21l6-6 M21 21l-6-6',
+  contract: 'M3 8h5V3 M21 8h-5V3 M8 21v-5H3 M16 21v-5h5',
   close: 'm6 6 12 12 M18 6 6 18',
   chevron: 'm7 10 5 5 5-5',
 } as const

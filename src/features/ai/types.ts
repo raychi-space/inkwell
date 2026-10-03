@@ -12,6 +12,7 @@ export interface Provider {
   apiKeyMask: string | null
 }
 export interface Assistant {
+  icon?: string
   id: string
   name: string
   enabled: boolean
