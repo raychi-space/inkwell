@@ -1,6 +1,6 @@
 # Raychi v0.2 · inkwell 管理台任务说明
 
-状态：待实现；[模块 Issue #2](https://github.com/raychi-space/inkwell/issues/2)，[跨仓主 Issue #1](https://github.com/raychi-space/raychi/issues/1)。项目级产品依据见 [Raychi 产品需求 v0.2](https://github.com/raychi-space/raychi/blob/main/docs/product-v0.2.md)；当前管理台仍只提供长文编辑与发布。本文只列站长操作，不定义 HTTP 字段或持久化结构。
+本文保留早期任务范围；对应[模块 Issue #2](https://github.com/raychi-space/inkwell/issues/2)及已完成的[跨仓主 Issue #1](https://github.com/raychi-space/raychi/issues/1)。项目级产品依据见 [Raychi 产品需求 v0.2](https://github.com/raychi-space/raychi/blob/main/docs/product-v0.2.md)。后续内容已收敛为文章和帖子，写作与发布流程也已迭代；当前站长操作以 [README](../README.md)与[写作助手说明](writing-assistant-v1.md)为准，下文不是当前功能进度或使用说明。
 
 ## 站长路径
 

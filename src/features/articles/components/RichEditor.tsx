@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import {
   MDXEditor,
   type MDXEditorMethods,
@@ -48,8 +48,14 @@ export function RichEditor({
   onPending: (change: number) => void
   onError: (message: string) => void
 }) {
+  const dirty = useRef(onDirty)
+  dirty.current = onDirty
   const agent = useMemo(
-    () => createEditorAgentAdapter(() => editorRef.current),
+    () =>
+      createEditorAgentAdapter(
+        () => editorRef.current,
+        () => dirty.current(),
+      ),
     [article.id, editorRef],
   )
   if (agentRef) agentRef.current = agent.adapter

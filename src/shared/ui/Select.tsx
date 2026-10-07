@@ -1,4 +1,13 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  useLayoutEffect,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 
 export type SelectOption = { value: string; label: string; icon?: ReactNode }
 
@@ -9,10 +18,21 @@ type Props = {
   onChange: (value: string) => void
   labelIcon?: ReactNode
   disabled?: boolean
+  floating?: boolean
   hint?: string
 }
 
-export function Select({ label, value, options, onChange, hint, labelIcon, disabled }: Props) {
+export function Select({
+  label,
+  value,
+  options,
+  onChange,
+  hint,
+  labelIcon,
+  disabled,
+  floating = false,
+}: Props) {
+  const [position, setPosition] = useState({ left: 0, top: 0, width: 280, maxHeight: 240 })
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [opensUp, setOpensUp] = useState(false)
@@ -29,7 +49,11 @@ export function Select({ label, value, options, onChange, hint, labelIcon, disab
   useEffect(() => {
     if (!open) return
     function closeOutside(event: PointerEvent) {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false)
+      if (
+        !rootRef.current?.contains(event.target as Node) &&
+        !menuRef.current?.contains(event.target as Node)
+      )
+        setOpen(false)
     }
     document.addEventListener('pointerdown', closeOutside)
     return () => document.removeEventListener('pointerdown', closeOutside)
@@ -41,6 +65,38 @@ export function Select({ label, value, options, onChange, hint, labelIcon, disab
         ?.querySelectorAll('[role="option"]')
         [activeIndex]?.scrollIntoView({ block: 'nearest' })
   }, [activeIndex, open])
+
+  useLayoutEffect(() => {
+    if (!open || !floating) return
+    function reposition() {
+      const rect = buttonRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const width = Math.min(280, window.innerWidth - 16)
+      const below = Math.max(0, window.innerHeight - rect.bottom - 13)
+      const above = Math.max(0, rect.top - 13)
+      const desired = Math.min(240, menuRef.current?.scrollHeight ?? 240)
+      const up = below < desired && above > below
+      const maxHeight = Math.min(240, up ? above : below)
+      const height = Math.min(desired, maxHeight)
+      setPosition({
+        width,
+        maxHeight,
+        left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)),
+        top: Math.max(8, up ? rect.top - height - 5 : rect.bottom + 5),
+      })
+    }
+    const resize = new ResizeObserver(reposition)
+    if (rootRef.current) resize.observe(rootRef.current)
+    if (menuRef.current) resize.observe(menuRef.current)
+    reposition()
+    window.addEventListener('resize', reposition)
+    document.addEventListener('scroll', reposition, true)
+    return () => {
+      resize.disconnect()
+      window.removeEventListener('resize', reposition)
+      document.removeEventListener('scroll', reposition, true)
+    }
+  }, [open, floating, options.length])
 
   function choose(index: number) {
     const option = options[index]
@@ -99,6 +155,35 @@ export function Select({ label, value, options, onChange, hint, labelIcon, disab
     }
   }
 
+  const menu = open && (
+    <div
+      ref={menuRef}
+      id={`${id}-list`}
+      className={`select-menu${floating ? ' select-menu-floating' : opensUp ? ' up' : ''}`}
+      style={floating ? position : undefined}
+      role="listbox"
+      aria-labelledby={`${id}-label`}
+    >
+      {options.map((option, index) => (
+        <div
+          id={`${id}-option-${index}`}
+          key={option.value}
+          role="option"
+          aria-selected={option.value === value}
+          className={`select-option${index === activeIndex ? ' focused' : ''}`}
+          onMouseMove={() => setActiveIndex(index)}
+          onClick={() => choose(index)}
+        >
+          <span className="select-value">
+            {option.icon}
+            <span>{option.label}</span>
+          </span>
+          {option.value === value && <span aria-hidden="true">✓</span>}
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <div className={'studio-select' + (labelIcon ? ' icon-label-select' : '')} ref={rootRef}>
       <span className="select-label" id={`${id}-label`}>
@@ -110,6 +195,7 @@ export function Select({ label, value, options, onChange, hint, labelIcon, disab
         ref={buttonRef}
         id={`${id}-button`}
         type="button"
+        title={selected?.label ?? label}
         className={`select-trigger${open ? ' open' : ''}`}
         role="combobox"
         aria-labelledby={`${id}-label ${id}-button`}
@@ -126,33 +212,7 @@ export function Select({ label, value, options, onChange, hint, labelIcon, disab
         </span>
         <span className="select-chevron" aria-hidden="true" />
       </button>
-      {open && (
-        <div
-          ref={menuRef}
-          id={`${id}-list`}
-          className={`select-menu${opensUp ? ' up' : ''}`}
-          role="listbox"
-          aria-labelledby={`${id}-label`}
-        >
-          {options.map((option, index) => (
-            <div
-              id={`${id}-option-${index}`}
-              key={option.value}
-              role="option"
-              aria-selected={option.value === value}
-              className={`select-option${index === activeIndex ? ' focused' : ''}`}
-              onMouseMove={() => setActiveIndex(index)}
-              onClick={() => choose(index)}
-            >
-              <span className="select-value">
-                {option.icon}
-                <span>{option.label}</span>
-              </span>
-              {option.value === value && <span aria-hidden="true">✓</span>}
-            </div>
-          ))}
-        </div>
-      )}
+      {floating && menu ? createPortal(menu, document.body) : menu}
       {hint && <small className="select-hint">{hint}</small>}
     </div>
   )

@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 type Fields = { title: string; summary: string; slug: string }
 export function PublicationDialog({
   fields,
+  children,
+  article = true,
+  taxonomyBusy = false,
   phase,
   error,
   pending,
@@ -12,6 +15,9 @@ export function PublicationDialog({
   onRetry,
   onSubmit,
 }: {
+  children?: ReactNode
+  article?: boolean
+  taxonomyBusy?: boolean
   fields: Fields
   phase: string
   error: string
@@ -53,27 +59,31 @@ export function PublicationDialog({
                 : '检查并编辑以下信息，确认后才会对外发布。'}
         </p>
         <fieldset disabled={pending}>
-          <label htmlFor="publication-heading">
-            发布标题
-            <input
-              required
-              id="publication-heading"
-              maxLength={200}
-              value={fields.title}
-              onChange={(e) => onChange({ ...fields, title: e.target.value })}
-            />
-          </label>
-          <label htmlFor="publication-summary">
-            摘要
-            <textarea
-              required
-              id="publication-summary"
-              rows={5}
-              maxLength={600}
-              value={fields.summary}
-              onChange={(e) => onChange({ ...fields, summary: e.target.value })}
-            />
-          </label>
+          {article && (
+            <>
+              <label htmlFor="publication-heading">
+                发布标题
+                <input
+                  required={article}
+                  id="publication-heading"
+                  maxLength={200}
+                  value={fields.title}
+                  onChange={(e) => onChange({ ...fields, title: e.target.value })}
+                />
+              </label>
+              <label htmlFor="publication-summary">
+                摘要
+                <textarea
+                  required={article}
+                  id="publication-summary"
+                  rows={5}
+                  maxLength={600}
+                  value={fields.summary}
+                  onChange={(e) => onChange({ ...fields, summary: e.target.value })}
+                />
+              </label>
+            </>
+          )}
           <label htmlFor="publication-slug">
             地址别名
             <input
@@ -81,16 +91,19 @@ export function PublicationDialog({
               id="publication-slug"
               maxLength={120}
               pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              readOnly={addressLocked}
+              readOnly={addressLocked || !article}
               value={fields.slug}
               onChange={(e) => onChange({ ...fields, slug: e.target.value })}
             />
           </label>
           <small>
-            {addressLocked
-              ? '已发布文章保留原地址，旧链接继续可用。'
-              : '默认取英文标题前五个单词，以连字符连接。可使用小写字母、数字和连字符。'}
+            {!article
+              ? '帖子地址自动随机生成，发布后保持不变。'
+              : addressLocked
+                ? '已发布文章保留原地址，旧链接继续可用。'
+                : '默认取英文标题前五个单词，以连字符连接。可使用小写字母、数字和连字符。'}
           </small>
+          {children}
         </fieldset>
         {error && (
           <p role="alert" className="notice">
@@ -106,7 +119,11 @@ export function PublicationDialog({
               重新生成
             </button>
           )}
-          <button className="primary" type="submit" disabled={pending || phase !== 'ready'}>
+          <button
+            className="primary"
+            type="submit"
+            disabled={pending || taxonomyBusy || phase !== 'ready'}
+          >
             确认发布
           </button>
         </div>
