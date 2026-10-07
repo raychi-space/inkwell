@@ -30,9 +30,11 @@
 
 参考 quick-assistant-app 的列表与详情编辑方式、模型行和密钥保留交互。本期仍使用已有 OpenAI-compatible 契约，不增加协议适配或复制其他应用的服务商预设。
 
-### 服务商 Logo
+### 助手图标与服务商 Logo
 
-助手列表使用其绑定服务商的 Logo；服务商列表、详情及助手的服务商下拉框使用同一组件。支持 OpenAI、DeepSeek、Anthropic、Gemini、Qwen、智谱、Moonshot、SiliconFlow、OpenRouter、Groq、Mistral 和 Ollama。图标沿用 quick-assistant-app 的本地 Lobe Icons SVG，许可证见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)，加载时无需请求外部图片服务。
+助手详情可选择 Lucide 或 Emoji 图标，保存配置后刷新仍保留；助手列表和写作页展示所选图标。图标以预设标识符保存，旧助手缺省使用默认机器人图标，不接受任意图片 URL。
+
+服务商列表、详情及助手的服务商下拉框继续展示服务商品牌 Logo。支持 OpenAI、DeepSeek、Anthropic、Gemini、Qwen、智谱、Moonshot、SiliconFlow、OpenRouter、Groq、Mistral 和 Ollama。品牌图标沿用 quick-assistant-app 的本地 Lobe Icons SVG，许可证见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)，加载时无需请求外部图片服务。
 
 品牌优先依据 API 地址的主机名识别；自建代理或本机连接可通过服务商名称识别。名称包含多个品牌、未知品牌或缺少服务商时显示通用连接图标。OpenAI-compatible 协议和模型 ID 不用于判断品牌，例如 OpenRouter 连接中的 DeepSeek 模型仍显示 OpenRouter。品牌识别仅用于显示，不改变调用地址、密钥或已保存配置。
 
@@ -40,7 +42,7 @@
 
 内容管理、草稿箱、网站管理、助手管理及编辑器统一使用 30px 页标题，手机端为 26px；区块标题为 17px。缩小页头、卡片和配置表单间距，设置输入使用 12px 字号；手机输入和下拉框保留至少 40px 高度。正文编辑区使用 16px 字号，列表和设置区保持各自的滚动方式。
 
-本轮图标、键盘选择与桌面/手机验证见[验证记录](verification/provider-logos-density-2026-10-02.md)。
+早期品牌图标、键盘选择与桌面/手机验证见[验证记录](verification/provider-logos-density-2026-10-02.md)。后续助手图标库和固定写作工作区见[2026-10-04 发布验收](https://github.com/raychi-space/raychi/issues/39#issuecomment-5971077966)；历史页面尺寸记录不替代后续写作页布局。
 
 ## 修改密码
 

@@ -18,7 +18,7 @@ npm run dev
 
 格式与编辑器边界见[编辑器约定](docs/editor-v0.1.md)。本仓库独立构建，不读取相邻仓库的文件。
 
-模块内部职责见[模块说明](docs/module.md)，v0.2 范围见[任务文档 PR #3](https://github.com/raychi-space/inkwell/pull/3)；Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理；实时状态看[Raychi Project](https://github.com/orgs/raychi-space/projects/1)及对应 Issue/PR。
+模块内部职责见[模块说明](docs/module.md)，早期 v0.2 范围见[产品范围文档](docs/product-scope-v0.2.md)；当前操作见下文，Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理；实时状态看[Raychi Project](https://github.com/orgs/raychi-space/projects/1)及对应 Issue/PR。
 
 ## 管理页面
 
@@ -34,7 +34,9 @@ npm run dev
 
 ## 写作助手
 
-[写作助手 v1](docs/writing-assistant-v1.md) 说明服务商/助手管理、连续对话、选区预览确认、自动摘要及第一期支持的选区范围。需 wellspring 启用独立 Agent 服务；正文改写需用户确认；摘要和发布信息在保存工作稿后生成，确认发布前可以编辑。正文改写仍需确认。
+[写作助手 v1](docs/writing-assistant-v1.md) 说明服务商/助手管理、连续对话、选区预览确认、发布元数据及第一期支持的选区范围。需 wellspring 启用独立 Agent 服务；正文改写需用户确认；摘要和发布信息在保存工作稿后生成，确认发布前可以编辑。
+
+正文编辑区和工具栏固定在写作页面内，正文与助手历史分别滚动。对话输入支持回车发送、展开为多行及中文输入法；助手管理可选择并保存 Lucide/Emoji 图标。配置和发布证据见[固定工作区与图标验收](https://github.com/raychi-space/raychi/issues/39#issuecomment-5971077966)。
 
 
 ## 保存与发布预览（2026-10-03）
