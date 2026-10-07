@@ -13,7 +13,10 @@ import {
 import type { EditorAgentAdapter, SelectionSnapshot } from '../../../shared/types/editor'
 
 /** Targets belong to one root editor instance. No Markdown offsets or string search. */
-export function createEditorAgentAdapter(methods: () => MDXEditorMethods | null) {
+export function createEditorAgentAdapter(
+  methods: () => MDXEditorMethods | null,
+  onDocumentChange: () => void = () => {},
+) {
   let editor: LexicalEditor | null = null
   let insert: ((markdown: string) => void) | null = null
   const targets = new Map<
@@ -45,6 +48,19 @@ export function createEditorAgentAdapter(methods: () => MDXEditorMethods | null)
   }
   const adapter: EditorAgentAdapter = {
     getCurrentMarkdown: () => methods()?.getMarkdown() ?? '',
+    applyDocument(before, markdown) {
+      const current = methods()
+      if (!current || !editor || current.getMarkdown() !== before)
+        throw new Error('正文已变化，请重新生成修改建议。')
+      // setMarkdown deliberately mutes MDXEditor's onChange. Commit one undo step
+      // and notify the draft owner explicitly after the Markdown has changed.
+      editor.update(() => current.setMarkdown(markdown), {
+        discrete: true,
+        tag: HISTORY_PUSH_TAG,
+      })
+      onDocumentChange()
+      targets.clear()
+    },
     captureSelection() {
       if (!editor?.getRootElement()?.isConnected) return null
       let captured: SelectionSnapshot | null = null

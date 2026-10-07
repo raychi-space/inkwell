@@ -7,14 +7,13 @@ import {
   getArticle,
   createArticle,
   saveArticle,
-  publishArticle,
   unpublishArticle,
   ArticleSidebar,
   ContentDashboard,
   RichEditor,
   type Article,
 } from '../features/articles'
-import { categories, tags, addCategory, addTag } from '../features/taxonomy'
+import { categories, tags, addCategory } from '../features/taxonomy'
 import { SettingsEditor, getSettings, type SiteSettings } from '../features/settings'
 import { ProviderSettings } from '../features/ai/ProviderSettings'
 import { AgentSettings } from '../features/ai/AgentSettings'
@@ -121,7 +120,17 @@ function Studio({
     dirty,
     assistantId: selectedAssistantId,
     saveDraft: save,
+    resolveTaxonomy: async () => {
+      const resolvedCategory =
+        current?.type === 'ARTICLE' ? await resolveName('category', category) : null
+      const pendingTag = newTag.trim() ? await resolveName('tag', newTag) : ''
+      const resolvedTags = [...new Set([...selectedTags, ...(pendingTag ? [pendingTag] : [])])]
+      setSelectedTags(resolvedTags)
+      setNewTag('')
+      return { category: resolvedCategory, tags: resolvedTags }
+    },
     onStored: (article) => {
+      setDirty(false)
       setCurrent(article)
       setTitle(article.title)
       setSummary(article.summary)
@@ -130,6 +139,7 @@ function Studio({
       setCurrent(article)
       setView('content')
       setNotice('已发布，访客现在可以阅读。')
+      void refreshTaxonomy()
     },
     onNotice: setNotice,
   })
@@ -261,31 +271,32 @@ function Studio({
   function resolveName(kind: 'category' | 'tag', raw: string): Promise<string> {
     const name = raw.trim()
     if (!name) return Promise.resolve(kind === 'category' ? '未分类' : '')
-    const names = kind === 'category' ? categoryNames : tagNames
-    const existing = names.find((value) => value === name)
+    // New tag names belong to the draft until the server publishes atomically.
+    if (kind === 'tag') {
+      if (name.length > 40 || /[\u0000-\u001f\u007f-\u009f]/.test(name))
+        return Promise.reject(new Error('标签不能超过 40 个字符或包含控制字符。'))
+      return Promise.resolve(name)
+    }
+    const existing = categoryNames.find((value) => value === name)
     if (existing) return Promise.resolve(existing)
-    const key = kind + ':' + name
+    const key = 'category:' + name
     const pending = nameWrites.current.get(key)
     if (pending) return pending
     setTaxonomyBusy((value) => value + 1)
     const work = (async () => {
       let actual: string
       try {
-        actual = (await (kind === 'category' ? addCategory(name) : addTag(name))).name
+        actual = (await addCategory(name)).name
       } catch (error) {
         if (!(error instanceof ApiError) || error.code !== 'NAME_CONFLICT') throw error
-        const all = await (kind === 'category' ? categories() : tags())
+        const all = await categories()
         const normalized = (value: string) =>
-          kind === 'category'
-            ? value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase()
-            : value
+          value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase()
         const matched = all.find((item) => normalized(item.name) === normalized(name))
         if (!matched) throw error
         actual = matched.name
       }
-      if (kind === 'category')
-        setCategoryNames((values) => [...new Set([...values, actual])].sort())
-      else setTagNames((values) => [...new Set([...values, actual])].sort())
+      setCategoryNames((values) => [...new Set([...values, actual])].sort())
       return actual
     })().finally(() => {
       nameWrites.current.delete(key)
@@ -331,12 +342,14 @@ function Studio({
       const input = {
         version: current.version,
         title:
-          current.type === 'ARTICLE' && dirty
-            ? documentTitle(markdown, documentTitle(current.bodyMarkdown) ? '' : current.title)
-            : title,
+          current.type === 'POST'
+            ? ''
+            : current.type === 'ARTICLE' && dirty
+              ? documentTitle(markdown, documentTitle(current.bodyMarkdown) ? '' : current.title)
+              : title,
         publicationMetadata: !dirty,
         slug: current.slug,
-        summary,
+        summary: current.type === 'POST' ? '' : summary,
         bodyMarkdown: markdown,
         tags: resolvedTags,
         category: resolvedCategory,
@@ -379,23 +392,7 @@ function Studio({
   }
 
   async function publish() {
-    if (current?.type === 'ARTICLE') {
-      await publication.prepare(true)
-      return
-    }
-    const saved = await save()
-    if (!saved) return
-    setBusy(true)
-    try {
-      const published = await publishArticle(saved.id, saved.version)
-      setCurrent(published)
-      setView('content')
-      setNotice('帖子已发布，访客现在可以阅读。')
-    } catch (error) {
-      setNotice(errorMessage(error))
-    } finally {
-      setBusy(false)
-    }
+    await publication.prepare(true)
   }
 
   async function unpublish() {
@@ -464,7 +461,7 @@ function Studio({
       )}
       <ArticleSidebar
         active={view}
-        username={session.username}
+        username={session.username ?? '你'}
         siteName={siteName}
         avatarUrl={avatarUrl}
         collapsed={sidebarCollapsed}
@@ -494,16 +491,18 @@ function Studio({
         <main className="workspace studio-page editor-workspace">
           <header className="studio-head editor-head">
             <div>
-              <button
-                className="back-link"
-                onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}
-              >
-                ← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}
-              </button>
-              <p className="eyebrow">
-                {current.status === 'PUBLISHED' ? '已发布' : '私人草稿'} · {typeNames[current.type]}
-                {dirty ? ' · 尚未保存' : ''}
-              </p>
+              <div className="editor-navigation">
+                <button
+                  className="back-link"
+                  onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}
+                >
+                  ← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}
+                </button>
+                <p className="eyebrow">
+                  {current.status === 'PUBLISHED' ? '已发布' : '草稿'} · {typeNames[current.type]}
+                  {dirty ? ' · 尚未保存' : ''}
+                </p>
+              </div>
               <h1 title={title}>{current.type === 'ARTICLE' ? title || '写文章' : '写帖子'}</h1>
             </div>
             <div className="actions">
@@ -569,7 +568,33 @@ function Studio({
               onClose={publication.close}
               onRetry={() => void publication.prepare(true)}
               onSubmit={() => void publication.submit()}
-            />
+              article={current.type === 'ARTICLE'}
+              taxonomyBusy={taxonomyBusy > 0}
+            >
+              <EditorTaxonomy
+                article={current.type === 'ARTICLE'}
+                category={category}
+                categoryNames={categoryNames}
+                tags={selectedTags}
+                tagNames={tagNames}
+                tagInput={newTag}
+                busy={busy || publication.pending || taxonomyBusy > 0 || agentLocked}
+                onCategory={(value) => {
+                  setCategory(value)
+                  setDirty(true)
+                }}
+                onCategoryCommit={(value) => commitName('category', value)}
+                onTagInput={(value) => {
+                  setNewTag(value)
+                  setDirty(true)
+                }}
+                onTagCommit={(value) => commitName('tag', value)}
+                onRemoveTag={(value) => {
+                  setSelectedTags((values) => values.filter((tag) => tag !== value))
+                  setDirty(true)
+                }}
+              />
+            </PublicationDialog>
           )}
           <section
             className={
@@ -585,8 +610,8 @@ function Studio({
               <div className="dashboard-card editor-main">
                 <div className="card-head editor-label">
                   <div>
-                    <p className="eyebrow">WRITING SPACE</p>
                     <h2>正文</h2>
+                    <p className="eyebrow">WRITING SPACE</p>
                   </div>
                   <span>
                     {current.type === 'ARTICLE'
@@ -594,29 +619,6 @@ function Studio({
                       : 'Markdown 文字内容 · 不支持图片'}
                   </span>
                 </div>
-                <EditorTaxonomy
-                  article={current.type === 'ARTICLE'}
-                  category={category}
-                  categoryNames={categoryNames}
-                  tags={selectedTags}
-                  tagNames={tagNames}
-                  tagInput={newTag}
-                  busy={busy || publication.pending || taxonomyBusy > 0 || agentLocked}
-                  onCategory={(value) => {
-                    setCategory(value)
-                    setDirty(true)
-                  }}
-                  onCategoryCommit={(value) => commitName('category', value)}
-                  onTagInput={(value) => {
-                    setNewTag(value)
-                    setDirty(true)
-                  }}
-                  onTagCommit={(value) => commitName('tag', value)}
-                  onRemoveTag={(value) => {
-                    setSelectedTags((values) => values.filter((tag) => tag !== value))
-                    setDirty(true)
-                  }}
-                />
                 <div className="editor-writing-area" ref={previewHost}>
                   {current.type === 'ARTICLE' ? (
                     <div className="editor-surface">
@@ -668,6 +670,8 @@ function Studio({
                 aria-hidden={!assistantOpen}
               >
                 <WritingAssistant
+                  username={session.username ?? '你'}
+                  userAvatar={avatarUrl}
                   key={current.id}
                   adapterRef={agentRef}
                   previewHost={previewHost}
