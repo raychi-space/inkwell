@@ -3556,3 +3556,34 @@ a {
     grid-template-columns: 1fr;
   }
 }
+.content-history-dialog {
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+.history-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.history-list button {
+  width: 100%;
+  display: grid;
+  gap: 0.3rem;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.history-list button[aria-pressed='true'] {
+  border-color: #497a55;
+}
+.content-history-dialog pre {
+  max-height: 32dvh;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+  border: 1px solid #dce5d8;
+  border-radius: 8px;
+  padding: 1rem;
+  font: inherit;
+}

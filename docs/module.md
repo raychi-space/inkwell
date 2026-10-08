@@ -9,3 +9,5 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 访问统计接入见 [wellspring 统计契约](https://github.com/raychi-space/wellspring/blob/main/docs/api/analytics-v1.md)。采集服务和聚合状态归独立 waymarks；应用不访问其 SQLite，浏览器不接收服务 token。
 
 内容导出属于 `features/articles`，由其API通过统一 `apiResponse` 处理认证和下载取消；app只组合当前已保存ID/版本与忙碌状态。工作稿、发布快照和图片的完整包及容量边界由 wellspring 负责，不在管理台拼装数据或读附件文件。
+
+修订历史也归 `features/articles`，只消费管理员元数据/快照及恢复API。app在明确恢复成功后更新当前文章并增加独立编辑器generation，正常保存不重建编辑器；富文本初始化规范化回调不标脏，真正用户输入及采纳建议仍标脏。历史正文预览用转义文本，不执行HTML。
