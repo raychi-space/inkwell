@@ -1,5 +1,12 @@
 import { api, apiResponse } from '../../shared/api/client'
-import type { Article, Page, Uploaded, ContentRevision, ContentRevisionSummary } from './types'
+import type {
+  Article,
+  Page,
+  Uploaded,
+  ContentRevision,
+  ContentRevisionSummary,
+  TrashItem,
+} from './types'
 
 type ArticleInput = Pick<
   Article,
@@ -102,4 +109,40 @@ export function restoreContentRevision(
     `/api/v1/admin/contents/${encodeURIComponent(id)}/revisions/${encodeURIComponent(revisionId)}/restore`,
     { method: 'POST', body: JSON.stringify({ expectedVersion }), signal },
   )
+}
+
+export function listTrashedContent(page: number, signal: AbortSignal): Promise<Page<TrashItem>> {
+  return api(`/api/v1/admin/trash?page=${page}&pageSize=20`, { signal })
+}
+export function moveContentToTrash(
+  id: string,
+  expectedVersion: number,
+  signal: AbortSignal,
+): Promise<TrashItem> {
+  return api(`/api/v1/admin/contents/${encodeURIComponent(id)}/trash`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+    signal,
+  })
+}
+export function recoverTrashedContent(
+  id: string,
+  expectedVersion: number,
+  signal: AbortSignal,
+): Promise<Article> {
+  return api(`/api/v1/admin/trash/${encodeURIComponent(id)}/restore`, {
+    method: 'POST',
+    body: JSON.stringify({ expectedVersion }),
+    signal,
+  })
+}
+export function purgeTrashedContent(
+  id: string,
+  expectedVersion: number,
+  signal: AbortSignal,
+): Promise<void> {
+  return api(`/api/v1/admin/trash/${encodeURIComponent(id)}?expectedVersion=${expectedVersion}`, {
+    method: 'DELETE',
+    signal,
+  })
 }

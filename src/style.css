@@ -3587,3 +3587,37 @@ a {
   padding: 1rem;
   font: inherit;
 }
+
+.trash-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.trash-item {
+  border: 1px solid var(--studio-border, #e0e7dc);
+  padding: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+}
+.trash-item > div:first-child {
+  min-width: 0;
+  flex: 1 1 240px;
+}
+.trash-item-title {
+  overflow-wrap: anywhere;
+  font-size: 1.1rem;
+}
+.trash-item p {
+  color: var(--studio-muted, #748176);
+}
+.trash-action-dialog {
+  max-width: min(540px, calc(100vw - 32px));
+  overflow-wrap: anywhere;
+}
+button.danger {
+  color: #b42318;
+  border-color: #b42318;
+}

@@ -11,6 +11,8 @@ const operations: Record<string, string> = {
   UNPUBLISH: '撤回',
   SUMMARY: '自动摘要',
   RESTORE: '历史恢复',
+  TRASH: '移入回收站',
+  RECOVER: '回收站恢复',
 }
 type Props = {
   article: Article
