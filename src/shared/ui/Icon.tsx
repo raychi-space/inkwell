@@ -1,4 +1,5 @@
 const paths = {
+  analytics: 'M4 20h16 M7 16V9 M12 16V4 M17 16v-5',
   content: 'M4 5h16v14H4z M8 9h8 M8 13h8 M8 16h5',
   draft: 'M6 3h9l4 4v14H6z M14 3v5h5 M9 12h7 M9 16h5',
   settings: 'M4 7h16 M4 17h16 M8 4v6 M16 14v6',

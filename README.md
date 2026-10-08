@@ -64,3 +64,7 @@ npm run dev
 ## 搜索引擎收录
 
 管理台 HTML 带 `robots: noindex, nofollow`，登录和编辑入口不参与公开站收录；内容授权仍由服务端会话与权限处理。公开站 SEO/RSS 在 lantern 实现，见[主任务 #43](https://github.com/raychi-space/raychi/issues/43)。
+
+## 访问统计
+
+左侧“访问统计”按 UTC 日期查询（结束日期包含当天），提供 PV、未识别 PV、访客日、近似访问、趋势、来源主机和热门页面。访客日是逐日去重之和，不能当作跨日独立访客数；近似访问按 UTC 30 分钟桶计算。未启用或服务故障显示明确提示并可重试，不当作零流量。仅站长会话可读取报表。接口见 [统计 v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/analytics-v1.md)。

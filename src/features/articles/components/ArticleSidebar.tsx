@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../../shared/ui/Icon'
 
 type Props = {
-  active: 'content' | 'drafts' | 'settings' | 'ai' | 'password'
+  active: 'content' | 'drafts' | 'settings' | 'ai' | 'password' | 'analytics'
   username: string | null
   siteName: string
   avatarUrl: string | null
@@ -12,6 +12,7 @@ type Props = {
   onDrafts: () => void
   onSettings: () => void
   onAI: () => void
+  onAnalytics: () => void
   onChangePassword: () => void
   onSignOut: () => void
 }
@@ -37,6 +38,7 @@ export function ArticleSidebar(p: Props) {
     { id: 'drafts', label: '草稿箱', icon: 'draft', action: p.onDrafts },
     { id: 'settings', label: '网站管理', icon: 'settings', action: p.onSettings },
     { id: 'ai', label: '助手管理', icon: 'assistant', action: p.onAI },
+    { id: 'analytics', label: '访问统计', icon: 'analytics', action: p.onAnalytics },
   ] as const
   return (
     <aside className="sidebar">

@@ -24,6 +24,7 @@ import { errorMessage } from '../shared/lib/errors'
 import { EditorTaxonomy } from '../features/articles/components/EditorTaxonomy'
 import { documentTitle } from '../features/articles/documentTitle'
 import { ApiError } from '../shared/api/client'
+import { AnalyticsDashboard } from '../features/analytics/AnalyticsDashboard'
 
 const AgentEditorFixture = lazy(() =>
   import('../features/articles/components/AgentEditorFixture').then((module) => ({
@@ -79,7 +80,9 @@ function Studio({
     }
   })
   const [current, setCurrent] = useState<Article | null>(null)
-  const [view, setView] = useState<'content' | 'drafts' | 'settings' | 'ai' | 'password'>('content')
+  const [view, setView] = useState<
+    'content' | 'drafts' | 'settings' | 'ai' | 'password' | 'analytics'
+  >('content')
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [body, setBody] = useState('')
@@ -454,6 +457,14 @@ function Studio({
     setNotice('')
   }
 
+  async function showAnalytics() {
+    if (!(await checkSession()) || !canLeave()) return
+    setCurrent(null)
+    setDirty(false)
+    setView('analytics')
+    setNotice('')
+  }
+
   return (
     <div className={'shell' + (sidebarCollapsed ? ' sidebar-collapsed' : '')}>
       {!sidebarCollapsed && (
@@ -469,11 +480,14 @@ function Studio({
         onContent={() => showSection('content')}
         onDrafts={() => showSection('drafts')}
         onAI={() => void showAssistants()}
+        onAnalytics={() => void showAnalytics()}
         onSettings={() => void showSettings()}
         onChangePassword={() => void showPassword()}
         onSignOut={() => void signOut()}
       />
-      {view === 'password' ? (
+      {view === 'analytics' ? (
+        <AnalyticsDashboard />
+      ) : view === 'password' ? (
         <ChangePassword
           onComplete={() => onSessionEnd('密码已修改，请使用新密码重新登录。')}
           onCancel={() => void showSection('content')}
