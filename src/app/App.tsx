@@ -26,6 +26,8 @@ import { documentTitle } from '../features/articles/documentTitle'
 import { ApiError } from '../shared/api/client'
 import { AnalyticsDashboard } from '../features/analytics/AnalyticsDashboard'
 import { ExportContent } from '../features/articles/components/ExportContent'
+import { MoveToTrash } from '../features/articles/components/TrashAction'
+import { TrashDashboard } from '../features/articles/components/TrashDashboard'
 import { ContentHistory } from '../features/articles/components/ContentHistory'
 
 const AgentEditorFixture = lazy(() =>
@@ -83,7 +85,7 @@ function Studio({
   })
   const [current, setCurrent] = useState<Article | null>(null)
   const [view, setView] = useState<
-    'content' | 'drafts' | 'settings' | 'ai' | 'password' | 'analytics'
+    'content' | 'drafts' | 'settings' | 'ai' | 'password' | 'analytics' | 'trash'
   >('content')
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
@@ -428,7 +430,7 @@ function Studio({
     }
   }
 
-  async function showSection(section: 'content' | 'drafts') {
+  async function showSection(section: 'content' | 'drafts' | 'trash') {
     if (!(await checkSession()) || !canLeave()) return
     setCurrent(null)
     setDirty(false)
@@ -482,13 +484,26 @@ function Studio({
         onToggle={toggleSidebar}
         onContent={() => showSection('content')}
         onDrafts={() => showSection('drafts')}
+        onTrash={() => showSection('trash')}
         onAI={() => void showAssistants()}
         onAnalytics={() => void showAnalytics()}
         onSettings={() => void showSettings()}
         onChangePassword={() => void showPassword()}
         onSignOut={() => void signOut()}
       />
-      {view === 'analytics' ? (
+      {view === 'trash' ? (
+        <TrashDashboard
+          busy={busy}
+          notice={notice}
+          onBusy={setBusy}
+          onNotice={setNotice}
+          onRecovered={(article) => {
+            edit(article)
+            setEditorGeneration((value) => value + 1)
+            setNotice('已恢复为草稿，手动发布后才会公开。')
+          }}
+        />
+      ) : view === 'analytics' ? (
         <AnalyticsDashboard />
       ) : view === 'password' ? (
         <ChangePassword
@@ -523,6 +538,26 @@ function Studio({
               <h1 title={title}>{current.type === 'ARTICLE' ? title || '写文章' : '写帖子'}</h1>
             </div>
             <div className="actions">
+              <MoveToTrash
+                article={current}
+                disabled={
+                  dirty ||
+                  busy ||
+                  publication.opened ||
+                  publication.pending ||
+                  taxonomyBusy > 0 ||
+                  pendingUploads > 0 ||
+                  agentLocked ||
+                  agentBusy
+                }
+                onBusy={setBusy}
+                onMoved={() => {
+                  setCurrent(null)
+                  setDirty(false)
+                  setView('trash')
+                  setNotice('已移到回收站，访客无法阅读。')
+                }}
+              />
               <ContentHistory
                 article={current}
                 dirty={dirty}
