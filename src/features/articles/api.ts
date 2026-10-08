@@ -1,4 +1,4 @@
-import { api } from '../../shared/api/client'
+import { api, apiResponse } from '../../shared/api/client'
 import type { Article, Page, Uploaded } from './types'
 
 type ArticleInput = Pick<
@@ -58,4 +58,16 @@ export async function upload(articleId: string, file: File): Promise<Uploaded> {
   const body = new FormData()
   body.append('file', file)
   return api<Uploaded>(`/api/v1/admin/articles/${articleId}/assets`, { method: 'POST', body })
+}
+
+export async function exportContent(
+  id: string,
+  version: number,
+  signal: AbortSignal,
+): Promise<Blob> {
+  const response = await apiResponse(
+    `/api/v1/admin/contents/${encodeURIComponent(id)}/export?expectedVersion=${version}`,
+    { signal },
+  )
+  return response.blob()
 }
