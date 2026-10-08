@@ -11,3 +11,5 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 内容导出属于 `features/articles`，由其API通过统一 `apiResponse` 处理认证和下载取消；app只组合当前已保存ID/版本与忙碌状态。工作稿、发布快照和图片的完整包及容量边界由 wellspring 负责，不在管理台拼装数据或读附件文件。
 
 修订历史也归 `features/articles`，只消费管理员元数据/快照及恢复API。app在明确恢复成功后更新当前文章并增加独立编辑器generation，正常保存不重建编辑器；富文本初始化规范化回调不标脏，真正用户输入及采纳建议仍标脏。历史正文预览用转义文本，不执行HTML。
+
+回收站也归features/articles：只读分页元数据、统一API/CSRF/版本，写入前native dialog明确确认，脏稿禁用移入，忙碌状态由app组合以阻止离开；恢复后app载入草稿，无自动公开。永久删除由后端事务和附件队列负责，不在浏览器删除文件。

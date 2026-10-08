@@ -41,3 +41,8 @@ export type Uploaded = {
   width: number
   height: number
 }
+
+export type TrashItem = Pick<
+  Article,
+  'id' | 'slug' | 'type' | 'title' | 'version' | 'updatedAt'
+> & { trashedAt: string }
