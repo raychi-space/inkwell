@@ -20,6 +20,17 @@ export type Article = {
 }
 
 export type Page<T> = { items: T[]; page: number; pageSize: number; total: number }
+export type ContentRevisionSummary = {
+  id: string
+  articleVersion: number
+  operation: string
+  title: string
+  summary: string
+  createdAt: string
+}
+export type ContentRevision = ContentRevisionSummary & {
+  snapshot: Pick<Article, 'title' | 'summary' | 'bodyMarkdown' | 'tags' | 'coverUrl' | 'category'>
+}
 export type Uploaded = {
   id: string
   articleId: string

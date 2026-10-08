@@ -1,5 +1,5 @@
 import { api, apiResponse } from '../../shared/api/client'
-import type { Article, Page, Uploaded } from './types'
+import type { Article, Page, Uploaded, ContentRevision, ContentRevisionSummary } from './types'
 
 type ArticleInput = Pick<
   Article,
@@ -70,4 +70,36 @@ export async function exportContent(
     { signal },
   )
   return response.blob()
+}
+
+export function contentRevisions(
+  id: string,
+  page: number,
+  signal: AbortSignal,
+): Promise<Page<ContentRevisionSummary>> {
+  return api(
+    `/api/v1/admin/contents/${encodeURIComponent(id)}/revisions?page=${page}&pageSize=20`,
+    { signal },
+  )
+}
+export function contentRevision(
+  id: string,
+  revisionId: string,
+  signal: AbortSignal,
+): Promise<ContentRevision> {
+  return api(
+    `/api/v1/admin/contents/${encodeURIComponent(id)}/revisions/${encodeURIComponent(revisionId)}`,
+    { signal },
+  )
+}
+export function restoreContentRevision(
+  id: string,
+  revisionId: string,
+  expectedVersion: number,
+  signal: AbortSignal,
+): Promise<Article> {
+  return api(
+    `/api/v1/admin/contents/${encodeURIComponent(id)}/revisions/${encodeURIComponent(revisionId)}/restore`,
+    { method: 'POST', body: JSON.stringify({ expectedVersion }), signal },
+  )
 }

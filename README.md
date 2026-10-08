@@ -71,3 +71,7 @@ npm run dev
 ## 单篇内容导出
 
 编辑页“导出已保存内容”下载该篇工作稿、最近发布快照及图片ZIP，未保存/上传/发布中禁用；导出不自动保存或发布。版本冲突需重新加载，退出或离开编辑页会中止尚未完成的下载。包含私密工作稿，外部评论、站点配置和模型密钥不在其中；不提供自动导入。语义见 [wellspring内容导出v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/content-export-v1.md)。`scripts/content-export-e2e.mjs` 使用明确隔离的真实API与生产管理台下载、解包并核对SHA256；页面失败反馈/延迟中止采用拦截测试，真实认证、图片、ZIP、版本冲突和会话失效则由实际后端验证。
+
+## 工作稿历史
+
+“历史版本”查看最近100条工作稿记录，分页/预览后明确确认才恢复；未保存修改或其他写入中禁用恢复，公开版本不改变。原有内容从下次变更前基线开始，图片沿用现有附件，不承诺恢复丢失文件。恢复后重新初始化富文本，MDXEditor初始Markdown规范化不当作用户编辑；正常保存保持现有编辑器与Undo行为。契约见 [修订历史v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/content-history-v1.md)。`scripts/content-history-e2e.mjs` 使用真实隔离API/MySQL与生产管理台验证预览/取消/确认、公开快照和图片、并发版本/409、脏稿保护、POST分页及390px；历史列表故障重试是明确的前端拦截测试。

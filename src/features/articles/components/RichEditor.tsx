@@ -129,7 +129,11 @@ export function RichEditor({
       readOnly={readOnly}
       markdown={article.bodyMarkdown}
       plugins={plugins}
-      onChange={onDirty}
+      onChange={(_markdown, initialMarkdownNormalize) => {
+        // Importing a saved snapshot can normalize whitespace/HTML. It is not
+        // a user edit; later typing and accepted proposals still mark the draft.
+        if (!initialMarkdownNormalize) onDirty()
+      }}
       contentEditableClassName="editable-prose"
     />
   )
