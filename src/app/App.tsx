@@ -26,6 +26,7 @@ import { documentTitle } from '../features/articles/documentTitle'
 import { ApiError } from '../shared/api/client'
 import { AnalyticsDashboard } from '../features/analytics/AnalyticsDashboard'
 import { ExportContent } from '../features/articles/components/ExportContent'
+import { ContentHistory } from '../features/articles/components/ContentHistory'
 
 const AgentEditorFixture = lazy(() =>
   import('../features/articles/components/AgentEditorFixture').then((module) => ({
@@ -105,6 +106,7 @@ function Studio({
   const agentRef = useRef<EditorAgentAdapter>(null)
   const previewHost = useRef<HTMLDivElement>(null)
   const editorRef = useRef<MDXEditorMethods>(null)
+  const [editorGeneration, setEditorGeneration] = useState(0)
   const [taxonomyBusy, setTaxonomyBusy] = useState(0)
   const nameWrites = useRef(new Map<string, Promise<string>>())
   const [selectedAssistantId, setSelectedAssistantId] = useState('')
@@ -521,6 +523,24 @@ function Studio({
               <h1 title={title}>{current.type === 'ARTICLE' ? title || '写文章' : '写帖子'}</h1>
             </div>
             <div className="actions">
+              <ContentHistory
+                article={current}
+                dirty={dirty}
+                disabled={
+                  busy ||
+                  publication.pending ||
+                  taxonomyBusy > 0 ||
+                  pendingUploads > 0 ||
+                  agentLocked ||
+                  agentBusy
+                }
+                onRestored={(article) => {
+                  edit(article)
+                  setEditorGeneration((value) => value + 1)
+                }}
+                onBusy={setBusy}
+                onNotice={setNotice}
+              />
               <ExportContent
                 id={current.id}
                 version={current.version}
@@ -653,7 +673,7 @@ function Studio({
                     <div className="editor-surface">
                       <Suspense fallback={<p className="upload-state">正在加载编辑器…</p>}>
                         <RichEditor
-                          key={current.id}
+                          key={`${current.id}:${editorGeneration}`}
                           article={current}
                           editorRef={editorRef}
                           agentRef={agentRef}
