@@ -68,3 +68,6 @@ npm run dev
 ## 访问统计
 
 左侧“访问统计”按 UTC 日期查询（结束日期包含当天），提供 PV、未识别 PV、访客日、近似访问、趋势、来源主机和热门页面。访客日是逐日去重之和，不能当作跨日独立访客数；近似访问按 UTC 30 分钟桶计算。未启用或服务故障显示明确提示并可重试，不当作零流量。仅站长会话可读取报表。接口见 [统计 v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/analytics-v1.md)。
+## 单篇内容导出
+
+编辑页“导出已保存内容”下载该篇工作稿、最近发布快照及图片ZIP，未保存/上传/发布中禁用；导出不自动保存或发布。版本冲突需重新加载，退出或离开编辑页会中止尚未完成的下载。包含私密工作稿，外部评论、站点配置和模型密钥不在其中；不提供自动导入。语义见 [wellspring内容导出v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/content-export-v1.md)。`scripts/content-export-e2e.mjs` 使用明确隔离的真实API与生产管理台下载、解包并核对SHA256；页面失败反馈/延迟中止采用拦截测试，真实认证、图片、ZIP、版本冲突和会话失效则由实际后端验证。

@@ -7,3 +7,5 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 运行 `npm run build` 检查类型与生产构建，`npm run lint` 和 `npm run format:check` 检查边界与格式；`npm run test:auth` 覆盖认证/改密，`npm run test:writing` 覆盖发布预览浏览器交互。浏览器测试的模拟响应不替代真实后端联调。改动编辑器时用当前后端实际检查“加载→编辑→保存→重新打开→发布预览→确认”，以及上传失败、未发布图片匿名 404、已发布文章仅保存后访客仍看旧版。将操作和实际结果写进 PR，跨仓验收按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)进行。
 
 访问统计接入见 [wellspring 统计契约](https://github.com/raychi-space/wellspring/blob/main/docs/api/analytics-v1.md)。采集服务和聚合状态归独立 waymarks；应用不访问其 SQLite，浏览器不接收服务 token。
+
+内容导出属于 `features/articles`，由其API通过统一 `apiResponse` 处理认证和下载取消；app只组合当前已保存ID/版本与忙碌状态。工作稿、发布快照和图片的完整包及容量边界由 wellspring 负责，不在管理台拼装数据或读附件文件。
