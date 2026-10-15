@@ -29,6 +29,7 @@ import { ExportContent } from '../features/articles/components/ExportContent'
 import { MoveToTrash } from '../features/articles/components/TrashAction'
 import { TrashDashboard } from '../features/articles/components/TrashDashboard'
 import { ContentHistory } from '../features/articles/components/ContentHistory'
+import { ReadingSettings } from '../features/reading'
 
 const AgentEditorFixture = lazy(() =>
   import('../features/articles/components/AgentEditorFixture').then((module) => ({
@@ -85,7 +86,7 @@ function Studio({
   })
   const [current, setCurrent] = useState<Article | null>(null)
   const [view, setView] = useState<
-    'content' | 'drafts' | 'settings' | 'ai' | 'password' | 'analytics' | 'trash'
+    'content' | 'drafts' | 'settings' | 'reading' | 'ai' | 'password' | 'analytics' | 'trash'
   >('content')
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
@@ -462,6 +463,14 @@ function Studio({
     setNotice('')
   }
 
+  async function showReading() {
+    if (!(await checkSession()) || !canLeave()) return
+    setCurrent(null)
+    setDirty(false)
+    setView('reading')
+    setNotice('')
+  }
+
   async function showAnalytics() {
     if (!(await checkSession()) || !canLeave()) return
     setCurrent(null)
@@ -485,6 +494,7 @@ function Studio({
         onContent={() => showSection('content')}
         onDrafts={() => showSection('drafts')}
         onTrash={() => showSection('trash')}
+        onReading={() => void showReading()}
         onAI={() => void showAssistants()}
         onAnalytics={() => void showAnalytics()}
         onSettings={() => void showSettings()}
@@ -512,6 +522,8 @@ function Studio({
         />
       ) : view === 'ai' ? (
         <AgentSettings />
+      ) : view === 'reading' ? (
+        <ReadingSettings onOpenAssistants={() => void showAssistants()} />
       ) : view === 'settings' ? (
         <SettingsEditor
           providers={<ProviderSettings />}

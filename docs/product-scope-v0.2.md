@@ -21,3 +21,5 @@
 - 帖子/思考无标题可发布；三类表单只展示适用字段；分类和标签新增后能选择并在重开时保留。
 - 站点设置保存即生效，未触发内容发布；失败时保留未保存输入并给出可理解的错误。
 - 运行 `npm run build`，并与当前后端做真实浏览器验证，覆盖 Markdown 往返、权限、图片与配置保存。
+
+> 2026-10-15 导航：当前产品基线见[现行产品](https://github.com/raychi-space/raychi/blob/main/docs/product-specs/current-behavior.md)；本文件保留原任务范围和验收要求，未实现但已确认的约束由后续设计/Issue 核实，不自动取消。
