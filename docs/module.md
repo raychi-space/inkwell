@@ -1,6 +1,6 @@
 # inkwell 模块说明
 
-所有者：inkwell；核对：2026-10-15。本文件包含 reading-shelf 开发分支的新增说明；系统边界见[架构](https://github.com/raychi-space/raychi/blob/main/ARCHITECTURE.md)，线上状态仍以已部署提交为准。
+所有者：inkwell；核对：2026-10-15。本文描述已提交的模块基线，功能开发分支的扩展另行验证。系统边界见[架构](https://github.com/raychi-space/raychi/blob/main/ARCHITECTURE.md)，本仓契约与代码仍需按任务指定提交核对。
 
 `src/main.tsx` 挂载应用；`src/app/` 组合页面状态。`src/features/auth/` 处理会话与登录，`src/features/articles/` 处理文章、帖子请求、列表、MDXEditor 与发布预览；`src/features/ai/` 处理助手/服务商配置、对话、选区建议与图标；`src/features/reading/` 管理拾阅来源、检查状态与翻译助手绑定；`src/features/taxonomy/` 和 `src/features/settings/` 管理分类标签及站点设置，`src/shared/api/` 统一请求、Cookie 和 CSRF。功能组件只调用本功能 API 层；跨功能编排在 `app/`，不把请求路径散落在界面组件中。
 
@@ -18,4 +18,4 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 
 ## 新增功能入口
 
-`features/analytics/` 拥有报表请求与显示，仍经统一 API/会话层访问 wellspring；统计口径归内核/站点契约。编辑器、导出、修订、回收站内部逻辑归 articles，业务权限与持久化归后端。`features/reading/` 是拾阅管理入口，已在开发分支完成构建验收，尚未上线。
+`features/analytics/` 拥有报表请求与显示，仍经统一 API/会话层访问 wellspring；统计口径归内核/站点契约。`features/reading/` 是拾阅管理入口，只通过统一 API 管理来源和翻译助手绑定。编辑器、导出、修订、回收站内部逻辑归 articles，业务权限与持久化归后端。
