@@ -3,6 +3,7 @@ const paths = {
   analytics: 'M4 20h16 M7 16V9 M12 16V4 M17 16v-5',
   content: 'M4 5h16v14H4z M8 9h8 M8 13h8 M8 16h5',
   draft: 'M6 3h9l4 4v14H6z M14 3v5h5 M9 12h7 M9 16h5',
+  reading: 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z M8 4v13a3 3 0 0 0 3 3',
   settings: 'M4 7h16 M4 17h16 M8 4v6 M16 14v6',
   assistant: 'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z',
   user: 'M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2',
