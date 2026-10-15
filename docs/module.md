@@ -2,7 +2,7 @@
 
 所有者：inkwell；核对：2026-10-15。本文描述已提交的模块基线，功能开发分支的扩展另行验证。系统边界见[架构](https://github.com/raychi-space/raychi/blob/main/ARCHITECTURE.md)，本仓契约与代码仍需按任务指定提交核对。
 
-`src/main.tsx` 挂载应用；`src/app/` 组合页面状态。`src/features/auth/` 处理会话与登录，`src/features/articles/` 处理文章、帖子请求、列表、MDXEditor 与发布预览；`src/features/ai/` 处理助手/服务商配置、对话、选区建议与图标；`src/features/taxonomy/` 和 `src/features/settings/` 管理分类标签及站点设置，`src/shared/api/` 统一请求、Cookie 和 CSRF。功能组件只调用本功能 API 层；跨功能编排在 `app/`，不把请求路径散落在界面组件中。
+`src/main.tsx` 挂载应用；`src/app/` 组合页面状态。`src/features/auth/` 处理会话与登录，`src/features/articles/` 处理文章、帖子请求、列表、MDXEditor 与发布预览；`src/features/ai/` 处理助手/服务商配置、对话、选区建议与图标；`src/features/reading/` 管理拾阅来源、检查状态与翻译助手绑定；`src/features/taxonomy/` 和 `src/features/settings/` 管理分类标签及站点设置，`src/shared/api/` 统一请求、Cookie 和 CSRF。功能组件只调用本功能 API 层；跨功能编排在 `app/`，不把请求路径散落在界面组件中。
 
 Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown；图片上传到后端后，正文保存稳定的公开地址，编辑区通过管理地址显示私密图片。保存工作稿不会替换访客可见的发布快照；明确发布才会更新。字段、状态码和错误格式以 [wellspring v0.2 契约](https://github.com/raychi-space/wellspring/blob/main/docs/api/contract-v0.2.md)为准，编辑能力与尚待验证的格式边界见[编辑器约定](editor-v0.1.md)。公开展示归 [lantern](https://github.com/raychi-space/lantern)。
 
@@ -18,4 +18,4 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 
 ## 新增功能入口
 
-`features/analytics/` 拥有报表请求与显示，仍经统一 API/会话层访问 wellspring；统计口径归内核/站点契约。编辑器、导出、修订、回收站内部逻辑归 articles，业务权限与持久化归后端。
+`features/analytics/` 拥有报表请求与显示，仍经统一 API/会话层访问 wellspring；统计口径归内核/站点契约。`features/reading/` 是拾阅管理入口，只通过统一 API 管理来源和翻译助手绑定。编辑器、导出、修订、回收站内部逻辑归 articles，业务权限与持久化归后端。
