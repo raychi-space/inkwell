@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { changePassword } from '../api'
 import { passwordValidation } from '../passwordValidation'
 import { errorMessage } from '../../../shared/lib/errors'
+import { PageHeader } from '../../../shared/ui/PageHeader'
 
 export function ChangePassword({
   onComplete,
@@ -44,12 +45,7 @@ export function ChangePassword({
 
   return (
     <main className="workspace studio-page">
-      <header className="studio-head">
-        <div>
-          <p className="eyebrow">账户安全</p>
-          <h1>修改密码</h1>
-        </div>
-      </header>
+      <PageHeader kicker="账户安全" title="修改密码" />
       <form className="dashboard-card password-form" onSubmit={submit}>
         <p className="settings-help">修改成功后，所有设备的登录都会失效，请使用新密码重新登录。</p>
         <fieldset disabled={busy}>

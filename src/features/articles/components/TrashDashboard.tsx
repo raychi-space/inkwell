@@ -3,6 +3,7 @@ import { listTrashedContent } from '../api'
 import type { Article, Page, TrashItem } from '../types'
 import { errorMessage } from '../../../shared/lib/errors'
 import { TrashActionDialog, type TrashActionKind } from './TrashAction'
+import { PageHeader } from '../../../shared/ui/PageHeader'
 
 export function TrashDashboard({
   busy,
@@ -48,13 +49,11 @@ export function TrashDashboard({
   }
   return (
     <main className="workspace studio-page dashboard-page">
-      <header className="studio-head dashboard-head">
-        <div>
-          <p className="eyebrow">CONTENT STUDIO</p>
-          <h1>回收站</h1>
-          <p>已移除的内容保留在这里，不会自动清空。恢复后为草稿，需要手动发布。</p>
-        </div>
-      </header>
+      <PageHeader
+        kicker="CONTENT STUDIO"
+        title="回收站"
+        subtitle="已移除的内容保留在这里，不会自动清空。恢复后为草稿，需要手动发布。"
+      />
       {notice && (
         <p className="notice" role="status">
           {notice}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { analyticsReport, type AnalyticsReport } from './api'
 import { errorMessage } from '../../shared/lib/errors'
+import { PageHeader } from '../../shared/ui/PageHeader'
 
 function utcDay(offset: number) {
   const date = new Date()
@@ -82,13 +83,7 @@ export function AnalyticsDashboard() {
   const maximum = Math.max(1, ...(report?.trend.map((row) => row.pageViews) ?? []))
   return (
     <main className="workspace studio-page analytics-page">
-      <header className="studio-head">
-        <div>
-          <p className="eyebrow">ANALYTICS</p>
-          <h1>访问统计</h1>
-          <p>公开页面的阅读情况 · UTC 日期</p>
-        </div>
-      </header>
+      <PageHeader kicker="ANALYTICS" title="访问统计" subtitle="公开页面的阅读情况 · UTC 日期" />
       <form
         className="dashboard-card analytics-filter"
         onSubmit={(event) => {

@@ -11,10 +11,12 @@ export function Card({ className, children, ...rest }: ComponentProps<'section'>
 export function CardHead({
   eyebrow,
   title,
+  subtitle,
   aside,
 }: {
   eyebrow: string
   title: ReactNode
+  subtitle?: ReactNode
   aside?: ReactNode
 }) {
   return (
@@ -22,6 +24,7 @@ export function CardHead({
       <div>
         <p className="eyebrow">{eyebrow}</p>
         <h2>{title}</h2>
+        {subtitle && <p>{subtitle}</p>}
       </div>
       {aside}
     </div>
