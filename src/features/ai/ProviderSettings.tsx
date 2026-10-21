@@ -3,6 +3,7 @@ import { providers, saveProvider, testProvider } from './api'
 import type { Provider } from './types'
 import { Select } from '../../shared/ui/Select'
 import { Icon } from '../../shared/ui/Icon'
+import { CardHead } from '../../shared/ui/Card'
 import { errorMessage } from '../../shared/lib/errors'
 import { useConfigSwitch } from './useConfigSwitch'
 import { ProviderLogo } from './ProviderLogo'
@@ -124,21 +125,21 @@ export function ProviderSettings() {
         ref={providerSection}
         aria-label="模型服务商配置"
       >
-        <div className="card-head">
-          <div>
-            <p className="eyebrow">MODEL CONNECTIONS</p>
-            <h2>模型服务商</h2>
-            <p>一个连接，管理多个模型。</p>
-          </div>
-          <button
-            className="secondary-button"
-            disabled={busy}
-            onClick={() => choose(providerDirty || !!newModel.trim(), '服务商', createProvider)}
-          >
-            <Icon name="plus" size={16} />
-            新增服务商
-          </button>
-        </div>
+        <CardHead
+          eyebrow="MODEL CONNECTIONS"
+          title="模型服务商"
+          subtitle="一个连接，管理多个模型。"
+          aside={
+            <button
+              className="secondary-button"
+              disabled={busy}
+              onClick={() => choose(providerDirty || !!newModel.trim(), '服务商', createProvider)}
+            >
+              <Icon name="plus" size={16} />
+              新增服务商
+            </button>
+          }
+        />
         {notice && (
           <p className="notice provider-notice" role="status">
             {notice}

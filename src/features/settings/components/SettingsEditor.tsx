@@ -12,6 +12,7 @@ import {
 import { getSettings, saveSettings } from '../api'
 import type { HomepageProject, SiteLink, SiteSettings, SocialAccount } from '../types'
 import { errorMessage } from '../../../shared/lib/errors'
+import { PageHeader } from '../../../shared/ui/PageHeader'
 import type { ReactNode } from 'react'
 
 const socialPlatforms = [
@@ -293,18 +294,16 @@ export function SettingsEditor({
 
   return (
     <main className="workspace studio-page management-page">
-      <header className="studio-head dashboard-head">
-        <div>
-          <p className="eyebrow">SITE STUDIO</p>
-          <h1>网站管理</h1>
-          <p>管理个人介绍、项目与网站上的外部链接。</p>
-        </div>
-        <div className="create-actions">
+      <PageHeader
+        kicker="SITE STUDIO"
+        title="网站管理"
+        subtitle="管理个人介绍、项目与网站上的外部链接。"
+        actions={
           <button className="primary" disabled={busy || !value} onClick={() => void save()}>
             {busy ? '正在保存…' : '保存设置'}
           </button>
-        </div>
-      </header>
+        }
+      />
       {notice && (
         <p className="notice dashboard-notice" role="status">
           {notice}

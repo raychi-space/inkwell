@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Select } from '../../../shared/ui/Select'
 import { Card, CardHead } from '../../../shared/ui/Card'
 import { EmptyState } from '../../../shared/ui/EmptyState'
+import { PageHeader } from '../../../shared/ui/PageHeader'
 import type { Article } from '../types'
 
 type Props = {
@@ -62,25 +63,26 @@ export function ContentDashboard({
 
   return (
     <main className="workspace studio-page dashboard-page">
-      <header className="studio-head dashboard-head">
-        <div>
-          <p className="eyebrow">CONTENT STUDIO</p>
-          <h1>{mode === 'published' ? '内容管理' : '草稿箱'}</h1>
-          <p>
-            {mode === 'published'
-              ? '查看与管理已经发布的内容。'
-              : '未发布的内容都在这里，整理好后再发布。'}
-          </p>
-        </div>
-        <div className="create-actions" aria-label="新建内容">
-          <button disabled={busy} onClick={() => onCreate('POST')}>
-            ＋ 写帖子
-          </button>
-          <button className="primary" disabled={busy} onClick={() => onCreate('ARTICLE')}>
-            ＋ 写文章
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        kicker="CONTENT STUDIO"
+        title={mode === 'published' ? '内容管理' : '草稿箱'}
+        subtitle={
+          mode === 'published'
+            ? '查看与管理已经发布的内容。'
+            : '未发布的内容都在这里，整理好后再发布。'
+        }
+        actionsLabel="新建内容"
+        actions={
+          <>
+            <button disabled={busy} onClick={() => onCreate('POST')}>
+              ＋ 写帖子
+            </button>
+            <button className="primary" disabled={busy} onClick={() => onCreate('ARTICLE')}>
+              ＋ 写文章
+            </button>
+          </>
+        }
+      />
       {(notice || error) && (
         <p className="notice dashboard-notice" role="status">
           {notice || error}

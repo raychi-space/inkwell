@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { errorMessage } from '../../shared/lib/errors'
+import { PageHeader } from '../../shared/ui/PageHeader'
+import { CardHead } from '../../shared/ui/Card'
 import type { Assistant, Provider } from '../../shared/types/ai'
 import {
   createAssistantFromTemplate,
@@ -180,23 +182,19 @@ export function ReadingSettings({ onOpenAssistants }: { onOpenAssistants: () => 
       </main>
     )
   return (
-    <main className="workspace management-page">
-      <header className="dashboard-head">
-        <div>
-          <p className="eyebrow">READING SHELF</p>
-          <h1>拾阅管理</h1>
-          <p>管理公开页的博客来源与中文译题服务。</p>
-        </div>
-      </header>
+    <main className="workspace studio-page management-page">
+      <PageHeader
+        kicker="READING SHELF"
+        title="拾阅管理"
+        subtitle="管理公开页的博客来源与中文译题服务。"
+      />
       <div className="management-scroll reading-management">
         <section className="dashboard-card reading-service-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">DISPLAY</p>
-              <h2>展示与翻译</h2>
-            </div>
-            <span>最近 {shelf.settings.displayDays} 天</span>
-          </div>
+          <CardHead
+            eyebrow="DISPLAY"
+            title="展示与翻译"
+            aside={<span>最近 {shelf.settings.displayDays} 天</span>}
+          />
           <div className="reading-service-fields">
             <label>
               翻译助手
@@ -278,12 +276,7 @@ export function ReadingSettings({ onOpenAssistants }: { onOpenAssistants: () => 
         </section>
 
         <section className="dashboard-card reading-add-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">NEW SOURCE</p>
-              <h2>添加来源</h2>
-            </div>
-          </div>
+          <CardHead eyebrow="NEW SOURCE" title="添加来源" />
           <SourceFields value={newSource} onChange={setNewSource} />
           <div className="reading-actions">
             <button className="primary" disabled={busy === 'new'} onClick={() => void addSource()}>
@@ -320,27 +313,27 @@ function SourceEditor({
 }) {
   return (
     <article className="dashboard-card reading-source-card">
-      <div className="card-head">
-        <div>
-          <p className="eyebrow">{source.articleCount} 篇链接</p>
-          <h2>{source.name}</h2>
-          <p>
-            {source.lastError
-              ? `最近检查失败：${source.lastError}`
-              : source.lastSuccessAt
-                ? `最近成功：${new Date(source.lastSuccessAt).toLocaleString('zh-CN')}`
-                : '尚未完成首次检查'}
-          </p>
-        </div>
-        <label className="reading-switch">
-          <input
-            type="checkbox"
-            checked={value.enabled}
-            onChange={(event) => onChange({ ...value, enabled: event.target.checked })}
-          />
-          启用
-        </label>
-      </div>
+      <CardHead
+        eyebrow={`${source.articleCount} 篇链接`}
+        title={source.name}
+        subtitle={
+          source.lastError
+            ? `最近检查失败：${source.lastError}`
+            : source.lastSuccessAt
+              ? `最近成功：${new Date(source.lastSuccessAt).toLocaleString('zh-CN')}`
+              : '尚未完成首次检查'
+        }
+        aside={
+          <label className="reading-switch">
+            <input
+              type="checkbox"
+              checked={value.enabled}
+              onChange={(event) => onChange({ ...value, enabled: event.target.checked })}
+            />
+            启用
+          </label>
+        }
+      />
       <SourceFields value={value} onChange={onChange} />
       <div className="reading-actions">
         <button className="secondary-button" disabled={busy} onClick={onSync}>
