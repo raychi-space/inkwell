@@ -3,10 +3,12 @@ import { providers, assistants, saveAssistant } from './api'
 import type { Provider, Assistant } from './types'
 import { Select } from '../../shared/ui/Select'
 import { Icon } from '../../shared/ui/Icon'
+import { CardHead } from '../../shared/ui/Card'
 import { errorMessage } from '../../shared/lib/errors'
 import { useConfigSwitch } from './useConfigSwitch'
 import { AssistantAvatar, AssistantIconPicker } from './AssistantAvatar'
 import { ProviderLogo } from './ProviderLogo'
+import { PageHeader } from '../../shared/ui/PageHeader'
 
 const emptyAssistant = {
   icon: 'lucide:bot',
@@ -95,13 +97,11 @@ export function AgentSettings() {
 
   return (
     <main className="workspace studio-page management-page">
-      <header className="studio-head dashboard-head">
-        <div>
-          <p className="eyebrow">AI STUDIO</p>
-          <h1>助手管理</h1>
-          <p>为不同任务创建助手，配置各自的模型和工作方式。</p>
-        </div>
-      </header>
+      <PageHeader
+        kicker="AI STUDIO"
+        title="助手管理"
+        subtitle="为不同任务创建助手，配置各自的模型和工作方式。"
+      />
       {notice && (
         <p className="notice dashboard-notice" role="status">
           {notice}
@@ -113,21 +113,21 @@ export function AgentSettings() {
           ref={assistantSection}
           aria-label="助手配置"
         >
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">YOUR ASSISTANTS</p>
-              <h2>助手</h2>
-              <p>选择模型，再告诉它应该怎样帮助你。</p>
-            </div>
-            <button
-              className="secondary-button"
-              disabled={busy}
-              onClick={() => choose(assistantDirty, '助手', createAssistant)}
-            >
-              <Icon name="plus" size={16} />
-              新增助手
-            </button>
-          </div>
+          <CardHead
+            eyebrow="YOUR ASSISTANTS"
+            title="助手"
+            subtitle="选择模型，再告诉它应该怎样帮助你。"
+            aside={
+              <button
+                className="secondary-button"
+                disabled={busy}
+                onClick={() => choose(assistantDirty, '助手', createAssistant)}
+              >
+                <Icon name="plus" size={16} />
+                新增助手
+              </button>
+            }
+          />
           <div className="entity-workspace">
             <div className="entity-list" aria-label="助手列表">
               {allAssistants.map((v) => (
