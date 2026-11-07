@@ -3590,10 +3590,13 @@ a {
 }
 .analytics-page .dashboard-head {
   align-items: center;
+  flex-direction: row;
   flex-wrap: nowrap;
 }
 .analytics-page .create-actions {
   margin-left: auto;
+  width: auto;
+  flex: 0 0 auto;
 }
 .analytics-power-area {
   display: flex;
