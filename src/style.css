@@ -3584,6 +3584,24 @@ a {
   }
 }
 
+.analytics-collection {
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.analytics-collection-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.analytics-collection h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+.analytics-collection p {
+  margin-bottom: 0;
+}
 .analytics-filter {
   display: flex;
   align-items: end;
