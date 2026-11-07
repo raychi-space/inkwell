@@ -19,31 +19,10 @@ export const saveAnalyticsSettings = (
     signal,
   })
 
-export type AnalyticsReport = {
-  appId: string
-  from: string
-  to: string
-  pageViews: number
-  unidentifiedPageViews: number
-  visitorDays: number
-  visits: number
-  sources: { name: string; pageViews: number }[]
-  regions: { name: string; pageViews: number }[]
-  popularPaths: { name: string; pageViews: number }[]
-  trend: { day: string; pageViews: number }[]
-  retention: { rawDays: number; aggregateDays: number }
-  definitions: { visitors: string; visits: string }
-}
-
-export const analyticsReport = (from: string, to: string, signal: AbortSignal) =>
-  api<AnalyticsReport>(`/api/v1/admin/analytics/report?${new URLSearchParams({ from, to })}`, {
-    signal,
-  })
-
 export type AnalyticsFilters = {
   from: string
   until: string
-  path: string
+  path?: string
   source: string
   ip: string
   country: string
@@ -91,8 +70,10 @@ function detailsQuery(filters: AnalyticsFilters) {
   if (!Number.isFinite(days) || days < 1 || days > 366)
     throw new Error('请选择 1～366 天的日期区间。')
   const query = new URLSearchParams({ from: filters.from, to: to.toISOString().slice(0, 10) })
-  for (const key of ['path', 'source', 'ip', 'country', 'province', 'city'] as const)
-    if (filters[key].trim()) query.set(key, filters[key].trim())
+  for (const key of ['path', 'source', 'ip', 'country', 'province', 'city'] as const) {
+    const value = filters[key]?.trim()
+    if (value) query.set(key, value)
+  }
   return query
 }
 export const analyticsOverview = (filters: AnalyticsFilters, signal: AbortSignal) =>

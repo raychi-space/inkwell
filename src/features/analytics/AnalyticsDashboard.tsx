@@ -24,7 +24,6 @@ function initialFilters(): AnalyticsFilters {
   return {
     from: day(-6),
     until: day(0),
-    path: '',
     source: '',
     ip: '',
     country: '',
