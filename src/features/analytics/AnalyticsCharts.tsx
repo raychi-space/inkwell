@@ -28,7 +28,7 @@ export function AnalyticsCharts({ report }: { report: AnalyticsOverview }) {
         <div className="analytics-line-layout">
           <div className="analytics-y-labels">
             <span>{number.format(maximum)}</span>
-            <span>{number.format(Math.round(maximum / 2))}</span>
+            <span>{number.format(maximum / 2)}</span>
             <span>0</span>
           </div>
           <div className="analytics-line-area">

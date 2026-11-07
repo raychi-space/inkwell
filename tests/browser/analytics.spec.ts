@@ -48,7 +48,7 @@ test('admin can disable collection, keep reports, reload the saved preference an
   await expect(control).toBeChecked()
   await control.click()
   await expect(control).not.toBeChecked()
-  await expect(page.getByText('已关闭访问统计功能。', { exact: true })).toBeVisible()
+  await expect(page.getByText('已关闭访问统计功能。', { exact: true })).toHaveCount(1)
   await expect(page.getByRole('heading', { name: '总浏览量' })).toBeVisible()
   await page.reload()
   await page.getByRole('button', { name: '访问统计', exact: true }).click()

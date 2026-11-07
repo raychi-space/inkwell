@@ -66,13 +66,18 @@ export function AnalyticsCollection() {
         aria-label="访问统计功能"
         title={settings?.enabled ? '关闭功能' : '开启功能'}
         aria-checked={Boolean(settings?.configured && settings.enabled)}
+        aria-busy={busy}
         disabled={busy || !settings?.configured}
         onClick={() => void toggle()}
       >
         <Power size={20} aria-hidden="true" />
       </button>
       {settings && !settings.configured && <p role="status">访问统计尚未配置，暂时无法开启。</p>}
-      {message && <p role="status">{message}</p>}
+      {message && (
+        <p role="status" className="sr-only">
+          {message}
+        </p>
+      )}
       {error && (
         <div>
           <p role="alert">{error}</p>
