@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { analyticsReport, type AnalyticsReport } from './api'
+import { AnalyticsCollection } from './AnalyticsCollection'
 import { errorMessage } from '../../shared/lib/errors'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
@@ -84,6 +85,7 @@ export function AnalyticsDashboard() {
   return (
     <main className="workspace studio-page analytics-page">
       <PageHeader kicker="ANALYTICS" title="访问统计" subtitle="公开页面的阅读情况 · UTC 日期" />
+      <AnalyticsCollection />
       <form
         className="dashboard-card analytics-filter"
         onSubmit={(event) => {
