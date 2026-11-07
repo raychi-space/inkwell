@@ -3587,11 +3587,15 @@ a {
 /* Analytics overview */
 .analytics-page {
   --analytics-ink: #315e40;
+  display: block;
+  overflow: auto;
+  padding: 20px clamp(16px, 2vw, 28px) 24px;
 }
 .analytics-page .dashboard-head {
   align-items: center;
   flex-direction: row;
   flex-wrap: nowrap;
+  margin-bottom: 12px;
 }
 .analytics-page .create-actions {
   margin-left: auto;
@@ -3628,36 +3632,37 @@ a {
 .analytics-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin: 20px 0;
+  gap: 10px;
+  margin: 0 0 12px;
 }
 .analytics-metrics section {
-  padding: 22px;
+  padding: 14px 16px;
   min-width: 0;
 }
 .analytics-metrics h2 {
   font-size: 13px;
   font-weight: 500;
   color: #68796d;
-  margin: 0 0 12px;
+  margin: 0 0 6px;
 }
 .analytics-metrics strong {
-  font-size: clamp(24px, 3vw, 36px);
+  font-size: clamp(24px, 2.5vw, 32px);
+  line-height: 1.2;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 .analytics-filter {
   display: flex;
   align-items: end;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
 }
 .analytics-filter label {
   display: grid;
-  gap: 6px;
-  flex: 1 1 140px;
+  gap: 4px;
+  flex: 1 1 130px;
   min-width: 0;
   font-size: 12px;
 }
@@ -3665,23 +3670,30 @@ a {
 .analytics-section-head select {
   width: 100%;
   min-width: 0;
-  padding: 9px 10px;
+  padding: 7px 9px;
+  min-height: 34px;
   border: 1px solid #d8e0d3;
   border-radius: 6px;
   background: #fff;
   color: #24352a;
 }
+.analytics-filter button,
+.analytics-pagination button {
+  padding: 7px 12px;
+  min-height: 34px;
+}
 .analytics-charts {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 12px;
 }
 .analytics-line-card,
 .analytics-region-card,
 .analytics-details,
 .analytics-error {
-  padding: 22px;
+  padding: 14px 16px;
   min-width: 0;
 }
 .analytics-section-head {
@@ -3689,8 +3701,8 @@ a {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 .analytics-section-head h2 {
   font-size: 17px;
@@ -3713,8 +3725,8 @@ a {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 32px 0 23px;
-  height: 230px;
+  padding: 28px 0 20px;
+  height: 200px;
   font-size: 11px;
   color: #68796d;
   font-variant-numeric: tabular-nums;
@@ -3726,7 +3738,7 @@ a {
 .analytics-line {
   display: block;
   width: 100%;
-  height: 230px;
+  height: 200px;
   overflow: visible;
 }
 .analytics-grid-line {
@@ -3752,7 +3764,7 @@ a {
   font-size: 11px;
 }
 .analytics-chart-values {
-  margin-top: 20px;
+  margin-top: 10px;
   font-size: 12px;
 }
 .analytics-chart-values summary {
@@ -3761,14 +3773,14 @@ a {
 }
 .analytics-region-chart {
   display: grid;
-  gap: 16px;
+  gap: 10px;
 }
 .analytics-region-row > div:first-child {
   display: flex;
   justify-content: space-between;
   gap: 12px;
   font-size: 12px;
-  margin-bottom: 7px;
+  margin-bottom: 5px;
 }
 .analytics-region-row span:last-child {
   font-variant-numeric: tabular-nums;
@@ -3796,7 +3808,7 @@ a {
 }
 .analytics-page th,
 .analytics-page td {
-  padding: 13px 10px;
+  padding: 9px 8px;
   border-bottom: 1px solid #e7ece5;
   overflow-wrap: anywhere;
 }
@@ -3819,7 +3831,7 @@ a {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 10px;
   font-size: 12px;
 }
 .analytics-pagination > span {
@@ -3828,7 +3840,8 @@ a {
 .analytics-note {
   color: #68796d;
   font-size: 12px;
-  line-height: 1.8;
+  line-height: 1.6;
+  margin: 10px 0 0;
 }
 @media (max-width: 900px) {
   .analytics-metrics {
@@ -3838,7 +3851,21 @@ a {
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 680px) {
+  .analytics-filter input,
+  .analytics-filter button,
+  .analytics-pagination button,
+  .analytics-section-head select {
+    min-height: 40px;
+  }
+}
 @media (max-width: 560px) {
+  .analytics-page {
+    padding: 16px 12px 24px;
+  }
+  .analytics-filter {
+    padding: 12px;
+  }
   .analytics-filter input {
     font-size: 16px;
   }
@@ -3849,7 +3876,7 @@ a {
   .analytics-line-card,
   .analytics-region-card,
   .analytics-details {
-    padding: 16px;
+    padding: 12px;
   }
   .analytics-power-area {
     max-width: 150px;
@@ -3858,11 +3885,11 @@ a {
     gap: 10px;
   }
   .analytics-line {
-    height: 200px;
+    height: 180px;
   }
   .analytics-y-labels {
-    height: 200px;
-    padding: 28px 0 20px;
+    height: 180px;
+    padding: 25px 0 18px;
   }
 }
 .content-history-dialog {
