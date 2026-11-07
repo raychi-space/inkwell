@@ -152,6 +152,7 @@ test('statistics remains vertically reachable and its details pan horizontally o
 
 test('statistics retains loaded values on a failed query and recovers on retry', async ({ page }) => {
   await fixture(page)
+  await expect(page.locator('.analytics-metrics strong').first()).toHaveText('1,234')
   await expect(page.locator('.analytics-metrics')).toHaveAttribute('aria-busy', 'false')
   const pattern = '**/api/v1/admin/analytics/overview?**'
   await page.route(pattern, route => route.fulfill({ status: 503, json: { code: 'ANALYTICS_UNAVAILABLE', message: '统计读取失败，请重试。' } }))
