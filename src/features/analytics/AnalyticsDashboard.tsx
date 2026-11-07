@@ -136,7 +136,6 @@ export function AnalyticsDashboard() {
             ['country', '国家'],
             ['province', '省份'],
             ['city', '城市'],
-            ['path', '页面路径'],
             ['source', '来源域名'],
           ] as const
         ).map(([key, label]) => (
@@ -145,7 +144,7 @@ export function AnalyticsDashboard() {
             <input
               value={filters[key]}
               onChange={(event) => field(key, event.target.value)}
-              placeholder={key === 'path' ? '/reading' : '全部'}
+              placeholder="全部"
               maxLength={512}
             />
           </label>
@@ -185,7 +184,6 @@ export function AnalyticsDashboard() {
                     <th>访问时间</th>
                     <th>原始 IP</th>
                     <th>归属地</th>
-                    <th>访问页面</th>
                     <th>来源</th>
                   </tr>
                 </thead>
@@ -195,7 +193,6 @@ export function AnalyticsDashboard() {
                       <td>{time.format(new Date(item.occurredAt))}</td>
                       <td>{item.ip ?? '未记录'}</td>
                       <td>{region([item.country, item.province, item.city])}</td>
-                      <td>{item.path}</td>
                       <td>
                         {item.source === 'direct_or_unknown' ? '直接访问或未知' : item.source}
                       </td>
@@ -203,7 +200,7 @@ export function AnalyticsDashboard() {
                   ))}
                   {!events?.items.length && (
                     <tr>
-                      <td colSpan={5}>这个条件下还没有访问记录。</td>
+                      <td colSpan={4}>这个条件下还没有访问记录。</td>
                     </tr>
                   )}
                 </tbody>

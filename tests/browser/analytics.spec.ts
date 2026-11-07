@@ -27,7 +27,7 @@ async function fixture(page: Page, options: { configured?: boolean; failure?: nu
     } else if (path.endsWith('/analytics/events')) {
       const query = new URL(request.url()).searchParams, page = Number(query.get('page') ?? 1)
       const filtered = query.has('ip')
-      body = { items: [{ id: 'event-'+page, occurredAt: '2026-11-07T09:00:00Z', path: filtered ? '/search' : page === 1 ? '/reading' : '/more', source: 'google.com', ip: '114.114.114.114', country: '中国', province: '江苏省', city: '南京市' }], total: filtered ? 1 : 21, page, pageSize: 20 }
+      body = { items: [{ id: 'event-'+page, occurredAt: '2026-11-07T09:00:00Z', path: filtered ? '/search' : page === 1 ? '/reading' : '/more', source: 'google.com', ip: filtered || page === 1 ? '114.114.114.114' : '114.114.114.115', country: '中国', province: '江苏省', city: '南京市' }], total: filtered ? 1 : 21, page, pageSize: 20 }
     } else if (path.endsWith('/auth/session')) body = { authenticated: true, username: 'fixture' }
     else if (path.endsWith('/auth/csrf')) body = { token: 'fixture', headerName: 'X-CSRF-TOKEN' }
     else if (path.endsWith('/settings')) body = { siteName: '测试站点' }
@@ -90,12 +90,16 @@ test('charts, geographic dimension, IP filtering and pagination render on deskto
   await expect(page.getByRole('list', { name: '地区访问量排名' })).toContainText('中国')
   await page.getByRole('combobox', { name: '地区维度' }).selectOption('cities')
   await expect(page.getByRole('list', { name: '地区访问量排名' })).toContainText('南京市')
-  await expect(page.getByRole('cell', { name: '/reading', exact: true })).toBeVisible()
+  await expect(page.getByLabel('页面路径', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('columnheader', { name: '访问页面', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('cell', { name: '/reading', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('cell', { name: '114.114.114.114', exact: true })).toBeVisible()
   await page.getByRole('button', { name: '下一页', exact: true }).click()
-  await expect(page.getByRole('cell', { name: '/more', exact: true })).toBeVisible()
+  await expect(page.getByRole('cell', { name: '114.114.114.115', exact: true })).toBeVisible()
   await page.getByLabel('IP 地址', { exact: true }).fill('114.114.114.114')
   await page.getByRole('button', { name: '查询', exact: true }).click()
-  await expect(page.getByRole('cell', { name: '/search', exact: true })).toBeVisible()
+  await expect(page.getByRole('cell', { name: '114.114.114.114', exact: true })).toBeVisible()
+  await expect(page.getByRole('cell', { name: '/search', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: '下一页', exact: true })).toBeDisabled()
   await expect(page.getByText('第 1 / 1 页')).toBeVisible()
   const heading = await page.getByRole('heading', {name:'访问统计',exact:true}).boundingBox()
