@@ -2556,6 +2556,13 @@ a {
   }
 }
 @media (max-width: 680px) {
+  .management-scroll {
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+  .content-list {
+    overscroll-behavior-y: auto;
+  }
   .shell,
   .shell.sidebar-collapsed {
     display: block;
@@ -3015,6 +3022,8 @@ a {
 }
 
 .password-form {
+  min-height: 0;
+  overflow-y: auto;
   max-width: 540px;
   padding: 24px;
 }
@@ -3587,8 +3596,6 @@ a {
 /* Analytics overview */
 .analytics-page {
   --analytics-ink: #315e40;
-  display: block;
-  overflow: auto;
   padding: 20px clamp(16px, 2vw, 28px) 24px;
 }
 .analytics-page .dashboard-head {
@@ -3925,6 +3932,8 @@ a {
 }
 
 .trash-list {
+  min-height: 0;
+  overflow-y: auto;
   list-style: none;
   padding: 0;
   display: grid;
