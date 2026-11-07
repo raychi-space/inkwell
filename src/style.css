@@ -3817,7 +3817,7 @@ a {
   font-weight: 500;
 }
 .analytics-details table {
-  min-width: 650px;
+  min-width: 560px;
 }
 .analytics-details th:first-child {
   min-width: 145px;
