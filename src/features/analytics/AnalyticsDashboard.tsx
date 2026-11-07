@@ -95,6 +95,16 @@ export function AnalyticsDashboard() {
           </section>
         ))}
       </div>
+      {loading && <p role="status">正在读取统计…</p>}
+      {error && (
+        <div className="dashboard-card analytics-error">
+          <p role="alert">{error}</p>
+          <button type="button" className="secondary-button" onClick={() => void load(filters)}>
+            重试
+          </button>
+        </div>
+      )}
+      {overview && <AnalyticsCharts report={overview} />}
       <form
         className="dashboard-card analytics-filter"
         onSubmit={(event) => {
@@ -156,18 +166,8 @@ export function AnalyticsDashboard() {
           重置
         </button>
       </form>
-      {loading && <p role="status">正在读取统计…</p>}
-      {error && (
-        <div className="dashboard-card analytics-error">
-          <p role="alert">{error}</p>
-          <button type="button" className="secondary-button" onClick={() => void load(filters)}>
-            重试
-          </button>
-        </div>
-      )}
       {overview && (
         <>
-          <AnalyticsCharts report={overview} />
           <section
             className="dashboard-card analytics-details"
             aria-labelledby="analytics-details-title"
