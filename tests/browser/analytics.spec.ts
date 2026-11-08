@@ -23,11 +23,14 @@ async function fixture(page: Page, options: { configured?: boolean; failure?: nu
     } else if (path.endsWith('/analytics/overview')) {
       const query = new URL(request.url()).searchParams
       const retention = { rawDays: 30, aggregateDays: 365, timeZone: 'Asia/Shanghai', geoConfigured: true, visitorTrackingSince: '2026-11-07T00:00:00Z' }
-      body = { from: query.get('from'), to: query.get('to'), summary: { pageViews: 1234, visitors: 74, todayPageViews: 24, todayVisitors: 8 }, trend: [{day: query.get('from'), pageViews: 2}, {day: new Date(Date.parse(query.get('to')!) - 86400000).toISOString().slice(0, 10), pageViews: 12}], countries: [{name: '中国', pageViews: 24}], provinces: [{name: '江苏省', pageViews: 12}], cities: [{name: '南京市', pageViews: 12}], retention }
+      const source = query.get('source')
+      const sources = [{name: 'google.com', pageViews: 8}, {name: 'direct_or_unknown', pageViews: 4}, {name: 'github.com', pageViews: 2}].filter(row => !source || row.name === source)
+      const count = source ? sources.reduce((total, row) => total + row.pageViews, 0) : 14
+      body = { from: query.get('from'), to: query.get('to'), summary: { pageViews: 1234, visitors: 74, todayPageViews: 24, todayVisitors: 8 }, trend: [{day: query.get('from'), pageViews: source === 'direct_or_unknown' ? 0 : 2}, {day: new Date(Date.parse(query.get('to')!) - 86400000).toISOString().slice(0, 10), pageViews: count - (source === 'direct_or_unknown' ? 0 : 2)}], countries: [{name: '中国', pageViews: count}], provinces: [{name: '江苏省', pageViews: count}], cities: [{name: '南京市', pageViews: count}], sources, retention }
     } else if (path.endsWith('/analytics/events')) {
       const query = new URL(request.url()).searchParams, page = Number(query.get('page') ?? 1)
-      const filtered = query.has('ip')
-      body = { items: [{ id: 'event-'+page, occurredAt: '2026-11-07T09:00:00Z', path: filtered ? '/search' : page === 1 ? '/reading' : '/more', source: 'google.com', ip: filtered || page === 1 ? '114.114.114.114' : '114.114.114.115', country: '中国', province: '江苏省', city: '南京市' }], total: filtered ? 1 : 21, page, pageSize: 20 }
+      const filtered = query.has('ip') || query.has('source')
+      body = { items: [{ id: 'event-'+page, occurredAt: '2026-11-07T09:00:00Z', path: filtered ? '/search' : page === 1 ? '/reading' : '/more', source: query.get('source') ?? 'google.com', ip: filtered || page === 1 ? '114.114.114.114' : '114.114.114.115', country: '中国', province: '江苏省', city: '南京市' }], total: filtered ? 1 : 21, page, pageSize: 20 }
     } else if (path.endsWith('/auth/session')) body = { authenticated: true, username: 'fixture' }
     else if (path.endsWith('/auth/csrf')) body = { token: 'fixture', headerName: 'X-CSRF-TOKEN' }
     else if (path.endsWith('/settings')) body = { siteName: '测试站点' }
@@ -166,3 +169,154 @@ test('statistics retains loaded values on a failed query and recovers on retry',
   await expect(page.getByRole('alert')).toHaveCount(0)
   await expect(page.getByText('第 1 / 1 页')).toBeVisible()
 })
+
+test('daily values appear by hover and keyboard without the old expanded table', async ({ page }) => {
+  await fixture(page)
+  const chart = page.getByRole('img', { name: /每日访问量/ })
+  const tooltip = page.getByRole('tooltip')
+  await expect(page.getByText('查看每日数值', { exact: true })).toHaveCount(0)
+  await chart.locator('circle').first().hover()
+  await expect(tooltip).toContainText('2 PV')
+  await expect(tooltip).toContainText(await page.getByLabel('开始日期', { exact: true }).inputValue())
+  await chart.locator('circle').last().hover()
+  await expect(tooltip).toContainText('12 PV')
+  await page.locator('.analytics-charts').screenshot({ path: '../.local/analytics-sources-20261108/chart-tooltip.png' })
+  await page.getByRole('heading', { name: '每日访问量', exact: true }).hover()
+  await expect(tooltip).toHaveCount(0)
+  await chart.focus()
+  await expect(tooltip).toContainText('2 PV')
+  await chart.press('ArrowRight')
+  await expect(tooltip).toContainText('12 PV')
+  await chart.press('Home')
+  await expect(tooltip).toContainText('2 PV')
+  await chart.press('End')
+  await expect(tooltip).toContainText('12 PV')
+  await chart.press('Escape')
+  await expect(tooltip).toHaveCount(0)
+})
+
+test('phone taps show first and last daily values inside the chart bounds', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 320, height: 700 }, hasTouch: true, isMobile: true })
+  try {
+    const page = await context.newPage()
+    await fixture(page)
+    const chart = page.getByRole('img', { name: /每日访问量/ })
+    await chart.scrollIntoViewIfNeeded()
+    for (const [index, value] of [[0, '2 PV'], [1, '12 PV']] as const) {
+      const circle = await chart.locator('circle').nth(index).boundingBox()
+      await page.touchscreen.tap(circle!.x + circle!.width / 2, circle!.y + circle!.height / 2)
+      await expect(page.getByRole('tooltip')).toContainText(value)
+      const box = (await page.getByRole('tooltip').boundingBox())!
+      const plot = (await page.locator('.analytics-line-plot').boundingBox())!
+      expect(box.x).toBeGreaterThanOrEqual(plot.x - 1)
+      expect(box.x + box.width).toBeLessThanOrEqual(plot.x + plot.width + 1)
+    }
+    await page.locator('.analytics-line-card').screenshot({ path: '../.local/analytics-sources-20261108/chart-tooltip-mobile.png' })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  } finally { await context.close() }
+})
+
+test('source ranking filters real request parameters, preserves the date range and global cards, and clears selection', async ({ page }) => {
+  const queries: { path: string; query: URLSearchParams }[] = []
+  page.on('request', request => {
+    const url = new URL(request.url())
+    if (/\/analytics\/(overview|events)$/.test(url.pathname)) queries.push({ path: url.pathname, query: url.searchParams })
+  })
+  await fixture(page)
+  const sources = page.getByRole('region', { name: '访问来源', exact: true })
+  await expect(sources.getByRole('row').filter({ hasText: 'google.com' })).toContainText('57.1%')
+  const cards = await page.locator('.analytics-metrics strong').allTextContents()
+  const from = await page.getByLabel('开始日期', { exact: true }).inputValue()
+  const until = await page.getByLabel('结束日期', { exact: true }).inputValue()
+  await page.getByRole('button', { name: '下一页', exact: true }).click()
+  await expect(page.getByText('第 2 / 2 页')).toBeVisible()
+  await page.getByLabel('开始日期', { exact: true }).fill('2026-10-01')
+  queries.length = 0
+  await sources.getByRole('button', { name: 'google.com', exact: true }).click()
+  await expect(sources.getByRole('button', { name: 'google.com', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(sources).toContainText('100%')
+  await expect(page.getByLabel('来源域名', { exact: true })).toHaveValue('google.com')
+  await expect(page.getByLabel('开始日期', { exact: true })).toHaveValue(from)
+  await expect(page.getByLabel('结束日期', { exact: true })).toHaveValue(until)
+  await expect(page.getByText('第 1 / 1 页')).toBeVisible()
+  expect(await page.locator('.analytics-metrics strong').allTextContents()).toEqual(cards)
+  expect(queries).toHaveLength(2)
+  for (const { path, query } of queries) {
+    expect(query.get('source')).toBe('google.com')
+    expect(query.get('from')).toBe(from)
+    if (path.endsWith('/events')) expect(query.get('page')).toBe('1')
+  }
+  await sources.getByRole('button', { name: '清除来源筛选', exact: true }).click()
+  await expect(sources.getByRole('button', { name: 'github.com', exact: true })).toBeVisible()
+  await expect(page.getByLabel('来源域名', { exact: true })).toHaveValue('')
+  await sources.getByRole('button', { name: '直接访问或未知', exact: true }).click()
+  await expect(page.getByLabel('来源域名', { exact: true })).toHaveValue('direct_or_unknown')
+  await expect(sources.getByRole('button', { name: '直接访问或未知', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.analytics-details tbody')).toContainText('直接访问或未知')
+  await page.getByLabel('IP 地址', { exact: true }).fill('114.114.114.114')
+  await page.getByRole('button', { name: '查询', exact: true }).click()
+  await expect(page.locator('.analytics-metrics')).toHaveAttribute('aria-busy', 'false')
+  await sources.getByRole('button', { name: '直接访问或未知', exact: true }).click()
+  await expect(page.getByLabel('来源域名', { exact: true })).toHaveValue('')
+  await expect(page.getByLabel('IP 地址', { exact: true })).toHaveValue('114.114.114.114')
+  await expect(sources.getByRole('button', { name: 'github.com', exact: true })).toBeVisible()
+})
+
+test('source selection failure retains the applied chart and selection until an explicit retry', async ({ page }) => {
+  await fixture(page)
+  const sources = page.getByRole('region', { name: '访问来源', exact: true })
+  await expect(sources.getByRole('button', { name: 'github.com', exact: true })).toBeVisible()
+  const pattern = '**/api/v1/admin/analytics/overview?**'
+  await page.route(pattern, route => route.fulfill({ status: 503, json: { code: 'ANALYTICS_UNAVAILABLE', message: '统计读取失败，请重试。' } }))
+  await sources.getByRole('button', { name: 'google.com', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('统计读取失败')
+  await expect(sources.getByRole('button', { name: 'google.com', exact: true })).toHaveAttribute('aria-pressed', 'false')
+  await expect(sources.getByRole('button', { name: 'github.com', exact: true })).toBeVisible()
+  await page.unroute(pattern)
+  await page.getByRole('button', { name: '重试', exact: true }).click()
+  await expect(sources.getByRole('button', { name: 'google.com', exact: true })).toHaveAttribute('aria-pressed', 'true')
+})
+
+for (const variant of ['empty', 'zero', 'single', 'many'] as const) {
+  test(`chart and sources handle ${variant} data and long source names`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 })
+    await fixture(page)
+    await expect(page.locator('.analytics-metrics')).toHaveAttribute('aria-busy', 'false')
+    const longName = 'very-long-referrer-'.repeat(8) + '.example'
+    await page.route('**/api/v1/admin/analytics/overview?**', async route => {
+      const count = variant === 'empty' ? 0 : variant === 'many' ? 366 : 1
+      const from = new URL(route.request().url()).searchParams.get('from')!
+      await route.fulfill({ json: {
+        from, to: from, summary: { pageViews: 1234, visitors: 74, todayPageViews: 24, todayVisitors: 8 },
+        trend: Array.from({ length: count }, (_, i) => ({ day: new Date(Date.parse(from) + i * 86400000).toISOString().slice(0, 10), pageViews: variant === 'zero' ? 0 : 100 })),
+        countries: [], provinces: [], cities: [], sources: variant === 'empty' ? [] : [{ name: longName, pageViews: variant === 'zero' ? 0 : 50 }, ...(variant === 'many' ? Array.from({length: 99}, (_, i) => ({name: `source-${i}.example`, pageViews: 1})) : [])],
+        retention: { rawDays: 30, aggregateDays: 365, timeZone: 'Asia/Shanghai', geoConfigured: true, visitorTrackingSince: '2026-11-07T00:00:00Z' },
+      } })
+    })
+    await page.getByRole('button', { name: '查询', exact: true }).click()
+    await expect(page.locator('.analytics-metrics')).toHaveAttribute('aria-busy', 'false')
+    const sources = page.getByRole('region', { name: '访问来源', exact: true })
+    if (variant === 'empty') {
+      await expect(sources).toContainText('这个区间还没有来源数据。')
+      await expect(page.locator('.analytics-line circle')).toHaveCount(0)
+    } else {
+      await expect(sources.getByRole('button', { name: longName, exact: true })).toBeVisible()
+      if (variant === 'single') await expect(sources).toContainText('50%')
+      if (variant === 'zero') await expect(sources).toContainText('0%')
+      const chart = page.getByRole('img', { name: /每日访问量/ })
+      await chart.focus()
+      await chart.press('End')
+      await expect(page.getByRole('tooltip')).toContainText(variant === 'zero' ? '0 PV' : '100 PV')
+      if (variant === 'many') {
+        const scroll = page.locator('.analytics-source-scroll')
+        await scroll.scrollIntoViewIfNeeded()
+        const box = (await scroll.boundingBox())!
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+        await page.mouse.wheel(0, 10000)
+        await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
+        await expect(sources.getByRole('button', { name: 'source-98.example', exact: true })).toBeInViewport()
+      }
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  })
+}

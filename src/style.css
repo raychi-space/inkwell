@@ -3698,6 +3698,7 @@ a {
 }
 .analytics-line-card,
 .analytics-region-card,
+.analytics-sources,
 .analytics-details,
 .analytics-error {
   padding: 14px 16px;
@@ -3770,13 +3771,58 @@ a {
   color: #68796d;
   font-size: 11px;
 }
-.analytics-chart-values {
-  margin-top: 10px;
-  font-size: 12px;
+.analytics-line-plot {
+  position: relative;
 }
-.analytics-chart-values summary {
+.analytics-line:focus-visible {
+  outline: 2px solid var(--analytics-ink);
+  outline-offset: 3px;
+}
+.analytics-chart-tooltip {
+  position: absolute;
+  z-index: 1;
+  width: 144px;
+  max-width: 100%;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid #dbe4d9;
+  border-radius: 6px;
+  background: #fff;
+  color: #315e40;
+  box-shadow: 0 3px 12px #203b2520;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.analytics-sources {
+  margin-bottom: 12px;
+}
+.analytics-source-scroll {
+  max-height: 240px;
+  overflow: auto;
+}
+.analytics-sources th:not(:first-child),
+.analytics-sources td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.analytics-source-button {
+  display: block;
+  max-width: 100%;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  color: var(--analytics-ink);
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
   cursor: pointer;
-  color: #68796d;
+}
+.analytics-source-button:hover,
+.analytics-source-button[aria-pressed='true'] {
+  text-decoration: underline;
 }
 .analytics-region-chart {
   display: grid;
@@ -3862,6 +3908,7 @@ a {
   .analytics-filter input,
   .analytics-filter button,
   .analytics-pagination button,
+  .analytics-sources button,
   .analytics-section-head select {
     min-height: 40px;
   }
@@ -3882,6 +3929,7 @@ a {
   .analytics-metrics section,
   .analytics-line-card,
   .analytics-region-card,
+  .analytics-sources,
   .analytics-details {
     padding: 12px;
   }

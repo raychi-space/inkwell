@@ -8,6 +8,7 @@ import {
 } from './api'
 import { AnalyticsCollection } from './AnalyticsCollection'
 import { AnalyticsCharts } from './AnalyticsCharts'
+import { AnalyticsSources } from './AnalyticsSources'
 import { errorMessage } from '../../shared/lib/errors'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
@@ -105,6 +106,18 @@ export function AnalyticsDashboard() {
           </div>
         )}
         {overview && <AnalyticsCharts report={overview} />}
+        {overview && (
+          <AnalyticsSources
+            report={overview}
+            source={applied.source}
+            loading={loading}
+            onSourceChange={(source) => {
+              const next = { ...applied, source }
+              setFilters(next)
+              void load(next)
+            }}
+          />
+        )}
         <form
           className="dashboard-card analytics-filter"
           onSubmit={(event) => {

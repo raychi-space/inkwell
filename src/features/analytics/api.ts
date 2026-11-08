@@ -44,6 +44,7 @@ export type AnalyticsOverview = {
   countries: { name: string; pageViews: number }[]
   provinces: { name: string; pageViews: number }[]
   cities: { name: string; pageViews: number }[]
+  sources: { name: string; pageViews: number }[]
   retention: AnalyticsRetention
 }
 export type AnalyticsEvent = {
