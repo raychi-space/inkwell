@@ -18,4 +18,4 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 
 ## 新增功能入口
 
-`features/analytics/` 拥有统计请求与显示：`api.ts` 只维护当前管理界面使用的 settings/overview/events 封装，经统一 API/会话层访问 wellspring；Dashboard 组合筛选与分页，Charts 展示折线与地区，Collection 维护持久开关和写入失败后的重新加载。页面不展示访问路径，API 的可选 path 过滤能力保留供后续消费方使用。统计口径归内核/站点契约，已无消费方的旧报表前端封装不再保留。`features/reading/` 是拾阅管理入口，只通过统一 API 管理来源和翻译助手绑定。编辑器、导出、修订、回收站内部逻辑归 articles，业务权限与持久化归后端。
+`features/analytics/` 拥有统计请求与显示：`api.ts` 只维护当前管理界面使用的 settings/overview/events 封装，经统一 API/会话层访问 wellspring；Dashboard 组合筛选与分页，Charts 展示折线提示与地区，Sources 展示来源排行并回调 Dashboard 沿用已应用条件查询，Collection 维护持久开关和写入失败后的重新加载。来源占比分母使用当前 `trend` 的 PV 合计，不能拿累计四卡或最多 100 组来源的合计代替；来源字段复用现有站点 v2 契约，无需增加采集或迁移。页面不展示访问路径，API 的可选 path 过滤能力保留供后续消费方使用。统计口径归内核/站点契约，已无消费方的旧报表前端封装不再保留。`features/reading/` 是拾阅管理入口，只通过统一 API 管理来源和翻译助手绑定。编辑器、导出、修订、回收站内部逻辑归 articles，业务权限与持久化归后端。
