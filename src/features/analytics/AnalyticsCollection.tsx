@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Power } from 'lucide-react'
 import { errorMessage } from '../../shared/lib/errors'
 import { analyticsSettings, saveAnalyticsSettings, type AnalyticsSettings } from './api'
 
@@ -45,7 +46,7 @@ export function AnalyticsCollection() {
       )
       if (controller.signal.aborted) return
       setSettings(value)
-      setMessage(value.enabled ? '已开启访问采集。' : '已关闭访问采集。')
+      setMessage(value.enabled ? '已开启访问统计功能。' : '已关闭访问统计功能。')
     } catch (failure) {
       if (controller.signal.aborted) return
       setError(errorMessage(failure))
@@ -57,29 +58,26 @@ export function AnalyticsCollection() {
   }
 
   return (
-    <section
-      className="dashboard-card analytics-collection"
-      aria-labelledby="analytics-collection-title"
-    >
-      <div className="analytics-collection-control">
-        <div>
-          <h2 id="analytics-collection-title">访问采集</h2>
-          <p>关闭后停止记录新访问，历史报表仍可查询。</p>
-        </div>
-        <button
-          type="button"
-          className="primary"
-          role="switch"
-          aria-label="访问采集"
-          aria-checked={Boolean(settings?.configured && settings.enabled)}
-          disabled={busy || !settings?.configured}
-          onClick={() => void toggle()}
-        >
-          {busy ? '正在处理…' : settings?.configured && settings.enabled ? '关闭采集' : '开启采集'}
-        </button>
-      </div>
+    <div className="analytics-power-area">
+      <button
+        type="button"
+        className="analytics-power"
+        role="switch"
+        aria-label="访问统计功能"
+        title={settings?.enabled ? '关闭功能' : '开启功能'}
+        aria-checked={Boolean(settings?.configured && settings.enabled)}
+        aria-busy={busy}
+        disabled={busy || !settings?.configured}
+        onClick={() => void toggle()}
+      >
+        <Power size={20} aria-hidden="true" />
+      </button>
       {settings && !settings.configured && <p role="status">访问统计尚未配置，暂时无法开启。</p>}
-      {message && <p role="status">{message}</p>}
+      {message && (
+        <p role="status" className="sr-only">
+          {message}
+        </p>
+      )}
       {error && (
         <div>
           <p role="alert">{error}</p>
@@ -93,6 +91,6 @@ export function AnalyticsCollection() {
           </button>
         </div>
       )}
-    </section>
+    </div>
   )
 }
