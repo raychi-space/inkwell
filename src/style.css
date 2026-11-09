@@ -4014,3 +4014,25 @@ button.danger {
   color: #b42318;
   border-color: #b42318;
 }
+
+.reading-integration-status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0 0;
+}
+.reading-integration-status dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.reading-integration-status dd {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 650px) {
+  .reading-integration-status {
+    grid-template-columns: 1fr;
+  }
+}
