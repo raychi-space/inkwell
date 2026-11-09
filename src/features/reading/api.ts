@@ -49,3 +49,14 @@ export const loadReadingDependencies = () =>
     api<{ items: Provider[] }>(aiBase + '/providers').then((value) => value.items),
     assistantTemplates(),
   ])
+
+export type ReadingIntegration = {
+  mode: 'legacy' | 'aihot'
+  configured: boolean
+  connected: boolean
+  legacyActive: boolean
+  checkedAt: string | null
+  lastSuccessAt: string | null
+  updatedAt: string | null
+}
+export const readingIntegration = () => api<ReadingIntegration>(base + '/integration')
