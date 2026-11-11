@@ -1,0 +1,227 @@
+{
+  "page": 1,
+  "pageSize": 100,
+  "total": 20,
+  "items": [
+    {
+      "id": "fixture-bad",
+      "name": "异常来源",
+      "enabled": true,
+      "health": "failing",
+      "intervalMinutes": 30,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "fixture-rss",
+      "name": "隔离RSS来源",
+      "enabled": true,
+      "health": "ok",
+      "intervalMinutes": 30,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-aws-ml",
+      "name": "AWS Machine Learning Blog",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-ars-technica-ai",
+      "name": "Ars Technica · AI",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 60,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-bair",
+      "name": "Berkeley AI Research",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 180,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-github-ai",
+      "name": "GitHub Blog · AI & ML",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-google-deepmind",
+      "name": "Google DeepMind",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-google-research",
+      "name": "Google Research",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-hugging-face",
+      "name": "Hugging Face Blog",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-import-ai",
+      "name": "Import AI",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 180,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-latent-space",
+      "name": "Latent Space",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 180,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-mit-tech-review-ai",
+      "name": "MIT Technology Review · AI",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-microsoft-research",
+      "name": "Microsoft Research",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-mistral",
+      "name": "Mistral AI",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-nvidia-blog",
+      "name": "NVIDIA Blog",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-openai-news",
+      "name": "OpenAI News",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-simon-willison",
+      "name": "Simon Willison",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 120,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-techcrunch-ai",
+      "name": "TechCrunch · AI",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 60,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-the-decoder",
+      "name": "The Decoder",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 60,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    },
+    {
+      "id": "rss-the-verge-ai",
+      "name": "The Verge · AI",
+      "enabled": false,
+      "health": "unknown",
+      "intervalMinutes": 60,
+      "lastSuccessAt": null,
+      "lastFetchAt": null,
+      "nextFetchAt": "2100-01-01T00:00:00.000Z",
+      "lastError": null
+    }
+  ]
+}
