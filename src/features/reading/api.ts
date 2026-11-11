@@ -58,5 +58,6 @@ export type ReadingIntegration = {
   checkedAt: string | null
   lastSuccessAt: string | null
   updatedAt: string | null
+  managementConfigured?: boolean
 }
 export const readingIntegration = () => api<ReadingIntegration>(base + '/integration')
