@@ -98,6 +98,8 @@ function Studio({
   const [newTag, setNewTag] = useState('')
   const [coverUrl, setCoverUrl] = useState('')
   const [dirty, setDirty] = useState(false)
+  const [readingDirty, setReadingDirty] = useState(false)
+  const [readingBusy, setReadingBusy] = useState(false)
   const [pendingUploads, setPendingUploads] = useState(0)
   const transfers = useRef(0)
   const [busy, setBusy] = useState(false)
@@ -213,11 +215,12 @@ function Studio({
 
   useEffect(() => {
     const leave = (event: BeforeUnloadEvent) => {
-      if (dirty || pendingUploads > 0 || publication.pending) event.preventDefault()
+      if (dirty || readingDirty || readingBusy || pendingUploads > 0 || publication.pending)
+        event.preventDefault()
     }
     window.addEventListener('beforeunload', leave)
     return () => window.removeEventListener('beforeunload', leave)
-  }, [dirty, pendingUploads, publication.pending])
+  }, [dirty, readingDirty, readingBusy, pendingUploads, publication.pending])
 
   async function refreshTaxonomy() {
     try {
@@ -244,7 +247,7 @@ function Studio({
   }
 
   function canLeave() {
-    if (busy || publication.pending || publication.opened || taxonomyBusy > 0) {
+    if (busy || readingBusy || publication.pending || publication.opened || taxonomyBusy > 0) {
       setNotice('请等待当前保存或分类标签操作完成。')
       return false
     }
@@ -252,7 +255,7 @@ function Studio({
       setNotice('请等待图片上传完成。')
       return false
     }
-    return !dirty || window.confirm('当前修改尚未保存，确定离开吗？')
+    return (!dirty && !readingDirty) || window.confirm('当前修改尚未保存，确定离开吗？')
   }
 
   async function open(id: string) {
@@ -523,7 +526,11 @@ function Studio({
       ) : view === 'ai' ? (
         <AgentSettings />
       ) : view === 'reading' ? (
-        <ReadingSettings onOpenAssistants={() => void showAssistants()} />
+        <ReadingSettings
+          onOpenAssistants={() => void showAssistants()}
+          onDirtyChange={setReadingDirty}
+          onBusyChange={setReadingBusy}
+        />
       ) : view === 'settings' ? (
         <SettingsEditor
           providers={<ProviderSettings />}

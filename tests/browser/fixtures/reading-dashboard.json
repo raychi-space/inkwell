@@ -1,0 +1,282 @@
+{
+  "checkedAt": "2026-11-11T14:17:01.748Z",
+  "timeZone": "Asia/Shanghai",
+  "processes": {
+    "api": {
+      "status": "healthy",
+      "lastSeenAt": "2026-11-11T14:16:17.276Z"
+    },
+    "worker": {
+      "status": "healthy",
+      "lastSeenAt": "2026-11-11T14:16:21.198Z"
+    }
+  },
+  "sources": {
+    "total": 20,
+    "enabled": 2,
+    "healthy": 1,
+    "failing": 1,
+    "degraded": 0
+  },
+  "counts": {
+    "collectedToday": 2,
+    "pending": 2,
+    "published": 4
+  },
+  "trend": [
+    {
+      "date": "2026-11-05",
+      "collected": 1,
+      "processed": 1
+    },
+    {
+      "date": "2026-11-06",
+      "collected": 1,
+      "processed": 1
+    },
+    {
+      "date": "2026-11-07",
+      "collected": 1,
+      "processed": 1
+    },
+    {
+      "date": "2026-11-08",
+      "collected": 0,
+      "processed": 0
+    },
+    {
+      "date": "2026-11-09",
+      "collected": 1,
+      "processed": 1
+    },
+    {
+      "date": "2026-11-10",
+      "collected": 4,
+      "processed": 3
+    },
+    {
+      "date": "2026-11-11",
+      "collected": 2,
+      "processed": 0
+    }
+  ],
+  "tasks": {
+    "page": 1,
+    "pageSize": 20,
+    "total": 28,
+    "items": [
+      {
+        "id": "schedule-1",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:41.885Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-2",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:40.887Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-3",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:39.888Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-4",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:38.888Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-5",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:37.888Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-6",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:36.889Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-7",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:35.889Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-8",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:34.890Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-9",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:33.890Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-10",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:32.890Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-11",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:31.891Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-12",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:30.891Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-13",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:29.891Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-14",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:28.892Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-15",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:27.892Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-16",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:26.892Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-17",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:25.893Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-18",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:24.893Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-19",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:23.893Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      },
+      {
+        "id": "schedule-20",
+        "kind": "schedule",
+        "name": "内容处理调度",
+        "status": "failed",
+        "startedAt": "2026-11-11T14:13:22.894Z",
+        "finishedAt": "2026-11-11T14:13:41.832Z",
+        "error": "任务执行失败"
+      }
+    ]
+  },
+  "modelSummary": {
+    "calls": 6,
+    "ok": 4,
+    "failed": 1,
+    "unknown": 1,
+    "tokensIn": 60,
+    "tokensOut": 30,
+    "p50Ms": 300,
+    "p95Ms": 600
+  },
+  "budgets": [
+    {
+      "service": "deepseek",
+      "perMinute": 10,
+      "perHour": 60,
+      "perDay": 300,
+      "usedMinute": 0,
+      "usedHour": 0,
+      "usedDay": 0,
+      "updatedAt": "2026-11-11T14:10:28.726Z"
+    },
+    {
+      "service": "llm",
+      "perMinute": 10,
+      "perHour": 60,
+      "perDay": 300,
+      "usedMinute": 0,
+      "usedHour": 6,
+      "usedDay": 6,
+      "updatedAt": "2026-11-11T14:10:28.772Z"
+    }
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "checkedAt": "2026-11-11T14:17:01.770Z",
+  "metadataAvailable": true,
+  "metadataAt": "2026-11-11T14:16:36.202Z",
+  "days": 7,
+  "choices": [
+    {
+      "key": "default",
+      "label": "fixture-default",
+      "service": "llm",
+      "vision": false
+    },
+    {
+      "key": "deepseek-flash",
+      "label": "deepseek-flash",
+      "service": "deepseek",
+      "vision": false
+    },
+    {
+      "key": "deepseek-flash-think",
+      "label": "deepseek-flash-think",
+      "service": "deepseek",
+      "vision": false
+    }
+  ],
+  "summary": {
+    "calls": 6,
+    "ok": 4,
+    "failed": 1,
+    "unknown": 1,
+    "tokensIn": 60,
+    "tokensOut": 30,
+    "p50Ms": 300,
+    "p95Ms": 600
+  },
+  "capabilities": [
+    {
+      "key": "prefilter",
+      "label": "精选预筛",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "score",
+      "label": "精选评分",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 6,
+        "ok": 4,
+        "failed": 1,
+        "unknown": 1,
+        "p50Ms": 300,
+        "p95Ms": 600,
+        "tokensIn": 60,
+        "tokensOut": 30
+      }
+    },
+    {
+      "key": "understand",
+      "label": "内容理解",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "summarize",
+      "label": "标题摘要",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "wording",
+      "label": "改用词",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "structure",
+      "label": "结构抽取",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "group",
+      "label": "事件归组",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "groupReview",
+      "label": "归组复核",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "digest",
+      "label": "事件综述",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "report",
+      "label": "周报月报的总述与主题",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "translate",
+      "label": "精选全文翻译",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    },
+    {
+      "key": "feedback",
+      "label": "反馈筛选",
+      "currentKey": "default",
+      "currentLabel": "fixture-default",
+      "configured": true,
+      "usage": {
+        "calls": 0,
+        "ok": 0,
+        "failed": 0,
+        "unknown": 0,
+        "p50Ms": null,
+        "p95Ms": null,
+        "tokensIn": 0,
+        "tokensOut": 0
+      }
+    }
+  ],
+  "budgets": [
+    {
+      "service": "deepseek",
+      "perMinute": 10,
+      "perHour": 60,
+      "perDay": 300,
+      "usedMinute": 0,
+      "usedHour": 0,
+      "usedDay": 0,
+      "updatedAt": "2026-11-11T14:10:28.726Z"
+    },
+    {
+      "service": "llm",
+      "perMinute": 10,
+      "perHour": 60,
+      "perDay": 300,
+      "usedMinute": 0,
+      "usedHour": 6,
+      "usedDay": 6,
+      "updatedAt": "2026-11-11T14:10:28.772Z"
+    }
+  ]
+}

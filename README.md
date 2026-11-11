@@ -90,3 +90,7 @@ npm run dev
 “历史版本”查看最近100条工作稿记录，分页/预览后明确确认才恢复；未保存修改或其他写入中禁用恢复，公开版本不改变。原有内容从下次变更前基线开始，图片沿用现有附件，不承诺恢复丢失文件。恢复后重新初始化富文本，MDXEditor初始Markdown规范化不当作用户编辑；正常保存保持现有编辑器与Undo行为。契约见 [修订历史v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/content-history-v1.md)。`scripts/content-history-e2e.mjs` 使用真实隔离API/MySQL与生产管理台验证预览/取消/确认、公开快照和图片、并发版本/409、脏稿保护、POST分页及390px；历史列表故障重试是明确的前端拦截测试。
 
 回收站：编辑页的“移到回收站”只对已保存内容可用；移入立即隐藏公开内容，正文/图片/历史保留。导航“回收站”可明确确认恢复为草稿或永久删除，无自动清空。恢复后必须手动发布。契约见 [内容回收站v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/content-trash-v1.md)。
+
+## AIHOT 拾阅管理
+
+“拾阅管理”提供运行看板、RSS采集来源、模型与限额三个页签，使用本站会话/CSRF API；模型和内部管理密钥均不进入浏览器。手动刷新只查询状态，检查RSS与立即采集是明确操作，表单未保存/保存中均有离开保护。未配置管理接入时保留状态提示，legacy 后端继续兼容。页面与测试入口见[管理界面](docs/management-ui.md#拾阅管理)，字段由 [wellspring 契约](https://github.com/raychi-space/wellspring/blob/main/docs/api/reading-management-v1.md)维护；本仓无需增加环境密钥。
