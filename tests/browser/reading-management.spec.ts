@@ -163,18 +163,30 @@ for (const width of [1280, 390, 320])
   test(`reading tabs scroll inside workspace at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 440 })
     await fixture(page)
-    for (const tab of ['运行看板', '采集来源', '模型与限额']) {
+    for (const [tab, heading, pager] of [
+      ['运行看板', '最近任务', '任务分页'],
+      ['采集来源', 'RSS 来源', '来源分页'],
+      ['模型与限额', '近7天环节用量', '模型用量分页'],
+    ]) {
       await page.getByRole('tab', { name: tab }).click()
-      await expect(page.locator('.reading-panel')).toBeVisible()
+      await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible()
+      const pagination = page.getByRole('navigation', { name: pager })
+      await expect(pagination).toBeVisible()
       await expect
         .poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth))
         .toBeLessThanOrEqual(1)
-      const scroll = page.locator('.management-scroll')
-      await scroll.evaluate((e) => {
-        e.scrollTop = e.scrollHeight
-      })
-      expect(
-        await scroll.evaluate((e) => e.scrollHeight <= e.clientHeight || e.scrollTop > 0),
-      ).toBe(true)
+      if (width > 680) {
+        const scroll = page.locator('.management-scroll')
+        await scroll.evaluate((e) => {
+          e.scrollTop = e.scrollHeight
+        })
+        await expect
+          .poll(() => scroll.evaluate((e) => e.scrollHeight <= e.clientHeight || e.scrollTop > 0))
+          .toBe(true)
+      } else {
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+        await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+      }
+      await expect(pagination).toBeInViewport()
     }
   })
