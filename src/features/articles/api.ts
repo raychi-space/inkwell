@@ -20,10 +20,17 @@ export type AdminFilters = {
   tag?: string
   sort?: string
 }
-export async function listArticles(page = 1, filters: AdminFilters = {}): Promise<Page<Article>> {
-  const params = new URLSearchParams({ page: String(page), pageSize: '50' })
+export async function listArticles(
+  page = 1,
+  filters: AdminFilters = {},
+  options: { pageSize?: number; signal?: AbortSignal } = {},
+): Promise<Page<Article>> {
+  const params = new URLSearchParams({
+    page: String(page),
+    pageSize: String(options.pageSize ?? 50),
+  })
   for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value)
-  return api(`/api/v1/admin/contents?${params}`)
+  return api(`/api/v1/admin/contents?${params}`, { signal: options.signal })
 }
 
 export async function getArticle(id: string): Promise<Article> {

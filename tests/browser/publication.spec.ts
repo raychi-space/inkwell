@@ -1,3 +1,4 @@
+import { installOverviewFixture, waitForOverview } from './overview-fixture'
 import { test, expect } from '@playwright/test'
 
 test('save silently prepares metadata; preview edits publish only after confirmation', async ({ page }) => {
@@ -21,7 +22,10 @@ test('save silently prepares metadata; preview edits publish only after confirma
     if (path.endsWith('/ai/turns/turn')) body = { ...(body as object), turnId: 'turn' }
     await route.fulfill({ json: body })
   })
+  await installOverviewFixture(page)
   await page.goto('/')
+  await waitForOverview(page)
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.getByText('正文标题', { exact: true }).click()
   await expect(page.getByText('发布信息', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: '发布', exact: true })).toBeDisabled()
@@ -61,6 +65,8 @@ test('save silently prepares metadata; preview edits publish only after confirma
   // Reload invalidates in-memory generation cache. Direct publish waits and failures cannot publish.
   fail = true
   await page.reload()
+  await waitForOverview(page)
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.getByText('人工确认标题', { exact: true }).click()
   await page.getByRole('button', { name: '发布更新', exact: true }).click()
   await expect(page.getByRole('button', { name: '确认发布', exact: true })).toBeDisabled()
@@ -91,7 +97,10 @@ test('posts publish without title, summary or model and taxonomy menus escape di
     else throw Error('Unexpected API ' + path)
     await route.fulfill({ json: body })
   })
+  await installOverviewFixture(page)
   await page.goto('/')
+  await waitForOverview(page)
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.getByRole('button', { name: /只写正文的帖子/ }).click()
   await expect(page.getByRole('textbox', { name: '正文 Markdown', exact: true })).toHaveValue('只写正文的帖子。')
   await page.getByRole('button', { name: '发布', exact: true }).click()

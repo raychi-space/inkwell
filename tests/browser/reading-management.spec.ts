@@ -1,3 +1,4 @@
+import { installOverviewFixture, waitForOverview } from './overview-fixture'
 import { expect, test, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 const sample = (name: string) =>
@@ -67,7 +68,9 @@ async function fixture(page: Page) {
     } else throw Error('Unexpected reading fixture: ' + method + ' ' + path)
     await route.fulfill({ json: body })
   })
+  await installOverviewFixture(page)
   await page.goto('/')
+  await waitForOverview(page)
   await page.getByRole('button', { name: '拾阅管理', exact: true }).click()
   await expect(page.getByRole('heading', { name: '近 7 天采集与处理', exact: true })).toBeVisible()
   return {

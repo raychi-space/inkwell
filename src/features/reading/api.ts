@@ -60,4 +60,5 @@ export type ReadingIntegration = {
   updatedAt: string | null
   managementConfigured?: boolean
 }
-export const readingIntegration = () => api<ReadingIntegration>(base + '/integration')
+export const readingIntegration = (signal?: AbortSignal) =>
+  api<ReadingIntegration>(base + '/integration', { signal })

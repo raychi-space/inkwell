@@ -30,6 +30,7 @@ import { MoveToTrash } from '../features/articles/components/TrashAction'
 import { TrashDashboard } from '../features/articles/components/TrashDashboard'
 import { ContentHistory } from '../features/articles/components/ContentHistory'
 import { ReadingSettings } from '../features/reading'
+import { OverviewDashboard } from './OverviewDashboard'
 
 const AgentEditorFixture = lazy(() =>
   import('../features/articles/components/AgentEditorFixture').then((module) => ({
@@ -86,8 +87,16 @@ function Studio({
   })
   const [current, setCurrent] = useState<Article | null>(null)
   const [view, setView] = useState<
-    'content' | 'drafts' | 'settings' | 'reading' | 'ai' | 'password' | 'analytics' | 'trash'
-  >('content')
+    | 'overview'
+    | 'content'
+    | 'drafts'
+    | 'settings'
+    | 'reading'
+    | 'ai'
+    | 'password'
+    | 'analytics'
+    | 'trash'
+  >('overview')
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [body, setBody] = useState('')
@@ -434,7 +443,7 @@ function Studio({
     }
   }
 
-  async function showSection(section: 'content' | 'drafts' | 'trash') {
+  async function showSection(section: 'overview' | 'content' | 'drafts' | 'trash') {
     if (!(await checkSession()) || !canLeave()) return
     setCurrent(null)
     setDirty(false)
@@ -494,6 +503,7 @@ function Studio({
         avatarUrl={avatarUrl}
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
+        onOverview={() => void showSection('overview')}
         onContent={() => showSection('content')}
         onDrafts={() => showSection('drafts')}
         onTrash={() => showSection('trash')}
@@ -504,7 +514,17 @@ function Studio({
         onChangePassword={() => void showPassword()}
         onSignOut={() => void signOut()}
       />
-      {view === 'trash' ? (
+      {view === 'overview' ? (
+        <OverviewDashboard
+          busy={busy}
+          notice={notice}
+          onCreate={(type) => void create(type)}
+          onOpen={(id) => void open(id)}
+          onContent={() => void showSection('content')}
+          onAnalytics={() => void showAnalytics()}
+          onReading={() => void showReading()}
+        />
+      ) : view === 'trash' ? (
         <TrashDashboard
           busy={busy}
           notice={notice}

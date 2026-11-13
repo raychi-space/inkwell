@@ -1,3 +1,4 @@
+import { installOverviewFixture, waitForOverview } from './overview-fixture'
 import { expect, test, type Page } from '@playwright/test'
 
 async function fixture(page: Page) {
@@ -13,7 +14,10 @@ async function fixture(page: Page) {
     else throw Error('Unexpected layout fixture API: ' + path)
     await route.fulfill({ json: body })
   })
+  await installOverviewFixture(page)
   await page.goto('/')
+  await waitForOverview(page)
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await expect(page.getByRole('heading', { name: '内容管理', exact: true })).toBeVisible()
 }
 
