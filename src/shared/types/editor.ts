@@ -11,5 +11,4 @@ export interface EditorAgentAdapter {
   validateSelection(selectionId: string): boolean
   applyReplacement(selectionId: string, markdown: string): void
   releaseSelection(selectionId: string): void
-  getAnchor(selectionId: string): HTMLElement | null
 }
