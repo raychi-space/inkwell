@@ -120,7 +120,7 @@ test('recent content opens in the editor and the new post action creates a draft
 }) => {
   const { methods } = await fixture(page)
   await page.getByRole('button', { name: /示例文章/ }).click()
-  await expect(page.getByRole('button', { name: /返回内容管理/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: '← 返回内容管理', exact: true })).toBeVisible()
   expect(methods).toContain('GET /api/v1/admin/contents/one')
   await page.getByRole('button', { name: '概览', exact: true }).click()
   await page.getByRole('button', { name: '＋ 写帖子' }).click()
