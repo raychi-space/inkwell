@@ -90,12 +90,13 @@ test('entry count, per-entry size and total bytes are bounded by LRU eviction', 
   assert.ok(cache.peekRead('large-8'))
 })
 
-for (const status of [200, 409, 503]) {
+for (const status of [200, 409, 503, 'disconnected']) {
   test(`admin writes (${status}) invalidate read data but preserve navigation controls`, async t => {
     client.resetAuthSession()
     const original = globalThis.fetch; let reads = 0
     t.after(() => { globalThis.fetch = original; client.resetAuthSession() })
     globalThis.fetch = async (path, options) => {
+      if (options.method === 'PUT' && status === 'disconnected') throw new TypeError('connection reset after commit')
       const body = path.endsWith('/csrf') ? { token: 'fixture', headerName: 'X-CSRF-TOKEN' } : options.method === 'PUT' ? { code: 'WRITE_FAILED' } : { version: ++reads }
       return new Response(JSON.stringify(body), { status: options.method === 'PUT' ? status : 200 })
     }

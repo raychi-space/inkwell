@@ -226,7 +226,7 @@ function FormulaNodeView({
       >
         {formula}
       </button>
-      {open && (
+      {open && !readOnly && (
         <FormulaDialog
           initial={value}
           display={display}
@@ -243,6 +243,9 @@ export function InsertMath() {
   const insert = usePublisher(insertDecoratorNode$),
     readOnly = useCellValue(readOnly$)
   const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (readOnly) setOpen(false)
+  }, [readOnly])
   return (
     <>
       <button
@@ -254,7 +257,7 @@ export function InsertMath() {
       >
         ∑ 公式
       </button>
-      {open && (
+      {open && !readOnly && (
         <FormulaDialog
           initial=""
           display={false}
@@ -262,7 +265,7 @@ export function InsertMath() {
           onClose={() => setOpen(false)}
           onSave={(value, display) => {
             setOpen(false)
-            insert(() => new MathNode(value, display))
+            if (!readOnly) insert(() => new MathNode(value, display))
           }}
         />
       )}

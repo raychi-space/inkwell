@@ -1,5 +1,16 @@
 .math-formula {
+  display: inline-block;
   max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
+}
+.message-markdown :not(.katex-display) > .katex {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
 }
 .math-formula .katex-display,
 .message-markdown .katex-display {

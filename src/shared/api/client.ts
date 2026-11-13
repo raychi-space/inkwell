@@ -70,13 +70,20 @@ export async function apiResponse(path: string, options: RequestInit = {}): Prom
   if (method !== 'GET' && method !== 'HEAD') headers.set(csrfHeader, csrfToken!)
   if (options.body && !(options.body instanceof FormData))
     headers.set('Content-Type', 'application/json')
-  const response = await fetch(path, {
-    ...options,
-    signal,
-    headers,
-    credentials: 'same-origin',
-    cache: 'no-store',
-  })
+  let response: Response
+  try {
+    response = await fetch(path, {
+      ...options,
+      signal,
+      headers,
+      credentials: 'same-origin',
+      cache: 'no-store',
+    })
+  } catch (error) {
+    // A disconnected response does not prove the server rejected the write.
+    if (protectedPath && method !== 'GET' && method !== 'HEAD') invalidateReadCache()
+    throw error
+  }
   if (protectedPath && version !== sessionVersion)
     throw new ApiError(401, 'AUTH_REQUIRED', '登录状态已改变。')
   // An unsuccessful response can still follow an ambiguous upstream write.

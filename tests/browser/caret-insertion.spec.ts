@@ -261,3 +261,22 @@ test('an unsupported new selection before sending invalidates the previous curso
   expect(fixture.submitted()).toBeUndefined()
   await expect(editor).not.toContainText('新增')
 })
+
+test('an open formula dialog cannot modify the editor once an assistant proposal locks it', async ({
+  page,
+}) => {
+  const fixture = await openWriting(page)
+  await caret(page, '.editable-prose p:nth-child(2) span', 2)
+  await page.getByRole('button', { name: '写入光标处', exact: true }).click()
+  await page.getByRole('textbox', { name: '消息', exact: true }).fill('补写')
+  await page.getByRole('button', { name: '发送', exact: true }).click()
+  await expect.poll(() => fixture.submitted()?.mode).toBe('insert')
+  await page.getByRole('button', { name: '插入公式', exact: true }).click()
+  await page.getByLabel('公式源码').fill('x^2')
+  await fixture.finish()
+  await expect(
+    page.getByRole('region', { name: '光标插入建议：待确认', exact: true }),
+  ).toBeVisible()
+  await expect(page.getByRole('dialog', { name: '插入公式', exact: true })).toHaveCount(0)
+  await expect(page.locator('.editable-prose .katex')).toHaveCount(0)
+})
