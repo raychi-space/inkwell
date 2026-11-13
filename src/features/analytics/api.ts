@@ -1,3 +1,4 @@
+import { readApi } from '../../shared/api/readApi'
 import { api } from '../../shared/api/client'
 
 export type AnalyticsSettings = {
@@ -7,7 +8,7 @@ export type AnalyticsSettings = {
 }
 
 export const analyticsSettings = (signal: AbortSignal) =>
-  api<AnalyticsSettings>('/api/v1/admin/analytics/settings', { signal })
+  readApi<AnalyticsSettings>('/api/v1/admin/analytics/settings', { signal, ttl: 30_000 })
 
 export const saveAnalyticsSettings = (
   input: Pick<AnalyticsSettings, 'enabled' | 'version'>,
@@ -78,10 +79,16 @@ function detailsQuery(filters: AnalyticsFilters) {
   return query
 }
 export const analyticsOverview = (filters: AnalyticsFilters, signal: AbortSignal) =>
-  api<AnalyticsOverview>(`/api/v1/admin/analytics/overview?${detailsQuery(filters)}`, { signal })
+  readApi<AnalyticsOverview>(`/api/v1/admin/analytics/overview?${detailsQuery(filters)}`, {
+    signal,
+    ttl: 30_000,
+  })
 export const analyticsEvents = (filters: AnalyticsFilters, page: number, signal: AbortSignal) => {
   const query = detailsQuery(filters)
   query.set('page', String(page))
   query.set('pageSize', '20')
-  return api<AnalyticsEvents>(`/api/v1/admin/analytics/events?${query}`, { signal })
+  return readApi<AnalyticsEvents>(`/api/v1/admin/analytics/events?${query}`, {
+    signal,
+    ttl: 30_000,
+  })
 }

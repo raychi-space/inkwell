@@ -1,3 +1,4 @@
+import { readApi } from '../../shared/api/readApi'
 import { api } from '../../shared/api/client'
 import type { Assistant, Provider } from '../../shared/types/ai'
 import type {
@@ -10,7 +11,7 @@ import type {
 
 const base = '/api/v1/admin/reading'
 
-export const readingShelf = () => api<ReadingShelf>(base)
+export const readingShelf = () => readApi<ReadingShelf>(base)
 export const saveReadingSettings = (version: number, translationAssistantId: string | null) =>
   api<ReadingSettings>(base + '/settings', {
     method: 'PUT',
@@ -30,7 +31,9 @@ export const syncReadingSource = (id: string) =>
 
 const aiBase = '/api/v1/admin/ai'
 export const assistantTemplates = () =>
-  api<{ items: AssistantTemplate[] }>(aiBase + '/assistant-templates').then((value) => value.items)
+  readApi<{ items: AssistantTemplate[] }>(aiBase + '/assistant-templates', { ttl: 300_000 }).then(
+    (value) => value.items,
+  )
 export const createAssistantFromTemplate = (
   templateId: string,
   providerId: string,
@@ -45,8 +48,12 @@ export const createAssistantFromTemplate = (
   )
 export const loadReadingDependencies = () =>
   Promise.all([
-    api<{ items: Assistant[] }>(aiBase + '/assistants').then((value) => value.items),
-    api<{ items: Provider[] }>(aiBase + '/providers').then((value) => value.items),
+    readApi<{ items: Assistant[] }>(aiBase + '/assistants', { ttl: 300_000 }).then(
+      (value) => value.items,
+    ),
+    readApi<{ items: Provider[] }>(aiBase + '/providers', { ttl: 300_000 }).then(
+      (value) => value.items,
+    ),
     assistantTemplates(),
   ])
 
@@ -61,4 +68,4 @@ export type ReadingIntegration = {
   managementConfigured?: boolean
 }
 export const readingIntegration = (signal?: AbortSignal) =>
-  api<ReadingIntegration>(base + '/integration', { signal })
+  readApi<ReadingIntegration>(base + '/integration', { signal, ttl: 30_000 })

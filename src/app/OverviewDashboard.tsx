@@ -11,6 +11,7 @@ import { AnalyticsCharts } from '../features/analytics/AnalyticsCharts'
 import { readingIntegration } from '../features/reading/api'
 import { readingDashboard, type ReadingDashboard } from '../features/reading/management-api'
 import { ApiError } from '../shared/api/client'
+import { invalidateReadCache } from '../shared/api/sessionCache'
 import { PageHeader } from '../shared/ui/PageHeader'
 
 const number = new Intl.NumberFormat('zh-CN')
@@ -137,7 +138,14 @@ export function OverviewDashboard({
         actionsLabel="概览操作"
         actions={
           <>
-            <button onClick={() => setRevision((value) => value + 1)}>刷新</button>
+            <button
+              onClick={() => {
+                invalidateReadCache()
+                setRevision((value) => value + 1)
+              }}
+            >
+              刷新
+            </button>
             <button disabled={busy} onClick={() => onCreate('POST')}>
               ＋ 写帖子
             </button>

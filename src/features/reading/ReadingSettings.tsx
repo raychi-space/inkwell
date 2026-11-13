@@ -1,5 +1,7 @@
+import { useSessionState } from '../../shared/lib/useSessionState'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError } from '../../shared/api/client'
+import { invalidateReadCache } from '../../shared/api/sessionCache'
 import { errorMessage } from '../../shared/lib/errors'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { Card, CardHead } from '../../shared/ui/Card'
@@ -29,7 +31,10 @@ export function ReadingSettings({
   const [busy, setBusy] = useState(false)
   const [dirty, setDirty] = useState(false),
     [pending, setPending] = useState(false)
-  const [tab, setTab] = useState<'dashboard' | 'sources' | 'models'>('dashboard')
+  const [tab, setTab] = useSessionState<'dashboard' | 'sources' | 'models'>(
+    'reading.tab',
+    'dashboard',
+  )
   const [revision, setRevision] = useState(0)
   const markDirty = useCallback(
     (value: boolean) => {
@@ -86,6 +91,7 @@ export function ReadingSettings({
 
   async function refresh() {
     if (!canDiscard()) return
+    invalidateReadCache()
     setBusy(true)
     setError('')
     try {

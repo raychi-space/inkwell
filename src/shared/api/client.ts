@@ -1,3 +1,5 @@
+import { clearSessionCache, invalidateReadCache } from './sessionCache.js'
+
 let csrfToken: string | null = null
 let csrfHeader = 'X-CSRF-TOKEN'
 let sessionVersion = 0
@@ -13,6 +15,7 @@ export function onSessionExpired(listener: () => void) {
 
 export function resetAuthSession() {
   sessionVersion++
+  clearSessionCache()
   csrfToken = null
   protectedRequests.abort()
   protectedRequests = new AbortController()
@@ -74,6 +77,10 @@ export async function apiResponse(path: string, options: RequestInit = {}): Prom
     credentials: 'same-origin',
     cache: 'no-store',
   })
+  if (protectedPath && version !== sessionVersion)
+    throw new ApiError(401, 'AUTH_REQUIRED', '登录状态已改变。')
+  // An unsuccessful response can still follow an ambiguous upstream write.
+  if (protectedPath && method !== 'GET' && method !== 'HEAD') invalidateReadCache()
   if (!response.ok) {
     const data = (await response.json().catch(() => null)) as {
       code?: string
@@ -108,7 +115,11 @@ export async function apiResponse(path: string, options: RequestInit = {}): Prom
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const version = sessionVersion
   const response = await apiResponse(path, options)
   if (response.status === 204) return undefined as T
-  return (await response.json()) as T
+  const data = (await response.json()) as T
+  if (path.startsWith('/api/v1/admin/') && version !== sessionVersion)
+    throw new ApiError(401, 'AUTH_REQUIRED', '登录状态已改变。')
+  return data
 }

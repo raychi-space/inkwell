@@ -1,3 +1,5 @@
+import { useSessionState } from '../../shared/lib/useSessionState'
+import { invalidateReadCache } from '../../shared/api/sessionCache'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   analyticsOverview,
@@ -36,11 +38,14 @@ const region = (parts: string[]) =>
   parts.filter((value) => value && value !== 'unknown').join(' / ') || '未知'
 
 export function AnalyticsDashboard() {
-  const [filters, setFilters] = useState(initialFilters)
-  const [applied, setApplied] = useState(initialFilters)
+  const [filters, setFilters] = useSessionState('analytics.filters', initialFilters)
+  const [applied, setApplied] = useSessionState('analytics.applied', initialFilters)
+  const [savedPage, setSavedPage] = useSessionState('analytics.page', 1)
+  const initialQuery = useRef({ filters: applied, page: savedPage })
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null)
   const [events, setEvents] = useState<AnalyticsEvents | null>(null)
   const [loading, setLoading] = useState(false)
+  const [refresh, setRefresh] = useState(0)
   const [error, setError] = useState('')
   const request = useRef<AbortController | null>(null)
   const load = useCallback(async (query: AnalyticsFilters, page = 1) => {
@@ -58,6 +63,7 @@ export function AnalyticsDashboard() {
       setOverview(report)
       setEvents(details)
       setApplied(query)
+      setSavedPage(page)
     } catch (failure) {
       if (!controller.signal.aborted) setError(errorMessage(failure))
     } finally {
@@ -65,7 +71,7 @@ export function AnalyticsDashboard() {
     }
   }, [])
   useEffect(() => {
-    void load(initialFilters())
+    void load(initialQuery.current.filters, initialQuery.current.page)
     return () => request.current?.abort()
   }, [load])
   const field = (key: keyof AnalyticsFilters, value: string) =>
@@ -77,7 +83,21 @@ export function AnalyticsDashboard() {
         kicker="ANALYTICS"
         title="访问统计"
         subtitle="公开站的访问与来源 · 北京时间"
-        actions={<AnalyticsCollection />}
+        actions={
+          <>
+            <button
+              disabled={loading}
+              onClick={() => {
+                invalidateReadCache()
+                setRefresh((value) => value + 1)
+                void load(applied, savedPage)
+              }}
+            >
+              刷新
+            </button>
+            <AnalyticsCollection refresh={refresh} />
+          </>
+        }
         actionsLabel="统计功能"
       />
       <div className="management-scroll analytics-scroll">
@@ -100,7 +120,14 @@ export function AnalyticsDashboard() {
         {error && (
           <div className="dashboard-card analytics-error">
             <p role="alert">{error}</p>
-            <button type="button" className="secondary-button" onClick={() => void load(filters)}>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                invalidateReadCache()
+                void load(filters)
+              }}
+            >
               重试
             </button>
           </div>
@@ -122,6 +149,7 @@ export function AnalyticsDashboard() {
           className="dashboard-card analytics-filter"
           onSubmit={(event) => {
             event.preventDefault()
+            invalidateReadCache()
             void load(filters)
           }}
         >
@@ -171,6 +199,7 @@ export function AnalyticsDashboard() {
             disabled={loading}
             onClick={() => {
               const value = initialFilters()
+              invalidateReadCache()
               setFilters(value)
               void load(value)
             }}

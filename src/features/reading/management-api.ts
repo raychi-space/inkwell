@@ -1,3 +1,4 @@
+import { readApi } from '../../shared/api/readApi'
 import { api } from '../../shared/api/client'
 
 export type ReadingUsage = {
@@ -85,11 +86,11 @@ const query = (values: Record<string, string | number>) =>
       .map(([k, v]) => [k, String(v)]),
   )
 export const readingDashboard = (values: Record<string, string | number>, signal?: AbortSignal) =>
-  api<ReadingDashboard>(base + '/dashboard' + query(values), { signal })
+  readApi<ReadingDashboard>(base + '/dashboard' + query(values), { signal, ttl: 30_000 })
 export const aihotSources = (values: Record<string, string | number>) =>
-  api<AihotSourcePage>(base + '/sources' + query(values))
+  readApi<AihotSourcePage>(base + '/sources' + query(values), { ttl: 30_000 })
 export const aihotSource = (id: string) =>
-  api<AihotSourceDetail>(base + '/sources/' + encodeURIComponent(id))
+  readApi<AihotSourceDetail>(base + '/sources/' + encodeURIComponent(id), { ttl: 30_000 })
 export const createAihotSource = (value: SourceDraft) =>
   api<AihotSourceDetail>(base + '/sources', { method: 'POST', body: JSON.stringify(value) })
 export const updateAihotSource = (
@@ -109,7 +110,7 @@ export const collectAihotSource = (id: string) =>
   api<{ jobId: string | null }>(base + '/sources/' + encodeURIComponent(id) + '/collect', {
     method: 'POST',
   })
-export const readingModels = () => api<ReadingModels>(base + '/models')
+export const readingModels = () => readApi<ReadingModels>(base + '/models', { ttl: 30_000 })
 export const switchReadingModel = (key: string, model: string | null) =>
   api<ReadingModels>(base + '/models/' + encodeURIComponent(key), {
     method: 'PUT',

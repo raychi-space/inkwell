@@ -1,3 +1,4 @@
+import { useSessionState } from '../../shared/lib/useSessionState'
 import { useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../../shared/lib/errors'
 import {
@@ -36,11 +37,11 @@ export function ReadingSources({
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
     [busy, setBusy] = useState(false)
-  const [search, setSearch] = useState(''),
-    [query, setQuery] = useState(''),
-    [enabled, setEnabled] = useState(''),
-    [health, setHealth] = useState(''),
-    [page, setPage] = useState(1)
+  const [search, setSearch] = useSessionState('reading.sources.search', ''),
+    [query, setQuery] = useSessionState('reading.sources.query', ''),
+    [enabled, setEnabled] = useSessionState('reading.sources.enabled', ''),
+    [health, setHealth] = useSessionState('reading.sources.health', ''),
+    [page, setPage] = useSessionState('reading.sources.page', 1)
   const [draft, setDraft] = useState<Draft | null>(null),
     [original, setOriginal] = useState(''),
     [revision, setRevision] = useState(0)
