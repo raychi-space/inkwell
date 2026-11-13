@@ -31,6 +31,7 @@ import { TrashDashboard } from '../features/articles/components/TrashDashboard'
 import { ContentHistory } from '../features/articles/components/ContentHistory'
 import { ReadingSettings } from '../features/reading'
 import { OverviewDashboard } from './OverviewDashboard'
+import { ThemePicker } from '../shared/ui/ThemePicker'
 
 const AgentEditorFixture = lazy(() =>
   import('../features/articles/components/AgentEditorFixture').then((module) => ({
@@ -560,7 +561,7 @@ function Studio({
         />
       ) : current ? (
         <main className="workspace studio-page editor-workspace">
-          <header className="studio-head editor-head">
+          <header className="studio-head editor-head has-theme-control">
             <div>
               <div className="editor-navigation">
                 <button
@@ -679,6 +680,7 @@ function Studio({
                 </button>
               )}
             </div>
+            <ThemePicker />
           </header>
           {publication.opened && (
             <PublicationDialog

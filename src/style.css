@@ -4559,21 +4559,46 @@ button.danger {
 .account-popover button {
   color: var(--studio-text);
 }
-.theme-picker {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 12px;
-  padding: 10px 12px;
+.studio-page .studio-head.has-theme-control {
+  position: relative;
+  padding-inline-end: 54px;
+  min-height: 42px;
 }
-.theme-picker select {
-  min-width: 106px;
+.has-theme-control > .theme-picker {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+.theme-picker .studio-select {
+  min-width: 0;
+  width: 42px;
+}
+.theme-picker .select-label,
+.theme-picker .select-trigger .select-value > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.theme-picker .select-trigger {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
   border: 1px solid var(--studio-border);
-  border-radius: 6px;
-  color: var(--studio-text);
+  border-radius: 50%;
+  color: var(--studio-accent);
   background: var(--studio-panel);
-  padding: 6px;
+  padding: 10px;
+}
+.theme-picker .select-trigger:hover {
+  background: var(--studio-surface);
+}
+.theme-picker .select-chevron {
+  display: none;
 }
 .notice.error,
 .error-banner {

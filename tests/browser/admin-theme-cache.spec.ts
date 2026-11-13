@@ -13,11 +13,12 @@ async function fixture(page: Page) {
     if (path.endsWith('/auth/session')) body = { authenticated: true, username }
     else if (path.endsWith('/auth/csrf')) body = { token: 'fixture', headerName: 'X-CSRF-TOKEN' }
     else if (path.endsWith('/analytics/settings')) body = { enabled: true, configured: true, version: 0 }
-    else if (path.endsWith('/analytics/overview')) body = { summary: { pageViews: 20, visitors: 10, todayPageViews: 3, todayVisitors: 2 }, trend: [], countries: [], provinces: [], cities: [], sources: [] }
+    else if (path.endsWith('/analytics/overview')) body = { summary: { pageViews: 20, visitors: 10, todayPageViews: 3, todayVisitors: 2 }, retention: { rawDays: 30, aggregateDays: 365, timeZone: 'Asia/Shanghai', geoConfigured: true, visitorTrackingSince: '2026-11-07T00:00:00Z' }, trend: [], countries: [], provinces: [], cities: [], sources: [] }
     else if (path.endsWith('/analytics/events')) body = { items: [], page: Number(url.searchParams.get('page')), pageSize: 20, total: 0 }
     else if (path.endsWith('/reading/integration')) body = { mode: 'aihot', managementConfigured: true }
     else if (path.endsWith('/aihot/dashboard')) body = dashboard
     else if (path.endsWith('/aihot/sources')) body = sources
+    else if (path.endsWith('/trash')) body = { items: [], total: 0, page: 1, pageSize: 20 }
     else if (path.endsWith('/settings')) {
       if (request.method() === 'PUT') site = { ...request.postDataJSON(), version: site.version + 1 }
       body = site
@@ -42,11 +43,15 @@ async function go(page: Page, name: string) {
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
 }
 
+async function theme(page: Page, label: string) {
+  await page.getByRole('combobox', { name: /管理台主题/ }).click()
+  await page.getByRole('option', { name: label, exact: true }).click()
+}
+
 test('warm default, dark and system preferences apply to surfaces and survive reload', async ({ page }) => {
   await fixture(page)
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'warm')
-  await page.getByRole('button', { name: /，账户菜单$/ }).click()
-  await page.getByRole('combobox', { name: '管理台主题' }).selectOption('dark')
+  await theme(page, '深色')
   await expect(page.locator('html')).toHaveClass(/dark-theme/)
   expect(await page.locator('.dashboard-card').first().evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(41, 49, 43)')
   await page.keyboard.press('Escape')
@@ -57,13 +62,12 @@ test('warm default, dark and system preferences apply to surfaces and survive re
   await page.screenshot({ path: 'test-results/admin-dark.png', fullPage: true })
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-  await page.getByRole('button', { name: /，账户菜单$/ }).click()
-  await page.getByRole('combobox', { name: '管理台主题' }).selectOption('system')
+  await theme(page, '跟随系统')
   await page.emulateMedia({ colorScheme: 'light' })
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'warm')
   await page.emulateMedia({ colorScheme: 'dark' })
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-  await page.getByRole('combobox', { name: '管理台主题' }).selectOption('warm')
+  await theme(page, '暖灰')
   await page.keyboard.press('Escape')
   await page.screenshot({ path: 'test-results/admin-warm.png', fullPage: true })
 })
@@ -127,8 +131,7 @@ test('cookie account changes discard cached data and navigation state', async ({
 
 test('dark writing surfaces, toolbar and code blocks keep readable foregrounds', async ({ page }) => {
   await fixture(page)
-  await page.getByRole('button', { name: /，账户菜单$/ }).click()
-  await page.getByRole('combobox', { name: '管理台主题' }).selectOption('dark')
+  await theme(page, '深色')
   await page.keyboard.press('Escape')
   await go(page, '内容管理')
   await page.getByRole('button', { name: /first 的内容/ }).click()
@@ -138,4 +141,51 @@ test('dark writing surfaces, toolbar and code blocks keep readable foregrounds',
   expect(await page.locator('.editable-prose p code span').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(51, 60, 53)')
   expect(await page.locator('.mdxeditor [role=combobox]').first().evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(41, 49, 43)')
   await page.screenshot({ path: 'test-results/admin-editor-dark.png', fullPage: true })
+})
+
+test('theme control stays at the header right on desktop and mobile across management and editor views', async ({
+  page,
+}) => {
+  await fixture(page)
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 })
+    if (width < 680 && await page.locator('.shell:not(.sidebar-collapsed)').count())
+      await page.getByRole('button', { name: '收起侧边栏', exact: true }).click()
+    for (const name of [
+      '概览',
+      '内容管理',
+      '草稿箱',
+      '回收站',
+      '拾阅管理',
+      '网站管理',
+      '助手管理',
+      '访问统计',
+    ]) {
+      await go(page, name)
+      const control = page.getByRole('combobox', { name: /管理台主题/ })
+      await expect(control).toBeVisible()
+      const header = await page.locator('.studio-head').boundingBox()
+      const button = await control.boundingBox()
+      expect(Math.abs(header!.x + header!.width - button!.x - button!.width)).toBeLessThan(2)
+      expect(Math.abs(header!.y - button!.y)).toBeLessThan(2)
+      await control.click()
+      await expect(page.getByRole('option', { name: '跟随系统', exact: true })).toBeVisible()
+      await control.press('Escape')
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      )
+    }
+  }
+  await go(page, '内容管理')
+  await page.getByRole('button', { name: /first 的内容/ }).click()
+  await expect(page.locator('.editable-prose')).toBeVisible()
+  const control = page.getByRole('combobox', { name: /管理台主题/ })
+  await control.focus()
+  await control.press('Enter')
+  await control.press('ArrowDown')
+  await control.press('Enter')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await expect(control).toBeFocused()
+  await page.getByRole('button', { name: /，账户菜单$/ }).click()
+  await expect(page.locator('.account-popover .theme-picker')).toHaveCount(0)
 })
