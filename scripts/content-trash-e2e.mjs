@@ -146,6 +146,9 @@ try {
   await page.route('**/admin/trash?page=**', route => route.fulfill({ status: 503, json: { code: 'UNAVAILABLE', message: '回收站暂时不可用。' } }))
   await page.getByRole('button', { name: '草稿箱', exact: true }).click()
   await page.getByRole('button', { name: '回收站', exact: true }).click()
+  await page.getByRole('heading', { name: '回收站', exact: true }).waitFor()
+  // Navigation can reuse the session cache. Explicit refresh exercises the failed request.
+  await page.getByRole('button', { name: '刷新', exact: true }).click()
   await page.getByRole('alert').getByText('回收站暂时不可用。', { exact: true }).waitFor()
   await page.unroute('**/admin/trash?page=**')
   await page.getByRole('button', { name: '重新加载', exact: true }).click()
