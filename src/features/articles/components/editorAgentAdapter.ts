@@ -17,12 +17,14 @@ import type { Nodes } from 'mdast'
 import { gfm } from 'micromark-extension-gfm'
 import { gfmFromMarkdown, gfmToMarkdown } from 'mdast-util-gfm'
 import { toMarkdown } from 'mdast-util-to-markdown'
+import { math } from 'micromark-extension-math'
+import { mathFromMarkdown, mathToMarkdown } from 'mdast-util-math'
 
 /** A single-block edit keeps its existing heading/list/quote container. */
 function inlineFragment(markdown: string) {
   let node: Nodes = fromMarkdown(markdown, {
-    extensions: [gfm()],
-    mdastExtensions: [gfmFromMarkdown()],
+    extensions: [gfm(), math()],
+    mdastExtensions: [gfmFromMarkdown(), mathFromMarkdown()],
   })
   if (node.children.length === 1 && node.children[0].type === 'paragraph') return markdown
   while (
@@ -35,7 +37,7 @@ function inlineFragment(markdown: string) {
     throw new Error('单段选区请返回一段文字；多段修改请扩大选区或使用全文修改。')
   return toMarkdown(
     { type: 'root', children: [{ type: 'paragraph', children: node.children }] },
-    { extensions: [gfmToMarkdown()] },
+    { extensions: [gfmToMarkdown(), mathToMarkdown()] },
   ).replace(/\n$/, '')
 }
 
@@ -69,6 +71,7 @@ export function createEditorAgentAdapter(
     'link',
     'autolink',
     'linebreak',
+    'math',
   ])
   function supportedTree(node: LexicalNode): boolean {
     return (
