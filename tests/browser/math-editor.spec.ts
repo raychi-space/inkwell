@@ -106,3 +106,11 @@ test('formatting around inline formulas survives roundtrip and adjacent words st
   await page.getByRole('button', { name: '接受', exact: true }).click()
   await expect(await exported(page)).toContainText('新文 $a$ 后文')
 })
+
+test('a long inline formula scrolls locally in a narrow editor', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await open(page, '前文 $\\frac{' + 'x'.repeat(120) + '}{2}$ 后文')
+  const formula = page.locator('.editor-math-inline .math-formula')
+  expect(await formula.evaluate((e) => e.scrollWidth > e.clientWidth)).toBe(true)
+  expect(await page.locator('.editable-prose[contenteditable]').evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true)
+})
