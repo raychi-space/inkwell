@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../../shared/ui/Icon'
+import { ThemePicker } from '../../../shared/ui/ThemePicker'
 
 type Props = {
   active:
@@ -138,6 +139,7 @@ export function ArticleSidebar(p: Props) {
               <strong>{p.username ?? '站主'}</strong>
               <small>当前登录账户</small>
             </div>
+            <ThemePicker />
             <button
               className="account-logout"
               onClick={() => {
