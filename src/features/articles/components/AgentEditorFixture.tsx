@@ -1,12 +1,17 @@
 import { useRef, useState } from 'react'
 import { RichEditor } from './RichEditor'
 import type { MDXEditorMethods } from '@mdxeditor/editor'
-import type { EditorAgentAdapter, SelectionSnapshot } from '../../../shared/types/editor'
+import type {
+  EditorAgentAdapter,
+  SelectionSnapshot,
+  InsertionSnapshot,
+} from '../../../shared/types/editor'
 import type { Article } from '../types'
 export function AgentEditorFixture() {
   const editor = useRef<MDXEditorMethods>(null),
     agent = useRef<EditorAgentAdapter>(null)
   const [selection, setSelection] = useState<SelectionSnapshot | null>(null)
+  const [insertion, setInsertion] = useState<InsertionSnapshot | null>(null)
   const [instance, setInstance] = useState(0)
   const [notice, setNotice] = useState(''),
     [markdown, setMarkdown] = useState('')
@@ -45,6 +50,45 @@ export function AgentEditorFixture() {
         交给助手
       </button>
       <input aria-label="助手输入" />
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          const captured = agent.current?.captureInsertion()
+          if (!captured) setNotice('请设置有效光标。')
+          else {
+            setInsertion(captured)
+            setNotice('光标已捕获')
+          }
+        }}
+      >
+        捕获光标
+      </button>
+      {insertion && (
+        <aside aria-label="光标建议">
+          <button
+            onClick={() => {
+              try {
+                agent.current?.applyInsertion(insertion.insertionId, replacement)
+                setInsertion(null)
+                setMarkdown(editor.current?.getMarkdown() ?? '')
+                setNotice('已插入')
+              } catch (e) {
+                setNotice(String(e))
+              }
+            }}
+          >
+            确认光标插入
+          </button>
+          <button
+            onClick={() => {
+              agent.current?.releaseInsertion(insertion.insertionId)
+              setInsertion(null)
+            }}
+          >
+            取消光标插入
+          </button>
+        </aside>
+      )}
       <textarea
         aria-label="建议 Markdown"
         value={replacement}

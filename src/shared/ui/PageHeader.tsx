@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ThemePicker } from './ThemePicker'
 
 /** 管理台统一的页头：分类标签 + 标题 + 可选副标题与操作区。所有管理视图共用。 */
 export function PageHeader({
@@ -15,7 +16,7 @@ export function PageHeader({
   actionsLabel?: string
 }) {
   return (
-    <header className="studio-head dashboard-head">
+    <header className="studio-head dashboard-head has-theme-control">
       <div>
         <p className="eyebrow">{kicker}</p>
         <h1>{title}</h1>
@@ -26,6 +27,7 @@ export function PageHeader({
           {actions}
         </div>
       )}
+      <ThemePicker />
     </header>
   )
 }

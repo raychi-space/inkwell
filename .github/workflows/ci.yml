@@ -16,5 +16,6 @@ jobs:
       - run: npm run format:check
       - run: npm run build
       - run: npm run test:auth
+      - run: npm run test:cache
       - run: npx playwright install chromium
       - run: npm run test:writing

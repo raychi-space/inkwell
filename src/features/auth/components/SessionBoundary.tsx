@@ -44,6 +44,9 @@ export function SessionBoundary({
         if (!mounted.current || version !== revision.current) return false
         if (!value.authenticated) endSession(!!sessionRef.current?.authenticated)
         else {
+          // Another tab may have replaced the same-origin session cookie.
+          if (sessionRef.current?.authenticated && sessionRef.current.username !== value.username)
+            resetAuthSession()
           sessionRef.current = value
           setSession(value)
         }
@@ -121,6 +124,6 @@ export function SessionBoundary({
         onSubmit={signIn}
       />
     )
-  // Unmounting this subtree also discards cached protected data and pending editor state.
+  // Session resets clear shared read data; unmounting discards pending editor state.
   return children(session, (notice) => endSession(false, notice), checkSession)
 }

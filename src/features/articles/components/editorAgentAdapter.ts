@@ -5,24 +5,32 @@ import {
   $getNodeByKey,
   $isTextNode,
   $isElementNode,
+  $isRootNode,
+  $getRoot,
   $setSelection,
   HISTORY_PUSH_TAG,
   type LexicalEditor,
   type RangeSelection,
   type LexicalNode,
 } from 'lexical'
-import type { EditorAgentAdapter, SelectionSnapshot } from '../../../shared/types/editor'
+import type {
+  EditorAgentAdapter,
+  SelectionSnapshot,
+  InsertionSnapshot,
+} from '../../../shared/types/editor'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import type { Nodes } from 'mdast'
 import { gfm } from 'micromark-extension-gfm'
 import { gfmFromMarkdown, gfmToMarkdown } from 'mdast-util-gfm'
 import { toMarkdown } from 'mdast-util-to-markdown'
+import { math } from 'micromark-extension-math'
+import { mathFromMarkdown, mathToMarkdown } from 'mdast-util-math'
 
 /** A single-block edit keeps its existing heading/list/quote container. */
 function inlineFragment(markdown: string) {
   let node: Nodes = fromMarkdown(markdown, {
-    extensions: [gfm()],
-    mdastExtensions: [gfmFromMarkdown()],
+    extensions: [gfm(), math()],
+    mdastExtensions: [gfmFromMarkdown(), mathFromMarkdown()],
   })
   if (node.children.length === 1 && node.children[0].type === 'paragraph') return markdown
   while (
@@ -35,7 +43,7 @@ function inlineFragment(markdown: string) {
     throw new Error('单段选区请返回一段文字；多段修改请扩大选区或使用全文修改。')
   return toMarkdown(
     { type: 'root', children: [{ type: 'paragraph', children: node.children }] },
-    { extensions: [gfmToMarkdown()] },
+    { extensions: [gfmToMarkdown(), mathToMarkdown()] },
   ).replace(/\n$/, '')
 }
 
@@ -55,6 +63,7 @@ export function createEditorAgentAdapter(
       inline: boolean
     }
   >()
+  const insertions = new Map<string, { bookmark: RangeSelection; structure: string }>()
   function block(node: LexicalNode): LexicalNode | null {
     if (['paragraph', 'heading', 'listitem'].includes(node.getType())) return node
     return node.getParent() ? block(node.getParent()!) : null
@@ -69,6 +78,7 @@ export function createEditorAgentAdapter(
     'link',
     'autolink',
     'linebreak',
+    'math',
   ])
   function supportedTree(node: LexicalNode): boolean {
     return (
@@ -76,14 +86,43 @@ export function createEditorAgentAdapter(
       (!$isElementNode(node) || node.getChildren().every(supportedTree))
     )
   }
+  const serialize = (node: LexicalNode): unknown => ({
+    key: node.getKey(),
+    value: node.exportJSON(),
+    children: $isElementNode(node) ? node.getChildren().map(serialize) : undefined,
+  })
   function structure(bookmark: RangeSelection) {
     const roots = [...new Set(bookmark.getNodes().map((node) => node.getTopLevelElementOrThrow()))]
-    const serialize = (node: LexicalNode): unknown => ({
-      key: node.getKey(),
-      value: node.exportJSON(),
-      children: $isElementNode(node) ? node.getChildren().map(serialize) : undefined,
-    })
     return JSON.stringify(roots.map(serialize))
+  }
+  function validInsertion(bookmark: RangeSelection) {
+    if (!bookmark.isCollapsed()) return false
+    const point = bookmark.anchor,
+      node = $getNodeByKey(point.key)
+    if (!node || point.offset < 0) return false
+    if (point.type === 'text')
+      return (
+        $isTextNode(node) &&
+        point.offset <= node.getTextContentSize() &&
+        supportedTree(node.getTopLevelElementOrThrow())
+      )
+    if (!$isElementNode(node) || point.offset > node.getChildrenSize()) return false
+    // Element points represent empty paragraphs and boundaries around noneditable formulas.
+    // A math node itself (or another nested/decorator editor) is never a target.
+    return $isRootNode(node) || supportedTree(node.getTopLevelElementOrThrow())
+  }
+  function insertionStructure(bookmark: RangeSelection) {
+    const node = $getNodeByKey(bookmark.anchor.key)!
+    if ($isRootNode(node)) {
+      const children = node.getChildren(),
+        offset = bookmark.anchor.offset
+      return JSON.stringify({
+        keys: children.map((child) => child.getKey()),
+        before: children[offset - 1] ? serialize(children[offset - 1]) : null,
+        after: children[offset] ? serialize(children[offset]) : null,
+      })
+    }
+    return JSON.stringify(serialize(node.getTopLevelElementOrThrow()))
   }
   function valid(bookmark: RangeSelection) {
     for (const point of [bookmark.anchor, bookmark.focus]) {
@@ -112,6 +151,68 @@ export function createEditorAgentAdapter(
       })
       onDocumentChange()
       targets.clear()
+      insertions.clear()
+    },
+    captureInsertion() {
+      if (!editor?.getRootElement()?.isConnected) return null
+      let captured: InsertionSnapshot | null = null
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection) || !validInsertion(selection)) return
+        const root = $getRoot(),
+          before = selection.clone(),
+          after = selection.clone()
+        before.anchor.set(root.getKey(), 0, 'element')
+        after.focus.set(root.getKey(), root.getChildrenSize(), 'element')
+        const snapshot = insertionStructure(selection)
+        const existing = [...insertions.entries()].find(
+          ([, target]) =>
+            target.bookmark.anchor.is(selection.anchor) && target.structure === snapshot,
+        )
+        const insertionId = existing?.[0] ?? crypto.randomUUID()
+        insertions.clear()
+        insertions.set(insertionId, { bookmark: selection.clone(), structure: snapshot })
+        captured = {
+          insertionId,
+          contextBefore: before.getTextContent().slice(-500),
+          contextAfter: after.getTextContent().slice(0, 500),
+        }
+      })
+      return captured
+    },
+    validateInsertion(id) {
+      const target = insertions.get(id)
+      if (!editor?.getRootElement()?.isConnected || !target) return false
+      return editor
+        .getEditorState()
+        .read(
+          () =>
+            validInsertion(target.bookmark) &&
+            insertionStructure(target.bookmark) === target.structure,
+        )
+    },
+    applyInsertion(id, markdown) {
+      const target = insertions.get(id)
+      if (!editor || !insert || !target || !adapter.validateInsertion(id))
+        throw new Error('插入位置已变化，请重新设置光标。')
+      if (!markdown.trim() || markdown.length > 100000)
+        throw new Error('插入内容无效，请重新生成。')
+      insertions.delete(id)
+      editor.update(
+        () => {
+          if (
+            !validInsertion(target.bookmark) ||
+            insertionStructure(target.bookmark) !== target.structure
+          )
+            throw new Error('插入位置已变化，请重新设置光标。')
+          $setSelection(target.bookmark.clone())
+          insert!(markdown)
+        },
+        { discrete: true, tag: HISTORY_PUSH_TAG },
+      )
+    },
+    releaseInsertion(id) {
+      insertions.delete(id)
     },
     captureSelection() {
       if (!editor?.getRootElement()?.isConnected) return null
@@ -215,7 +316,10 @@ export function createEditorAgentAdapter(
   const plugin = realmPlugin<void>({
     init(realm) {
       realm.sub(rootEditor$, (root) => {
-        if (editor !== root) targets.clear()
+        if (editor !== root) {
+          targets.clear()
+          insertions.clear()
+        }
         editor = root
         insert = root ? (markdown) => realm.pub(insertMarkdown$, markdown) : null
       })
@@ -223,7 +327,10 @@ export function createEditorAgentAdapter(
     update(realm) {
       // Realm plugins initialize once; updates also bind after hot reload and prop changes.
       const root = realm.getValue(rootEditor$)
-      if (editor !== root) targets.clear()
+      if (editor !== root) {
+        targets.clear()
+        insertions.clear()
+      }
       editor = root
       insert = root ? (markdown) => realm.pub(insertMarkdown$, markdown) : null
     },
