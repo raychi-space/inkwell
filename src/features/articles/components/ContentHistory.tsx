@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { contentRevision, contentRevisions, restoreContentRevision } from '../api'
 import type { Article, ContentRevision, ContentRevisionSummary, Page } from '../types'
 import { errorMessage } from '../../../shared/lib/errors'
+import { invalidateReadCache } from '../../../shared/api/sessionCache'
 
 const operations: Record<string, string> = {
   BASELINE: '原有工作稿基线',
@@ -141,7 +142,13 @@ function HistoryDialog({
       {error && (
         <div role="alert">
           <p>{error}</p>
-          <button disabled={pending} onClick={() => setRetry((value) => value + 1)}>
+          <button
+            disabled={pending}
+            onClick={() => {
+              invalidateReadCache()
+              setRetry((value) => value + 1)
+            }}
+          >
             重新加载
           </button>
         </div>

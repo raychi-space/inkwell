@@ -1,3 +1,4 @@
+import { useSessionState } from '../../shared/lib/useSessionState'
 import { useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../../shared/lib/errors'
 import { readingDashboard, type ReadingDashboard as Report } from './management-api'
@@ -13,9 +14,9 @@ export function ReadingDashboard({ refresh }: { refresh: number }) {
   const [report, setReport] = useState<Report | null>(null),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false)
-  const [status, setStatus] = useState('failed'),
-    [kind, setKind] = useState('all'),
-    [page, setPage] = useState(1)
+  const [status, setStatus] = useSessionState('reading.status', 'failed'),
+    [kind, setKind] = useSessionState('reading.kind', 'all'),
+    [page, setPage] = useSessionState('reading.tasks.page', 1)
   const generation = useRef(0)
   useEffect(() => {
     const current = ++generation.current

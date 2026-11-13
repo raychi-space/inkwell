@@ -1,5 +1,5 @@
+import { useSessionState } from '../../../shared/lib/useSessionState'
 import { useAdminContents } from '../useAdminContents'
-import { useState } from 'react'
 import { Select } from '../../../shared/ui/Select'
 import { Card, CardHead } from '../../../shared/ui/Card'
 import { EmptyState } from '../../../shared/ui/EmptyState'
@@ -36,13 +36,13 @@ export function ContentDashboard({
   onCreate,
   onOpen,
 }: Props) {
-  const [sort, setSort] = useState('recent')
-  const [type, setType] = useState('all')
-  const [category, setCategory] = useState('all')
-  const [tag, setTag] = useState('all')
+  const [sort, setSort] = useSessionState(mode + '.sort', 'recent')
+  const [type, setType] = useSessionState(mode + '.type', 'all')
+  const [category, setCategory] = useSessionState(mode + '.category', 'all')
+  const [tag, setTag] = useSessionState(mode + '.tag', 'all')
 
-  const [page, setPage] = useState(1)
-  const { result, loading, error } = useAdminContents(page, {
+  const [page, setPage] = useSessionState(mode + '.page', 1)
+  const { result, loading, error, refresh } = useAdminContents(page, {
     status: mode === 'published' ? 'PUBLISHED' : 'DRAFT',
     type: type === 'all' ? undefined : type,
     category: category === 'all' ? undefined : category,
@@ -74,6 +74,9 @@ export function ContentDashboard({
         actionsLabel="新建内容"
         actions={
           <>
+            <button disabled={loading || busy} onClick={refresh}>
+              刷新
+            </button>
             <button disabled={busy} onClick={() => onCreate('POST')}>
               ＋ 写帖子
             </button>
