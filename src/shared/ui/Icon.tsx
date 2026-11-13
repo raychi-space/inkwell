@@ -1,4 +1,5 @@
 const paths = {
+  overview: 'M4 4h7v7H4z M15 4h5v7h-5z M4 15h7v5H4z M15 15h5v5h-5z',
   trash: 'M4 6h16 M9 6V3h6v3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7',
   analytics: 'M4 20h16 M7 16V9 M12 16V4 M17 16v-5',
   content: 'M4 5h16v14H4z M8 9h8 M8 13h8 M8 16h5',
