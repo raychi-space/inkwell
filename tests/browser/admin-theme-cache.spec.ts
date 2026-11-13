@@ -48,6 +48,73 @@ async function theme(page: Page, label: string) {
   await page.getByRole('option', { name: label, exact: true }).click()
 }
 
+for (const width of [1440, 800, 680, 600, 560, 390, 320]) {
+  test(`management pages share overview insets and header spacing at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 844 })
+    await fixture(page)
+    if (width <= 680 && await page.locator('.shell:not(.sidebar-collapsed)').count())
+      await page.getByRole('button', { name: '收起侧边栏', exact: true }).click()
+    const layout = () => page.locator('main.studio-page').evaluate(main => {
+      const style = getComputedStyle(main)
+      const header = main.querySelector<HTMLElement>('.studio-head')!
+      const bounds = main.getBoundingClientRect(), heading = header.getBoundingClientRect()
+      return {
+        padding: style.padding,
+        top: heading.top - bounds.top,
+        left: heading.left - bounds.left,
+        right: bounds.right - heading.right,
+        gap: getComputedStyle(header).marginBottom,
+      }
+    })
+    const overview = await layout()
+    for (const name of ['访问统计', '内容管理', '草稿箱', '回收站', '拾阅管理', '网站管理', '助手管理']) {
+      await go(page, name)
+      expect(await layout(), name).toEqual(overview)
+      if (name === '拾阅管理') {
+        const header = await page.locator('.studio-head').boundingBox()
+        const tabs = await page.getByRole('tablist').boundingBox()
+        expect(Math.abs(tabs!.x - header!.x)).toBeLessThan(1)
+      }
+      if ([1440, 390].includes(width) && ['内容管理', '拾阅管理'].includes(name))
+        await page.screenshot({ path: testInfo.outputPath(name === '内容管理' ? 'content.png' : 'reading.png') })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    }
+    await page.getByRole('button', { name: /，账户菜单$/ }).click()
+    await page.getByRole('button', { name: '修改密码', exact: true }).click()
+    await expect(page.getByRole('heading', { name: '修改密码', exact: true })).toBeVisible()
+    expect(await layout()).toEqual(overview)
+  })
+}
+
+test('brand returns to overview, retains unsaved guards and collapsed expansion', async ({ page }) => {
+  await fixture(page)
+  await go(page, '内容管理')
+  await page.getByRole('button', { name: '返回概览', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '概览', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '概览', exact: true })).toHaveAttribute('aria-current', 'page')
+  await go(page, '内容管理')
+  await page.getByRole('button', { name: /first 的内容/ }).click()
+  const editor = page.locator('.editable-prose')
+  await editor.click()
+  await page.keyboard.insertText('尚未保存的修改')
+  await expect(page.getByText(/尚未保存/).first()).toBeVisible()
+  await Promise.all([
+    page.waitForEvent('dialog').then(dialog => dialog.dismiss()),
+    page.getByRole('button', { name: '返回概览', exact: true }).click(),
+  ])
+  await expect(editor).toContainText('尚未保存的修改')
+  await Promise.all([
+    page.waitForEvent('dialog').then(dialog => dialog.accept()),
+    page.getByRole('button', { name: '返回概览', exact: true }).click(),
+  ])
+  await expect(page.getByRole('heading', { name: '概览', exact: true })).toBeVisible()
+  await go(page, '内容管理')
+  await page.getByRole('button', { name: '收起侧边栏', exact: true }).click()
+  await page.getByRole('button', { name: '展开侧边栏', exact: true }).click()
+  await expect(page.locator('.shell')).not.toHaveClass(/sidebar-collapsed/)
+  await expect(page.getByRole('heading', { name: '内容管理', exact: true })).toBeVisible()
+})
+
 test('warm default, dark and system preferences apply to surfaces and survive reload', async ({ page }) => {
   await fixture(page)
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'warm')
