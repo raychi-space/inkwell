@@ -1,3 +1,4 @@
+import { installOverviewFixture, waitForOverview } from './overview-fixture'
 import { test, expect } from '@playwright/test'
 
 test('whole-document suggestions can be rejected, accepted and invalidated by newer edits', async ({ page }) => {
@@ -41,7 +42,10 @@ test('whole-document suggestions can be rejected, accepted and invalidated by ne
     } else throw Error('Unexpected API ' + path)
     await route.fulfill({ json: body })
   })
+  await installOverviewFixture(page)
   await page.goto('/')
+  await waitForOverview(page)
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.getByText('全文测试', { exact: true }).click()
   const editor = page.locator('.editable-prose').first()
   await expect(editor).toHaveText('原始正文。')

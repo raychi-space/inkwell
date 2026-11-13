@@ -84,8 +84,8 @@ const query = (values: Record<string, string | number>) =>
       .filter(([, v]) => v !== '')
       .map(([k, v]) => [k, String(v)]),
   )
-export const readingDashboard = (values: Record<string, string | number>) =>
-  api<ReadingDashboard>(base + '/dashboard' + query(values))
+export const readingDashboard = (values: Record<string, string | number>, signal?: AbortSignal) =>
+  api<ReadingDashboard>(base + '/dashboard' + query(values), { signal })
 export const aihotSources = (values: Record<string, string | number>) =>
   api<AihotSourcePage>(base + '/sources' + query(values))
 export const aihotSource = (id: string) =>

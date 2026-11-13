@@ -1,3 +1,4 @@
+import { installOverviewFixture, waitForOverview } from './overview-fixture'
 import { test, expect } from '@playwright/test'
 
 test('filter refresh retains content and statistics until success, discards stale responses and preserves rows on error', async ({ page }) => {
@@ -20,7 +21,10 @@ test('filter refresh retains content and statistics until success, discards stal
     } else throw Error('Unexpected API ' + path)
     await route.fulfill({ json: body })
   })
+  await installOverviewFixture(page)
   await page.goto('/')
+  await waitForOverview(page)
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await expect(page.getByText('原来的内容', { exact: true })).toBeVisible()
   await page.getByRole('combobox', { name: /^类型/ }).click()
   await page.getByRole('option', { name: '帖子', exact: true }).click()
