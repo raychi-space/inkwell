@@ -1,0 +1,99 @@
+.math-formula {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
+}
+.message-markdown :not(.katex-display) > .katex {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
+}
+.math-formula .katex-display,
+.message-markdown .katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+}
+.editor-math-block {
+  display: block;
+  max-width: 100%;
+  margin: 12px 0;
+}
+.editor-math-inline {
+  display: inline;
+}
+.editor-math-trigger {
+  display: inline-block;
+  max-width: 100%;
+  padding: 3px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.editor-math-trigger:focus-visible,
+.editor-math-trigger:hover:not(:disabled) {
+  border-color: var(--studio-accent, #315e40);
+}
+.editor-math-block .editor-math-trigger {
+  width: 100%;
+}
+.math-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: 85dvh;
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--studio-border, #d1d6cc);
+  border-radius: 12px;
+  background: var(--studio-panel, #f5f4ef);
+  color: var(--studio-text, #28332d);
+}
+.math-dialog::backdrop {
+  background: #0006;
+}
+.math-dialog h3 {
+  margin: 0 0 12px;
+}
+.math-dialog label {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+}
+.math-dialog textarea {
+  min-height: 100px;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--studio-bg, #efeee8);
+  color: inherit;
+  padding: 10px;
+  border: 1px solid var(--studio-border, #cbd0c6);
+  border-radius: 6px;
+  font-family: monospace;
+}
+.math-dialog-preview {
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid var(--studio-border, #cbd0c6);
+  border-radius: 6px;
+}
+.math-dialog .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.math-toolbar-button {
+  white-space: nowrap;
+}
+.math-formula .katex-error,
+.message-markdown .katex-error {
+  color: var(--studio-text, #28332d) !important;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

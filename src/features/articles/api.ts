@@ -1,3 +1,4 @@
+import { readApi } from '../../shared/api/readApi'
 import { api, apiResponse } from '../../shared/api/client'
 import type {
   Article,
@@ -23,14 +24,17 @@ export type AdminFilters = {
 export async function listArticles(
   page = 1,
   filters: AdminFilters = {},
-  options: { pageSize?: number; signal?: AbortSignal } = {},
+  options: { pageSize?: number; signal?: AbortSignal; force?: boolean } = {},
 ): Promise<Page<Article>> {
   const params = new URLSearchParams({
     page: String(page),
     pageSize: String(options.pageSize ?? 50),
   })
   for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value)
-  return api(`/api/v1/admin/contents?${params}`, { signal: options.signal })
+  return readApi(`/api/v1/admin/contents?${params}`, {
+    signal: options.signal,
+    force: options.force,
+  })
 }
 
 export async function getArticle(id: string): Promise<Article> {
@@ -91,7 +95,7 @@ export function contentRevisions(
   page: number,
   signal: AbortSignal,
 ): Promise<Page<ContentRevisionSummary>> {
-  return api(
+  return readApi(
     `/api/v1/admin/contents/${encodeURIComponent(id)}/revisions?page=${page}&pageSize=20`,
     { signal },
   )
@@ -119,7 +123,7 @@ export function restoreContentRevision(
 }
 
 export function listTrashedContent(page: number, signal: AbortSignal): Promise<Page<TrashItem>> {
-  return api(`/api/v1/admin/trash?page=${page}&pageSize=20`, { signal })
+  return readApi(`/api/v1/admin/trash?page=${page}&pageSize=20`, { signal })
 }
 export function moveContentToTrash(
   id: string,

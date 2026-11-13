@@ -1,3 +1,5 @@
+import { useSessionState } from '../../../shared/lib/useSessionState'
+import { invalidateReadCache } from '../../../shared/api/sessionCache'
 import { useEffect, useState } from 'react'
 import { listTrashedContent } from '../api'
 import type { Article, Page, TrashItem } from '../types'
@@ -18,7 +20,7 @@ export function TrashDashboard({
   onRecovered: (article: Article) => void
   onNotice: (message: string) => void
 }) {
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useSessionState('trash.page', 1)
   const [retry, setRetry] = useState(0)
   const [result, setResult] = useState<Page<TrashItem> | null>(null)
   const [loading, setLoading] = useState(true)
@@ -53,6 +55,17 @@ export function TrashDashboard({
         kicker="CONTENT STUDIO"
         title="回收站"
         subtitle="已移除的内容保留在这里，不会自动清空。恢复后为草稿，需要手动发布。"
+        actions={
+          <button
+            disabled={busy || loading}
+            onClick={() => {
+              invalidateReadCache()
+              setRetry((value) => value + 1)
+            }}
+          >
+            刷新
+          </button>
+        }
       />
       {notice && (
         <p className="notice" role="status">
@@ -63,7 +76,13 @@ export function TrashDashboard({
       {error && (
         <div role="alert">
           <p className="notice">{error}</p>
-          <button disabled={busy} onClick={() => setRetry((value) => value + 1)}>
+          <button
+            disabled={busy}
+            onClick={() => {
+              invalidateReadCache()
+              setRetry((value) => value + 1)
+            }}
+          >
             重新加载
           </button>
         </div>

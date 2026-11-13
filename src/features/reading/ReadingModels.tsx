@@ -1,3 +1,4 @@
+import { useSessionState } from '../../shared/lib/useSessionState'
 import { useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../../shared/lib/errors'
 import {
@@ -23,8 +24,8 @@ export function ReadingModels({
     [busy, setBusy] = useState(false)
   const [modelDrafts, setModelDrafts] = useState<Record<string, string>>({}),
     [budgetDrafts, setBudgetDrafts] = useState<Record<string, BudgetDraft>>({})
-  const [filter, setFilter] = useState(''),
-    [page, setPage] = useState(1)
+  const [filter, setFilter] = useSessionState('reading.models.filter', ''),
+    [page, setPage] = useSessionState('reading.models.page', 1)
   const generation = useRef(0),
     alive = useRef(true)
   const dirty = Object.keys(modelDrafts).length > 0 || Object.keys(budgetDrafts).length > 0

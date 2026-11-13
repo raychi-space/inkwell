@@ -22,13 +22,13 @@ npm run dev
 
 打开 <http://127.0.0.1:5173>。Vite 将 `/api` 代理到 `RAYCHI_API_URL`（默认 `http://127.0.0.1:8080`）；生产环境需在同源入口转发 `/api`。执行 `npm run build` 检查类型并构建。
 
-格式与编辑器边界见[编辑器约定](docs/editor-v0.1.md)。本仓库独立构建，不读取相邻仓库的文件。
+公式可通过工具栏插入和编辑，助手回复同步渲染公式；保存仍为 Markdown/TeX。格式与编辑器边界见[编辑器约定](docs/editor-v0.1.md)。本仓库独立构建，不读取相邻仓库的文件。
 
 模块内部职责见[模块说明](docs/module.md)，早期 v0.2 范围见[产品范围文档](docs/product-scope-v0.2.md)；当前操作见下文，Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理；实时状态看[Raychi Project](https://github.com/orgs/raychi-space/projects/1)及对应 Issue/PR。
 
 ## 管理页面
 
-[管理台使用说明](docs/management-ui.md) 介绍网站设置、可收缩的图标侧栏与头像账户菜单。内容管理、草稿箱、网站管理和助手管理使用一致的页面框架；桌面端页头与侧栏固定，内容区域独立滚动。
+[管理台使用说明](docs/management-ui.md) 介绍网站设置、可收缩的图标侧栏与头像账户菜单。页面右上角的主题图标可切换默认暖灰、深色和跟随系统主题。只读查询使用有界会话内缓存，切换页面保留筛选与分页；手动刷新或写入后重新查询，缓存数据只保留在当前页面内存中。内容管理、草稿箱、网站管理和助手管理使用一致的页面框架；桌面端页头与侧栏固定，内容区域独立滚动。
 
 登录后默认进入“概览”，查看今日访问、全站内容数量、近 7 天趋势、拾阅状态和最近内容；手动刷新只读取数据，详情见[管理台使用说明](docs/management-ui.md#概览)。
 

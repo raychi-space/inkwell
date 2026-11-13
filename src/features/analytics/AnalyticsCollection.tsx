@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Power } from 'lucide-react'
 import { errorMessage } from '../../shared/lib/errors'
+import { invalidateReadCache } from '../../shared/api/sessionCache'
 import { analyticsSettings, saveAnalyticsSettings, type AnalyticsSettings } from './api'
 
-export function AnalyticsCollection() {
+export function AnalyticsCollection({ refresh = 0 }: { refresh?: number }) {
   const [settings, setSettings] = useState<AnalyticsSettings | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -29,7 +30,7 @@ export function AnalyticsCollection() {
   useEffect(() => {
     void load()
     return () => request.current?.abort()
-  }, [load])
+  }, [load, refresh])
 
   async function toggle() {
     if (!settings || busy || !settings.configured) return
@@ -85,7 +86,10 @@ export function AnalyticsCollection() {
             type="button"
             className="secondary-button"
             disabled={busy}
-            onClick={() => void load()}
+            onClick={() => {
+              invalidateReadCache()
+              void load()
+            }}
           >
             重新加载设置
           </button>

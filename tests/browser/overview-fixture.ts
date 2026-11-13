@@ -44,4 +44,10 @@ export async function waitForOverview(page: Page) {
   await expect(page.getByText('拾阅管理尚未配置')).toBeVisible()
   await expect(page.locator('.overview-metrics section').last()).toContainText('0')
   await expect(page.getByRole('img', { name: /每日访问量/ })).toBeAttached()
+  // These legacy fixtures seed overview-only responses before the target feature's
+  // own routes take over. Do not carry their deliberately different data across.
+  await page.evaluate(async () => {
+    const cache = await import(/* @vite-ignore */ '/src/shared/api/sessionCache.ts')
+    cache.invalidateReadCache()
+  })
 }

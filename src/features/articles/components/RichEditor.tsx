@@ -28,6 +28,7 @@ import type { Article } from '../types'
 import type { EditorAgentAdapter } from '../../../shared/types/editor'
 import { createEditorAgentAdapter } from './editorAgentAdapter'
 import { errorMessage } from '../../../shared/lib/errors'
+import { InsertMath, mathPlugin } from './mathPlugin'
 
 export function RichEditor({
   article,
@@ -84,6 +85,7 @@ export function RichEditor({
           python: 'Python',
         },
       }),
+      mathPlugin(),
       markdownShortcutPlugin(),
       imagePlugin({
         disableImageResize: true,
@@ -115,6 +117,7 @@ export function RichEditor({
             <InsertImage />
             <InsertTable />
             <InsertCodeBlock />
+            <InsertMath />
           </>
         ),
       }),

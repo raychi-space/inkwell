@@ -1,9 +1,11 @@
+import { readApi } from '../../shared/api/readApi'
 import { api, apiResponse } from '../../shared/api/client'
 import type { Provider, Assistant, Turn, TurnRequest } from './types'
 const base = '/api/v1/admin/ai'
-export const providers = () => api<{ items: Provider[] }>(base + '/providers').then((v) => v.items)
+export const providers = () =>
+  readApi<{ items: Provider[] }>(base + '/providers', { ttl: 300_000 }).then((v) => v.items)
 export const assistants = () =>
-  api<{ items: Assistant[] }>(base + '/assistants').then((v) => v.items)
+  readApi<{ items: Assistant[] }>(base + '/assistants', { ttl: 300_000 }).then((v) => v.items)
 export const saveProvider = (id: string | null, body: unknown) =>
   api<Provider>(base + '/providers' + (id ? '/' + id : ''), {
     method: id ? 'PATCH' : 'POST',

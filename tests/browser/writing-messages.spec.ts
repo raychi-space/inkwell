@@ -84,7 +84,7 @@ test('streaming replies render Markdown before completion and do not execute HTM
                   JSON.stringify({
                     turnId: 'one',
                     status: 'running',
-                    partialReply: '## 正在写\n\n**重点内容**',
+                    partialReply: '## 正在写\n\n**重点内容**\n\n公式 $x^',
                   }) +
                   '\n\n',
               ),
@@ -143,4 +143,21 @@ test('suggestion cards highlight only changed text and retain accepted state out
   await input.fill('继续讨论')
   await input.press('Enter')
   await expect.poll(() => submitted().history.at(-1).content).toContain('修改建议状态：已接受')
+})
+
+test('assistant replies render inline and display math while retaining invalid source and code literals', async ({
+  page,
+}) => {
+  await openWriting(
+    page,
+    '行内 $E=mc^2$。\n\n$$\n\\frac{1}{2}\n$$\n\n`$literal$`\n\n$\\frac{a$\n\n$\\href{javascript:alert(1)}{bad}$',
+  )
+  await page.getByLabel('消息', { exact: true }).fill('解释公式')
+  await page.getByLabel('消息', { exact: true }).press('Enter')
+  const reply = page.locator('.agent-message.assistant .message-markdown')
+  await expect(reply.locator('.katex')).toHaveCount(3)
+  await expect(reply.locator('.katex-display')).toHaveCount(1)
+  await expect(reply.locator('.katex-error')).toContainText('\\frac{a')
+  await expect(reply.locator('code').filter({ hasText: '$literal$' })).toHaveCount(1)
+  await expect(reply.locator('a')).toHaveCount(0)
 })
