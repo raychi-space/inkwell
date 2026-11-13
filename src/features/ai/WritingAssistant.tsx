@@ -61,6 +61,7 @@ export function WritingAssistant({
   const composerRef = useRef<HTMLTextAreaElement>(null)
   const mounted = useRef(true),
     flight = useRef(false),
+    proposalPending = useRef(false),
     decision = useRef(false),
     epoch = useRef(0)
   const historyHost = useRef<HTMLDivElement>(null)
@@ -88,7 +89,7 @@ export function WritingAssistant({
     let frame = 0
     function captureSelectedText() {
       frame = 0
-      if (flight.current || selectionState.current.proposal) return
+      if (flight.current || proposalPending.current) return
       const host = previewHost.current
       const range = window.getSelection()
       if (
@@ -106,6 +107,11 @@ export function WritingAssistant({
         if (selectionState.current.insertion) {
           const value = adapterRef.current?.captureInsertion()
           if (value) setInsertion(value)
+          else {
+            adapterRef.current?.releaseInsertion(selectionState.current.insertion.insertionId)
+            setRetry(null)
+            setNotice('当前位置不支持插入，请重新设置光标。')
+          }
         }
         return
       }
@@ -113,6 +119,8 @@ export function WritingAssistant({
       if (!value) {
         const previous = selectionState.current.selection
         if (previous) adapterRef.current?.releaseSelection(previous.selectionId)
+        if (selectionState.current.insertion)
+          adapterRef.current?.releaseInsertion(selectionState.current.insertion.insertionId)
         setSelection(null)
         setRetry(null)
         setNotice('请选择段落、标题、引用或列表中的文字；暂不支持表格、图片和代码块。')
@@ -147,6 +155,8 @@ export function WritingAssistant({
   function chooseInsertion() {
     const target = adapterRef.current?.captureInsertion()
     if (!target) {
+      if (insertion) adapterRef.current?.releaseInsertion(insertion.insertionId)
+      setRetry(null)
       setNotice('请先在正文中设置光标；可选择空段落或公式前后。')
       return
     }
@@ -158,6 +168,7 @@ export function WritingAssistant({
     composerRef.current?.focus()
   }
   function recordDecision(state: WritingSuggestion['state']) {
+    proposalPending.current = false
     const requestId = proposalRequest.current
     setEntries((values) =>
       values.map((entry) =>
@@ -200,7 +211,7 @@ export function WritingAssistant({
     )
   }
   async function execute(request: TurnRequest, retrying = false) {
-    if (flight.current || proposal) return
+    if (flight.current || proposalPending.current) return
     if (
       request.mode === 'rewrite' &&
       (!request.context.selection ||
@@ -298,6 +309,8 @@ export function WritingAssistant({
           setNotice('插入位置或内容已失效，请重新设置光标后生成。')
           return
         }
+        // Stop queued native selection frames before React commits the pending card.
+        proposalPending.current = true
         callbacks.current.onLock(true)
         showSuggestion(request, proposed)
         setProposal(proposed)
@@ -317,6 +330,7 @@ export function WritingAssistant({
           setNotice('没有修改。')
           return
         }
+        proposalPending.current = true
         callbacks.current.onLock(true)
         showSuggestion(request, proposed)
         setProposal(proposed)
@@ -336,6 +350,7 @@ export function WritingAssistant({
           setNotice('没有修改。')
           return
         }
+        proposalPending.current = true
         callbacks.current.onLock(true)
         showSuggestion(request, proposed)
         setProposal(proposed)
@@ -365,7 +380,7 @@ export function WritingAssistant({
     }
   }
   function submit() {
-    if (!assistantId || flight.current || proposal) return
+    if (!assistantId || flight.current || proposalPending.current) return
     const content = message.trim()
     if (!content) {
       setNotice('请输入消息。')

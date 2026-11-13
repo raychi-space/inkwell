@@ -103,7 +103,7 @@ test('cursor targets expire after edits to their block or editor remount', async
   }
 })
 
-async function openWriting(page: Page) {
+async function openWriting(page: Page, markdown = '相同原文\n\n相同原文') {
   let submitted: any,
     finish: (() => void) | undefined,
     writes = 0
@@ -114,7 +114,7 @@ async function openWriting(page: Page) {
     version: 1,
     title: '光标测试',
     slug: 'caret',
-    bodyMarkdown: '相同原文\n\n相同原文',
+    bodyMarkdown: markdown,
     summary: '',
     tags: [],
     category: null,
@@ -237,4 +237,27 @@ test('rejecting insertion keeps the document and does not save or publish it', a
   await expect(page.locator('.editable-prose p')).toHaveText(['相同原文', '相同原文'])
   await expect(page.getByRole('region', { name: '光标插入位置', exact: true })).toHaveCount(0)
   expect(fixture.writes()).toBe(0)
+})
+
+test('an unsupported new selection before sending invalidates the previous cursor target', async ({
+  page,
+}) => {
+  const fixture = await openWriting(page, '相同原文\n\n```js\nconst value = 1\n```\n\n结尾')
+  await caret(page, '.editable-prose p:first-child span', 2)
+  await page.getByRole('button', { name: '写入光标处', exact: true }).click()
+  const editor = page.locator('.editable-prose[contenteditable]').first()
+  await editor.focus()
+  await editor.evaluate((element) => {
+    const range = document.createRange()
+    range.selectNodeContents(element)
+    const selection = window.getSelection()!
+    selection.removeAllRanges()
+    selection.addRange(range)
+  })
+  await expect(page.locator('.conversation-toast')).toContainText('请选择段落')
+  await page.getByRole('textbox', { name: '消息', exact: true }).fill('在这里补写')
+  await page.getByRole('button', { name: '发送', exact: true }).click()
+  await expect(page.locator('.conversation-toast')).toContainText('插入位置已变化')
+  expect(fixture.submitted()).toBeUndefined()
+  await expect(editor).not.toContainText('新增')
 })
