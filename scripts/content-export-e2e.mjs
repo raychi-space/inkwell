@@ -82,6 +82,7 @@ try {
   assert.equal((await anonymous.request.get(api + endpoint)).status(), 401)
   const page = await owner.newPage()
   await page.goto(studio)
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.locator('.content-row').filter({ hasText: title }).click()
   const button = page.getByRole('button', { name: '导出已保存内容', exact: true })
   await button.waitFor()
@@ -105,6 +106,7 @@ try {
   assert.equal(await button.isDisabled(), true)
   assert.ok((await button.getAttribute('title')).includes('先保存'))
   await page.reload()
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.locator('.content-row').filter({ hasText: title }).click()
   // Actual server version mismatch keeps editor content and offers reload via message.
   const changed = await req('/api/v1/admin/contents/' + article.id, 'PUT', { version: article.version,
