@@ -291,12 +291,6 @@ a {
   min-width: 0;
 }
 
-.dashboard-page {
-  padding: 54px clamp(24px, 5vw, 74px) 90px;
-  max-width: 1640px;
-  width: 100%;
-  margin: auto;
-}
 .dashboard-head {
   display: flex;
   justify-content: space-between;
@@ -925,9 +919,6 @@ a {
   .sidebar-foot {
     display: none;
   }
-  .dashboard-page {
-    padding: 26px 16px 70px;
-  }
   .dashboard-head h1 {
     font-size: 30px;
   }
@@ -989,14 +980,14 @@ a {
   max-width: 1640px;
   width: 100%;
   margin: 0 auto;
-  padding: clamp(22px, 3vh, 32px) clamp(24px, 3.5vw, 48px) 24px;
+  padding: 20px clamp(16px, 2vw, 28px) 24px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 .studio-head {
   flex: none;
-  margin: 0 0 20px;
+  margin: 0 0 12px;
 }
 .studio-grid {
   display: grid;
@@ -1283,7 +1274,6 @@ a {
     height: auto;
     min-height: 100dvh;
     overflow: visible;
-    padding: 26px 18px 45px;
   }
   .studio-grid,
   .editor-workspace .editor-page {
@@ -1310,12 +1300,6 @@ a {
   }
 }
 @media (max-width: 600px) {
-  .studio-page {
-    padding: 26px 16px 45px;
-  }
-  .studio-head {
-    margin-bottom: 22px;
-  }
   .editor-workspace .editor-head {
     padding: 0;
   }
@@ -2093,14 +2077,6 @@ a {
   border-color: var(--studio-muted);
 }
 
-.reading-management {
-  padding: 22px 24px 40px;
-}
-.reading-management > * {
-  max-width: 1040px;
-  margin-left: auto;
-  margin-right: auto;
-}
 .reading-service-card,
 .reading-source-card,
 .reading-add-card {
@@ -2607,9 +2583,6 @@ a {
   }
   .management-page .dashboard-head h1 {
     font-size: 26px;
-  }
-  .management-page {
-    padding: 26px 16px 32px;
   }
   .management-page .settings-page {
     padding: 16px;
@@ -3688,13 +3661,11 @@ a {
 }
 .analytics-page {
   --analytics-ink: var(--studio-accent);
-  padding: 20px clamp(16px, 2vw, 28px) 24px;
 }
 .analytics-page .dashboard-head {
   align-items: center;
   flex-direction: row;
   flex-wrap: nowrap;
-  margin-bottom: 12px;
 }
 .analytics-page .create-actions {
   margin-left: auto;
@@ -4137,7 +4108,7 @@ a {
   }
 }
 @media (max-width: 560px) {
-  .analytics-page {
+  .studio-page {
     padding: 16px 12px 24px;
   }
   .analytics-filter {
@@ -4247,11 +4218,8 @@ button.danger {
 
 /* AIHOT management uses the existing page header and one scroll container. */
 .reading-management {
-  padding: 14px 18px 28px;
+  padding-bottom: 28px;
   min-width: 0;
-}
-.reading-management > * {
-  max-width: 1240px;
 }
 .reading-tabs {
   display: flex;
@@ -4488,9 +4456,6 @@ button.danger {
   }
 }
 @media (max-width: 650px) {
-  .reading-management {
-    padding: 12px;
-  }
   .reading-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
