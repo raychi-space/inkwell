@@ -22,7 +22,7 @@ npm run dev
 
 打开 <http://127.0.0.1:5173>。Vite 将 `/api` 代理到 `RAYCHI_API_URL`（默认 `http://127.0.0.1:8080`）；生产环境需在同源入口转发 `/api`。执行 `npm run build` 检查类型并构建。
 
-格式与编辑器边界见[编辑器约定](docs/editor-v0.1.md)。本仓库独立构建，不读取相邻仓库的文件。
+公式可通过工具栏插入和编辑，助手回复同步渲染公式；保存仍为 Markdown/TeX。格式与编辑器边界见[编辑器约定](docs/editor-v0.1.md)。本仓库独立构建，不读取相邻仓库的文件。
 
 模块内部职责见[模块说明](docs/module.md)，早期 v0.2 范围见[产品范围文档](docs/product-scope-v0.2.md)；当前操作见下文，Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理；实时状态看[Raychi Project](https://github.com/orgs/raychi-space/projects/1)及对应 Issue/PR。
 
