@@ -1,7 +1,13 @@
 import { useId, useState, type PointerEvent } from 'react'
 import type { AnalyticsOverview } from './api'
 const number = new Intl.NumberFormat('zh-CN')
-export function AnalyticsCharts({ report }: { report: AnalyticsOverview }) {
+export function AnalyticsCharts({
+  report,
+  lineOnly = false,
+}: {
+  report: AnalyticsOverview
+  lineOnly?: boolean
+}) {
   const [dimension, setDimension] = useState<'countries' | 'provinces' | 'cities'>('countries')
   const [point, setPoint] = useState<number | null>(null)
   const tooltipId = useId()
@@ -30,7 +36,7 @@ export function AnalyticsCharts({ report }: { report: AnalyticsOverview }) {
     (i) => i >= 0 && i < points.length,
   )
   return (
-    <div className="analytics-charts">
+    <div className={lineOnly ? 'analytics-charts analytics-charts-line-only' : 'analytics-charts'}>
       <section className="dashboard-card analytics-line-card">
         <div className="analytics-section-head">
           <h2>每日访问量</h2>
@@ -141,37 +147,39 @@ export function AnalyticsCharts({ report }: { report: AnalyticsOverview }) {
           </div>
         </div>
       </section>
-      <section className="dashboard-card analytics-region-card">
-        <div className="analytics-section-head">
-          <h2>访问来自哪里</h2>
-          <label>
-            <span className="sr-only">地区维度</span>
-            <select
-              aria-label="地区维度"
-              value={dimension}
-              onChange={(event) => setDimension(event.target.value as typeof dimension)}
-            >
-              <option value="countries">国家</option>
-              <option value="provinces">省份</option>
-              <option value="cities">城市</option>
-            </select>
-          </label>
-        </div>
-        <div className="analytics-region-chart" role="list" aria-label="地区访问量排名">
-          {rows.map((row) => (
-            <div className="analytics-region-row" role="listitem" key={row.name}>
-              <div>
-                <span>{row.name === 'unknown' ? '未知' : row.name}</span>
-                <span>{number.format(row.pageViews)} PV</span>
+      {!lineOnly && (
+        <section className="dashboard-card analytics-region-card">
+          <div className="analytics-section-head">
+            <h2>访问来自哪里</h2>
+            <label>
+              <span className="sr-only">地区维度</span>
+              <select
+                aria-label="地区维度"
+                value={dimension}
+                onChange={(event) => setDimension(event.target.value as typeof dimension)}
+              >
+                <option value="countries">国家</option>
+                <option value="provinces">省份</option>
+                <option value="cities">城市</option>
+              </select>
+            </label>
+          </div>
+          <div className="analytics-region-chart" role="list" aria-label="地区访问量排名">
+            {rows.map((row) => (
+              <div className="analytics-region-row" role="listitem" key={row.name}>
+                <div>
+                  <span>{row.name === 'unknown' ? '未知' : row.name}</span>
+                  <span>{number.format(row.pageViews)} PV</span>
+                </div>
+                <div className="analytics-region-track">
+                  <span style={{ width: `${(row.pageViews / maxRegion) * 100}%` }} />
+                </div>
               </div>
-              <div className="analytics-region-track">
-                <span style={{ width: `${(row.pageViews / maxRegion) * 100}%` }} />
-              </div>
-            </div>
-          ))}
-          {!rows.length && <p>这个区间还没有数据。</p>}
-        </div>
-      </section>
+            ))}
+            {!rows.length && <p>这个区间还没有数据。</p>}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

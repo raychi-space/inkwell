@@ -2,12 +2,22 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../../shared/ui/Icon'
 
 type Props = {
-  active: 'content' | 'drafts' | 'settings' | 'reading' | 'ai' | 'password' | 'analytics' | 'trash'
+  active:
+    | 'overview'
+    | 'content'
+    | 'drafts'
+    | 'settings'
+    | 'reading'
+    | 'ai'
+    | 'password'
+    | 'analytics'
+    | 'trash'
   username: string | null
   siteName: string
   avatarUrl: string | null
   collapsed: boolean
   onToggle: () => void
+  onOverview: () => void
   onContent: () => void
   onDrafts: () => void
   onSettings: () => void
@@ -36,6 +46,7 @@ export function ArticleSidebar(p: Props) {
     return () => document.removeEventListener('pointerdown', close)
   }, [menuOpen])
   const entries = [
+    { id: 'overview', label: '概览', icon: 'overview', action: p.onOverview },
     { id: 'content', label: '内容管理', icon: 'content', action: p.onContent },
     { id: 'drafts', label: '草稿箱', icon: 'draft', action: p.onDrafts },
     { id: 'trash', label: '回收站', icon: 'trash', action: p.onTrash },

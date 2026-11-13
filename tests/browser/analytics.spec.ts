@@ -1,3 +1,4 @@
+import { installOverviewFixture, waitForOverview } from './overview-fixture'
 import { test, expect, type Page } from '@playwright/test'
 
 async function fixture(page: Page, options: { configured?: boolean; failure?: number } = {}) {
@@ -39,8 +40,11 @@ async function fixture(page: Page, options: { configured?: boolean; failure?: nu
     else throw Error('Unexpected API ' + path)
     await route.fulfill({ json: body })
   })
+  await installOverviewFixture(page)
   await page.goto('/')
+  await waitForOverview(page)
   await page.getByRole('button', { name: '访问统计', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '访问统计', exact: true })).toBeVisible()
   return writes
 }
 
@@ -54,6 +58,7 @@ test('admin can disable collection, keep reports, reload the saved preference an
   await expect(page.getByText('已关闭访问统计功能。', { exact: true })).toHaveCount(1)
   await expect(page.getByRole('heading', { name: '总浏览量' })).toBeVisible()
   await page.reload()
+  await waitForOverview(page)
   await page.getByRole('button', { name: '访问统计', exact: true }).click()
   await expect(control).not.toBeChecked()
   await control.click()
