@@ -24,6 +24,24 @@ async function caret(page: Page, selector: string, offset: number, elementPoint 
 
 for (const fixture of [
   {
+    name: 'before inline math',
+    markdown: '前文 $x$ 后文',
+    selector: '.editable-prose p',
+    offset: 1,
+    element: true,
+    expected: '前文 新增',
+    count: 1,
+  },
+  {
+    name: 'after inline math',
+    markdown: '前文 $x$ 后文',
+    selector: '.editable-prose p',
+    offset: 2,
+    element: true,
+    expected: '新增 后文',
+    count: 1,
+  },
+  {
     name: 'text',
     markdown: '相同原文\n\n相同原文',
     selector: '.editable-prose p:nth-child(2) span',

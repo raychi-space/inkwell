@@ -95,12 +95,6 @@ export function createEditorAgentAdapter(
     const roots = [...new Set(bookmark.getNodes().map((node) => node.getTopLevelElementOrThrow()))]
     return JSON.stringify(roots.map(serialize))
   }
-  function insertionTree(node: LexicalNode): boolean {
-    return (
-      (supported.has(node.getType()) || ['math', 'inline-math'].includes(node.getType())) &&
-      (!$isElementNode(node) || node.getChildren().every(insertionTree))
-    )
-  }
   function validInsertion(bookmark: RangeSelection) {
     if (!bookmark.isCollapsed()) return false
     const point = bookmark.anchor,
@@ -110,12 +104,12 @@ export function createEditorAgentAdapter(
       return (
         $isTextNode(node) &&
         point.offset <= node.getTextContentSize() &&
-        insertionTree(node.getTopLevelElementOrThrow())
+        supportedTree(node.getTopLevelElementOrThrow())
       )
     if (!$isElementNode(node) || point.offset > node.getChildrenSize()) return false
     // Element points represent empty paragraphs and boundaries around noneditable formulas.
     // A math node itself (or another nested/decorator editor) is never a target.
-    return $isRootNode(node) || insertionTree(node.getTopLevelElementOrThrow())
+    return $isRootNode(node) || supportedTree(node.getTopLevelElementOrThrow())
   }
   function insertionStructure(bookmark: RangeSelection) {
     const node = $getNodeByKey(bookmark.anchor.key)!

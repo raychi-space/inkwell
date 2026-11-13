@@ -191,6 +191,9 @@ function FormulaNodeView({
 }) {
   const [open, setOpen] = useState(false)
   const readOnly = useCellValue(readOnly$)
+  useEffect(() => {
+    if (readOnly) setOpen(false)
+  }, [readOnly])
   function change(next: string | null) {
     if (!editor.isEditable()) {
       setOpen(false)
