@@ -18,6 +18,8 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 
 ## 新增功能入口
 
+写作对话的 `WritingProposal` 保存和展示结构化建议状态及有界差异，不把状态拼入可见回复；发给模型的历史由 `WritingAssistant` 组合。共享 `MarkdownMessage` 负责安全 Markdown/GFM 显示。`editorAgentAdapter` 使用 Lexical 节点书签及涉及块结构快照校验格式化选区，单块局部替换保留既有块类型；建议仍来自既有工具契约，未新增任务服务或改写接口。
+
 `app/OverviewDashboard.tsx` 组合内容、访问统计和拾阅三个功能的既有管理 API 与统计折线；各区域独立读取、取消旧请求和处理故障。内容列表按需传入分页大小和取消信号，计数使用服务端 total，最近内容最多读取五条。概览不拥有统计口径，也不直接调用独立内核或执行采集任务。
 
 `features/analytics/` 拥有统计请求与显示：`api.ts` 只维护当前管理界面使用的 settings/overview/events 封装，经统一 API/会话层访问 wellspring；Dashboard 组合筛选与分页，Charts 展示折线提示与地区，Sources 展示来源排行并回调 Dashboard 沿用已应用条件查询，Collection 维护持久开关和写入失败后的重新加载。来源占比分母使用当前 `trend` 的 PV 合计，不能拿累计四卡或最多 100 组来源的合计代替；来源字段复用现有站点 v2 契约，无需增加采集或迁移。页面不展示访问路径，API 的可选 path 过滤能力保留供后续消费方使用。统计口径归内核/站点契约，已无消费方的旧报表前端封装不再保留。`features/reading/` 是拾阅管理入口，只通过统一 API 读取 AIHOT 接入状态，后端为旧模式时再使用原来源和翻译助手接口；不直连 AIHOT。编辑器、导出、修订、回收站内部逻辑归 articles，业务权限与持久化归后端。
