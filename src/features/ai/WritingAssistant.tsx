@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { createPortal } from 'react-dom'
 import { createTurn, streamTurn } from './api'
 import type {
   Assistant,
@@ -11,6 +10,8 @@ import type {
 import { Icon } from '../../shared/ui/Icon'
 import { AssistantAvatar } from './AssistantAvatar'
 import { Select } from '../../shared/ui/Select'
+import { MarkdownMessage } from '../../shared/ui/MarkdownMessage'
+import { WritingProposal, suggestionStates, type WritingSuggestion } from './WritingProposal'
 import { errorMessage } from '../../shared/lib/errors'
 interface Props {
   username?: string
@@ -30,6 +31,7 @@ interface Entry {
   icon?: string
   role: 'user' | 'assistant'
   content: string
+  suggestion?: WritingSuggestion
 }
 export function WritingAssistant({
   username = '你',
@@ -50,7 +52,7 @@ export function WritingAssistant({
     [proposal, setProposal] = useState<Proposal | null>(null)
   const [pending, setPending] = useState(false),
     [retry, setRetry] = useState<TurnRequest | null>(null)
-  const [previewTop, setPreviewTop] = useState(0)
+  const proposalRequest = useRef<string | null>(null)
   const [expanded, setExpanded] = useState(false)
   const streamAbort = useRef<AbortController | null>(null)
   const documentTarget = useRef<{ id: string; before: string } | null>(null)
@@ -102,7 +104,7 @@ export function WritingAssistant({
         if (previous) adapterRef.current?.releaseSelection(previous.selectionId)
         setSelection(null)
         setRetry(null)
-        setNotice('暂不支持此选区。请选择普通无格式段落中的文字。')
+        setNotice('请选择段落、标题、引用或列表中的文字；暂不支持表格、图片和代码块。')
         return
       }
       if (value.selectionId === selectionState.current.selection?.selectionId) return
@@ -121,43 +123,45 @@ export function WritingAssistant({
       if (frame) cancelAnimationFrame(frame)
     }
   }, [adapterRef, previewHost])
-  useEffect(() => {
-    if (proposal?.kind === 'replacement' && previewHost.current) {
-      const anchor = adapterRef.current?.getAnchor(proposal.selectionId)
-      if (anchor)
-        setPreviewTop(
-          Math.max(
-            previewHost.current.scrollTop + 8,
-            Math.min(
-              anchor.getBoundingClientRect().bottom -
-                previewHost.current.getBoundingClientRect().top +
-                previewHost.current.scrollTop +
-                8,
-              previewHost.current.scrollTop + previewHost.current.clientHeight - 340,
-            ),
-          ),
-        )
-    }
-  }, [proposal, adapterRef, previewHost])
   function clearSelection() {
     if (selection) adapterRef.current?.releaseSelection(selection.selectionId)
     setSelection(null)
     callbacks.current.onLock(false)
   }
-  function recordDecision(value: string) {
-    setEntries((v) => {
-      const next = [...v]
-      const last = next.at(-1)
-      if (last?.role === 'assistant')
-        next[next.length - 1] = {
-          ...last,
-          content: last.content + '\n[建议' + value + ']',
-        }
-      return next
-    })
+  function recordDecision(state: WritingSuggestion['state']) {
+    const requestId = proposalRequest.current
+    setEntries((values) =>
+      values.map((entry) =>
+        entry.requestId === requestId && entry.suggestion
+          ? { ...entry, suggestion: { ...entry.suggestion, state } }
+          : entry,
+      ),
+    )
     setProposal(null)
     setRetry(null)
     clearSelection()
+  }
+  function showSuggestion(
+    request: TurnRequest,
+    proposed: Proposal,
+    state: WritingSuggestion['state'] = 'pending',
+  ) {
+    if (proposed.kind !== 'replacement' && proposed.kind !== 'document') return
+    proposalRequest.current = request.requestId
+    const suggestion: WritingSuggestion = {
+      kind: proposed.kind,
+      before:
+        proposed.kind === 'replacement'
+          ? request.context.selection!.beforeMarkdown
+          : (request.context.documentMarkdown ?? ''),
+      after: proposed.newText,
+      state,
+    }
+    setEntries((values) =>
+      values.map((entry) =>
+        entry.requestId === request.requestId ? { ...entry, suggestion } : entry,
+      ),
+    )
   }
   async function execute(request: TurnRequest, retrying = false) {
     if (flight.current || proposal) return
@@ -204,7 +208,9 @@ export function WritingAssistant({
           )
           return index < 0
             ? [...values, entry]
-            : values.map((value, i) => (i === index ? entry : value))
+            : values.map((value, i) =>
+                i === index ? { ...entry, suggestion: value.suggestion } : value,
+              )
         })
       }
       let task
@@ -239,6 +245,7 @@ export function WritingAssistant({
           proposed.selectionId !== request.context.selection?.selectionId ||
           !adapterRef.current?.validateSelection(proposed.selectionId)
         ) {
+          if (request.context.selection) showSuggestion(request, proposed, 'expired')
           clearSelection()
           setNotice('原文已变化，请重新选择。')
           return
@@ -249,15 +256,16 @@ export function WritingAssistant({
           return
         }
         callbacks.current.onLock(true)
+        showSuggestion(request, proposed)
         setProposal(proposed)
       } else if (proposed?.kind === 'document') {
-        setPreviewTop(previewHost.current?.scrollTop ?? 0)
         const target = documentTarget.current
         if (
           !target ||
           target.id !== proposed.documentId ||
           adapterRef.current?.getCurrentMarkdown() !== target.before
         ) {
+          showSuggestion(request, proposed, 'expired')
           setNotice('正文已变化，请重新生成修改建议。')
           return
         }
@@ -266,6 +274,7 @@ export function WritingAssistant({
           return
         }
         callbacks.current.onLock(true)
+        showSuggestion(request, proposed)
         setProposal(proposed)
       } else if (proposed) {
         clearSelection()
@@ -318,7 +327,11 @@ export function WritingAssistant({
       message: content,
       history: (entries.at(-1)?.role === 'user' ? entries.slice(0, -1) : entries)
         .slice(-40)
-        .map(({ role, content }) => ({ role, content })),
+        .map(({ role, content, suggestion }) => ({
+          role,
+          content:
+            content + (suggestion ? `\n[修改建议状态：${suggestionStates[suggestion.state]}]` : ''),
+        })),
       context: {
         title,
         documentId,
@@ -340,41 +353,12 @@ export function WritingAssistant({
         if (!adapterRef.current) throw new Error('编辑器已重新加载，请重新生成。')
         adapterRef.current.applyDocument(documentTarget.current.before, proposal.newText)
       } else throw new Error('结果类型不匹配。')
-      recordDecision('已接受')
+      recordDecision('accepted')
     } catch (e) {
       setNotice(errorMessage(e))
-      recordDecision('已过期')
+      recordDecision('expired')
     }
   }
-  const preview = (proposal?.kind === 'replacement' || proposal?.kind === 'document') && (
-    <section
-      className="agent-replacement-preview"
-      style={{ top: previewTop }}
-      aria-label={proposal.kind === 'document' ? '全文修改建议' : '选区修改建议'}
-    >
-      <h3>{proposal.kind === 'document' ? '全文修改建议' : '选区修改建议'}</h3>
-      <div className="agent-preview-diff">
-        <div className="proposal-before">
-          <strong>原文</strong>
-          <pre>
-            {proposal.kind === 'document'
-              ? documentTarget.current?.before
-              : selection?.beforeMarkdown}
-          </pre>
-        </div>
-        <div className="proposal-after">
-          <strong>{proposal.newText === '' ? '删除选区' : '新文'}</strong>
-          <pre>{proposal.newText || '（将删除所选文字）'}</pre>
-        </div>
-      </div>
-      <div className="actions">
-        <button className="primary" onClick={accept}>
-          接受
-        </button>
-        <button onClick={() => recordDecision('已拒绝')}>拒绝</button>
-      </div>
-    </section>
-  )
   return (
     <section className="card writing-assistant" aria-label="写作对话">
       <header className="conversation-head">
@@ -426,7 +410,18 @@ export function WritingAssistant({
               <span>{v.role === 'user' ? username : (v.name ?? '助手')}</span>
             </div>
             <div className={'agent-message ' + v.role}>
-              <p>{v.content}</p>
+              {v.role === 'assistant' ? (
+                <MarkdownMessage content={v.content} />
+              ) : (
+                <p>{v.content}</p>
+              )}
+              {v.suggestion && (
+                <WritingProposal
+                  suggestion={v.suggestion}
+                  onAccept={accept}
+                  onReject={() => recordDecision('rejected')}
+                />
+              )}
             </div>
           </div>
         ))}
@@ -501,7 +496,6 @@ export function WritingAssistant({
           </button>
         </div>
       )}
-      {preview && previewHost.current && createPortal(preview, previewHost.current)}
     </section>
   )
 }

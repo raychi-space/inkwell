@@ -10,9 +10,11 @@ export function AgentEditorFixture() {
   const [instance, setInstance] = useState(0)
   const [notice, setNotice] = useState(''),
     [markdown, setMarkdown] = useState('')
+  const [replacement, setReplacement] = useState('新的替换文字')
   const article = {
     id: 'editor-fixture',
-    bodyMarkdown: '相同原文\n\n相同原文\n\n最后一段。',
+    bodyMarkdown:
+      new URLSearchParams(location.search).get('markdown') ?? '相同原文\n\n相同原文\n\n最后一段。',
   } as Article
   return (
     <main>
@@ -33,7 +35,7 @@ export function AgentEditorFixture() {
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
           const captured = agent.current?.captureSelection()
-          if (!captured) setNotice('仅支持普通段落的无格式文字选区。')
+          if (!captured) setNotice('请选择支持的文字选区。')
           else {
             setSelection(captured)
             setNotice('选区已捕获')
@@ -43,6 +45,11 @@ export function AgentEditorFixture() {
         交给助手
       </button>
       <input aria-label="助手输入" />
+      <textarea
+        aria-label="建议 Markdown"
+        value={replacement}
+        onChange={(e) => setReplacement(e.target.value)}
+      />
       <button onClick={() => editor.current?.setMarkdown('原文已从外部改变。')}>
         外部修改原文
       </button>
@@ -54,7 +61,7 @@ export function AgentEditorFixture() {
           <button
             onClick={() => {
               try {
-                agent.current?.applyReplacement(selection.selectionId, '新的替换文字')
+                agent.current?.applyReplacement(selection.selectionId, replacement)
                 setSelection(null)
                 setMarkdown(editor.current?.getMarkdown() ?? '')
               } catch (e) {
