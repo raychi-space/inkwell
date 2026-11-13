@@ -60,9 +60,9 @@ export function ArticleSidebar(p: Props) {
       <div className="sidebar-brand">
         <button
           className="brand"
-          onClick={p.collapsed ? p.onToggle : p.onContent}
-          aria-label={p.collapsed ? '展开侧边栏' : '返回内容管理'}
-          title={p.collapsed ? '展开侧边栏' : '返回内容管理'}
+          onClick={p.collapsed ? p.onToggle : p.onOverview}
+          aria-label={p.collapsed ? '展开侧边栏' : '返回概览'}
+          title={p.collapsed ? '展开侧边栏' : '返回概览'}
         >
           <span className="brand-mark">R</span>
           <span className="brand-name sidebar-label" aria-hidden={p.collapsed}>
