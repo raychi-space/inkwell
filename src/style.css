@@ -1344,36 +1344,6 @@ a {
 .editor-writing-area {
   position: relative;
 }
-.agent-replacement-preview {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  z-index: 20;
-  padding: 18px;
-  background: var(--panel, #fff);
-  border: 1px solid var(--border, #ccc);
-  border-radius: 12px;
-  box-shadow: 0 8px 30px #0002;
-}
-.agent-replacement-preview pre {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  margin: 8px 0;
-  font: inherit;
-}
-.proposal-before {
-  background: #fce8e8;
-  color: #842727;
-  padding: 10px;
-  border-radius: 6px;
-}
-.proposal-after {
-  background: #e4f3e9;
-  color: #235b38;
-  padding: 10px;
-  margin-top: 8px;
-  border-radius: 6px;
-}
 .agent-summary-proposal {
   margin-top: 16px;
   padding: 12px;
@@ -1410,10 +1380,6 @@ a {
   padding: 10px;
 }
 
-.agent-replacement-preview {
-  max-height: 330px;
-  overflow: auto;
-}
 .agent-actions button,
 .writing-assistant > button,
 .agent-summary-proposal button,
@@ -1761,48 +1727,6 @@ a {
   .conversation-collapsed .conversation-panel {
     transition: none;
   }
-}
-.agent-replacement-preview {
-  display: flex;
-  flex-direction: column;
-  max-height: min(330px, calc(100% - 16px));
-  overflow: hidden;
-}
-.agent-replacement-preview h3 {
-  flex-shrink: 0;
-  margin: 0 0 10px;
-  font-size: 16px;
-}
-.agent-preview-diff {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-.agent-replacement-preview > .actions {
-  flex-shrink: 0;
-  margin-top: 10px;
-}
-.agent-replacement-preview {
-  padding: 14px;
-}
-.agent-replacement-preview h3 {
-  margin-bottom: 8px;
-}
-.agent-preview-diff .proposal-before,
-.agent-preview-diff .proposal-after {
-  padding: 6px 10px;
-  margin-bottom: 6px;
-}
-.agent-preview-diff strong {
-  font-size: 12px;
-}
-.agent-replacement-preview pre {
-  font-size: 13px;
-  line-height: 1.55;
-  margin: 3px 0;
-}
-.agent-replacement-preview > .actions {
-  margin-top: 8px;
 }
 
 /* Shared management surfaces and compact navigation. */
@@ -3594,6 +3518,118 @@ a {
 }
 
 /* Analytics overview */
+.message-markdown {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+.chat-entry .message-markdown p {
+  white-space: normal;
+  margin: 6px 0;
+}
+.message-markdown > :first-child {
+  margin-top: 0;
+}
+.message-markdown > :last-child {
+  margin-bottom: 0;
+}
+.message-markdown h1,
+.message-markdown h2,
+.message-markdown h3 {
+  font-size: 1.1em;
+  margin: 12px 0 6px;
+}
+.message-markdown ul,
+.message-markdown ol {
+  padding-left: 22px;
+  margin: 6px 0;
+}
+.message-markdown blockquote {
+  margin: 8px 0;
+  padding-left: 10px;
+  border-left: 3px solid #bad0bf;
+}
+.message-markdown pre {
+  white-space: pre;
+  overflow: auto;
+  padding: 10px;
+  background: #edf1ed;
+  border-radius: 6px;
+}
+.message-markdown :not(pre) > code {
+  background: #e8eee9;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.message-markdown table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+.message-markdown td,
+.message-markdown th {
+  border: 1px solid #ccd8ce;
+  padding: 5px 8px;
+}
+.message-markdown a {
+  color: #315e40;
+  text-decoration: underline;
+}
+.writing-proposal {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #c1d3c4;
+  border-radius: 8px;
+  background: #f8fbf8;
+}
+.writing-proposal header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+.writing-proposal h3 {
+  font-size: 13px;
+  margin: 0;
+}
+.writing-proposal header span {
+  color: #667b6c;
+  font-size: 12px;
+}
+.writing-diff {
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  margin: 8px 0;
+}
+.writing-diff ins {
+  background: #d5eedc;
+  color: #205a33;
+  text-decoration: none;
+}
+.writing-diff del {
+  background: #f9dede;
+  color: #8c2929;
+}
+.writing-proposal details {
+  margin: 8px 0;
+}
+.writing-proposal summary {
+  cursor: pointer;
+  font-size: 12px;
+}
+.writing-proposal .actions {
+  margin-top: 8px;
+}
+.writing-proposal[data-state='expired'] {
+  border-color: #d7c7ad;
+}
+.writing-proposal[data-state='rejected'] {
+  background: #f3f4f2;
+}
 .analytics-page {
   --analytics-ink: #315e40;
   padding: 20px clamp(16px, 2vw, 28px) 24px;
