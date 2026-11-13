@@ -5,6 +5,7 @@ import type {
   EditorAgentAdapter,
   Proposal,
   SelectionSnapshot,
+  InsertionSnapshot,
   TurnRequest,
 } from './types'
 import { Icon } from '../../shared/ui/Icon'
@@ -49,6 +50,7 @@ export function WritingAssistant({
     [message, setMessage] = useState(''),
     [notice, setNotice] = useState('')
   const [selection, setSelection] = useState<SelectionSnapshot | null>(null),
+    [insertion, setInsertion] = useState<InsertionSnapshot | null>(null),
     [proposal, setProposal] = useState<Proposal | null>(null)
   const [pending, setPending] = useState(false),
     [retry, setRetry] = useState<TurnRequest | null>(null)
@@ -64,14 +66,17 @@ export function WritingAssistant({
   const historyHost = useRef<HTMLDivElement>(null)
   const callbacks = useRef({ onLock, onBusy, onAssistantChange })
   callbacks.current = { onLock, onBusy, onAssistantChange }
-  const selectionState = useRef({ selection, proposal })
-  selectionState.current = { selection, proposal }
+  const selectionState = useRef({ selection, insertion, proposal })
+  selectionState.current = { selection, insertion, proposal }
   useEffect(() => {
     mounted.current = true
     return () => {
       streamAbort.current?.abort()
       mounted.current = false
       epoch.current++
+      const target = selectionState.current
+      if (target.selection) adapterRef.current?.releaseSelection(target.selection.selectionId)
+      if (target.insertion) adapterRef.current?.releaseInsertion(target.insertion.insertionId)
       callbacks.current.onLock(false)
       callbacks.current.onBusy(false)
     }
@@ -89,7 +94,6 @@ export function WritingAssistant({
       if (
         !host ||
         !range ||
-        range.isCollapsed ||
         !range.anchorNode ||
         !range.focusNode ||
         !host.contains(range.anchorNode) ||
@@ -98,6 +102,13 @@ export function WritingAssistant({
         !document.activeElement?.closest('.editable-prose')
       )
         return
+      if (range.isCollapsed) {
+        if (selectionState.current.insertion) {
+          const value = adapterRef.current?.captureInsertion()
+          if (value) setInsertion(value)
+        }
+        return
+      }
       const value = adapterRef.current?.captureSelection()
       if (!value) {
         const previous = selectionState.current.selection
@@ -108,6 +119,9 @@ export function WritingAssistant({
         return
       }
       if (value.selectionId === selectionState.current.selection?.selectionId) return
+      if (selectionState.current.insertion)
+        adapterRef.current?.releaseInsertion(selectionState.current.insertion.insertionId)
+      setInsertion(null)
       setSelection(value)
       setRetry(null)
       setNotice('')
@@ -125,8 +139,23 @@ export function WritingAssistant({
   }, [adapterRef, previewHost])
   function clearSelection() {
     if (selection) adapterRef.current?.releaseSelection(selection.selectionId)
+    if (insertion) adapterRef.current?.releaseInsertion(insertion.insertionId)
     setSelection(null)
+    setInsertion(null)
     callbacks.current.onLock(false)
+  }
+  function chooseInsertion() {
+    const target = adapterRef.current?.captureInsertion()
+    if (!target) {
+      setNotice('请先在正文中设置光标；可选择空段落或公式前后。')
+      return
+    }
+    if (selection) adapterRef.current?.releaseSelection(selection.selectionId)
+    setSelection(null)
+    setInsertion(target)
+    setRetry(null)
+    setNotice('')
+    composerRef.current?.focus()
   }
   function recordDecision(state: WritingSuggestion['state']) {
     const requestId = proposalRequest.current
@@ -146,14 +175,21 @@ export function WritingAssistant({
     proposed: Proposal,
     state: WritingSuggestion['state'] = 'pending',
   ) {
-    if (proposed.kind !== 'replacement' && proposed.kind !== 'document') return
+    if (
+      proposed.kind !== 'replacement' &&
+      proposed.kind !== 'document' &&
+      proposed.kind !== 'insertion'
+    )
+      return
     proposalRequest.current = request.requestId
     const suggestion: WritingSuggestion = {
       kind: proposed.kind,
       before:
         proposed.kind === 'replacement'
           ? request.context.selection!.beforeMarkdown
-          : (request.context.documentMarkdown ?? ''),
+          : proposed.kind === 'insertion'
+            ? ''
+            : (request.context.documentMarkdown ?? ''),
       after: proposed.newText,
       state,
     }
@@ -171,6 +207,16 @@ export function WritingAssistant({
         !adapterRef.current?.validateSelection(request.context.selection.selectionId))
     ) {
       setNotice('原文已变化，请重新选择。')
+      setRetry(null)
+      clearSelection()
+      return
+    }
+    if (
+      request.mode === 'insert' &&
+      (!request.context.insertion ||
+        !adapterRef.current?.validateInsertion(request.context.insertion.insertionId))
+    ) {
+      setNotice('插入位置已变化，请重新设置光标。')
       setRetry(null)
       clearSelection()
       return
@@ -239,7 +285,23 @@ export function WritingAssistant({
       updateReply(result.reply || '已生成建议，请确认。')
       setNotice('')
       const proposed = result.proposal
-      if (proposed?.kind === 'replacement') {
+      if (proposed?.kind === 'insertion') {
+        if (
+          request.mode !== 'insert' ||
+          proposed.insertionId !== request.context.insertion?.insertionId ||
+          !proposed.newText.trim() ||
+          proposed.newText.length > 100000 ||
+          !adapterRef.current?.validateInsertion(proposed.insertionId)
+        ) {
+          showSuggestion(request, proposed, 'expired')
+          clearSelection()
+          setNotice('插入位置或内容已失效，请重新设置光标后生成。')
+          return
+        }
+        callbacks.current.onLock(true)
+        showSuggestion(request, proposed)
+        setProposal(proposed)
+      } else if (proposed?.kind === 'replacement') {
         if (
           !['chat', 'rewrite'].includes(request.mode) ||
           proposed.selectionId !== request.context.selection?.selectionId ||
@@ -261,6 +323,7 @@ export function WritingAssistant({
       } else if (proposed?.kind === 'document') {
         const target = documentTarget.current
         if (
+          request.mode !== 'chat' ||
           !target ||
           target.id !== proposed.documentId ||
           adapterRef.current?.getCurrentMarkdown() !== target.before
@@ -279,6 +342,9 @@ export function WritingAssistant({
       } else if (proposed) {
         clearSelection()
         setNotice('结果类型不匹配，请重新发送。')
+      } else if (request.mode === 'insert') {
+        clearSelection()
+        setNotice('未生成有效插入建议，请重新发送。')
       } else if (
         !request.context.selection ||
         !adapterRef.current?.validateSelection(request.context.selection.selectionId)
@@ -311,6 +377,12 @@ export function WritingAssistant({
       setNotice('原文已变化，请重新选择后发送。')
       return
     }
+    if (insertion && !adapterRef.current?.validateInsertion(insertion.insertionId)) {
+      clearSelection()
+      setRetry(null)
+      setNotice('插入位置已变化，请重新设置光标后发送。')
+      return
+    }
     if (!adapterRef.current) {
       setNotice('编辑器正在加载，请稍后发送。')
       return
@@ -323,7 +395,7 @@ export function WritingAssistant({
     const request: TurnRequest = {
       requestId: crypto.randomUUID(),
       assistantId,
-      mode: 'chat',
+      mode: insertion ? 'insert' : 'chat',
       message: content,
       history: (entries.at(-1)?.role === 'user' ? entries.slice(0, -1) : entries)
         .slice(-40)
@@ -334,9 +406,10 @@ export function WritingAssistant({
         })),
       context: {
         title,
-        documentId,
+        ...(!insertion ? { documentId } : {}),
         documentMarkdown: adapterRef.current?.getCurrentMarkdown() ?? '',
         ...(selection ? { selection } : {}),
+        ...(insertion ? { insertion } : {}),
       },
     }
     setMessage('')
@@ -349,6 +422,9 @@ export function WritingAssistant({
       if (proposal.kind === 'replacement') {
         if (!adapterRef.current) throw new Error('编辑器已重新加载，请重新选择。')
         adapterRef.current.applyReplacement(proposal.selectionId, proposal.newText)
+      } else if (proposal.kind === 'insertion') {
+        if (!adapterRef.current) throw new Error('编辑器已重新加载，请重新设置光标。')
+        adapterRef.current.applyInsertion(proposal.insertionId, proposal.newText)
       } else if (proposal.kind === 'document' && documentTarget.current) {
         if (!adapterRef.current) throw new Error('编辑器已重新加载，请重新生成。')
         adapterRef.current.applyDocument(documentTarget.current.before, proposal.newText)
@@ -386,7 +462,7 @@ export function WritingAssistant({
             <strong>聊聊这篇文章</strong>
             <p>
               {available.length
-                ? '助手可以阅读当前全文。直接提出写作或修改要求即可，也可以选中文字进行局部修改；修改建议确认后应用。'
+                ? '助手可以阅读当前全文。可以选中文字修改，也可以设置光标后选择“写入光标处”；建议确认后应用。'
                 : '请先在助手管理中配置并启用助手。'}
             </p>
           </div>
@@ -427,6 +503,18 @@ export function WritingAssistant({
         ))}
       </div>
       <div className={'conversation-composer' + (expanded ? ' expanded' : '')}>
+        {insertion && (
+          <div className="agent-selection" role="region" aria-label="光标插入位置">
+            <small>写入光标处</small>
+            <p>
+              {insertion.contextBefore.slice(-50) || '文档开头'}｜
+              {insertion.contextAfter.slice(0, 50) || '文档末尾'}
+            </p>
+            <button disabled={pending || !!proposal} onClick={clearSelection}>
+              取消插入
+            </button>
+          </div>
+        )}
         {selection && (
           <div className="agent-selection" role="region" aria-label="已选中选区">
             <small>已选中选区</small>
@@ -474,6 +562,14 @@ export function WritingAssistant({
           </button>
         </div>
         <div className="agent-actions">
+          <button
+            disabled={pending || !!proposal || !assistantId}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={chooseInsertion}
+            aria-pressed={!!insertion}
+          >
+            写入光标处
+          </button>
           <button
             className="primary"
             disabled={pending || !!proposal || !assistantId}

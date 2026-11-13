@@ -1,11 +1,16 @@
-import type { SelectionSnapshot } from '../../shared/types/editor'
+import type { SelectionSnapshot, InsertionSnapshot } from '../../shared/types/editor'
 export type { Assistant, Provider } from '../../shared/types/ai'
-export type { SelectionSnapshot, EditorAgentAdapter } from '../../shared/types/editor'
-export type WritingMode = 'chat' | 'rewrite' | 'summarize' | 'metadata'
+export type {
+  SelectionSnapshot,
+  InsertionSnapshot,
+  EditorAgentAdapter,
+} from '../../shared/types/editor'
+export type WritingMode = 'chat' | 'rewrite' | 'insert' | 'summarize' | 'metadata'
 export type Proposal =
   | { kind: 'document'; documentId: string; newText: string }
   | { kind: 'metadata'; title: string; summary: string; slug: string }
   | { kind: 'replacement'; selectionId: string; newText: string }
+  | { kind: 'insertion'; insertionId: string; newText: string }
   | { kind: 'summary'; summary: string }
 export interface TurnRequest {
   requestId: string
@@ -17,6 +22,7 @@ export interface TurnRequest {
     title: string
     documentId?: string
     selection?: SelectionSnapshot
+    insertion?: InsertionSnapshot
     documentMarkdown?: string
     currentSummary?: string
   }

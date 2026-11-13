@@ -3,7 +3,7 @@ import { diffChars } from 'diff'
 import { MarkdownMessage } from '../../shared/ui/MarkdownMessage'
 
 export type WritingSuggestion = {
-  kind: 'replacement' | 'document'
+  kind: 'replacement' | 'document' | 'insertion'
   before: string
   after: string
   state: 'pending' | 'accepted' | 'rejected' | 'expired'
@@ -35,7 +35,8 @@ export function WritingProposal({
       ],
     [before, after],
   )
-  const title = kind === 'document' ? '全文修改建议' : '选区修改建议'
+  const title =
+    kind === 'document' ? '全文修改建议' : kind === 'insertion' ? '光标插入建议' : '选区修改建议'
   return (
     <section
       className="writing-proposal"
@@ -61,14 +62,14 @@ export function WritingProposal({
       {!after && <p>将删除所选内容。</p>}
       {after && (
         <details>
-          <summary>修改后预览</summary>
+          <summary>{kind === 'insertion' ? '插入内容预览' : '修改后预览'}</summary>
           <MarkdownMessage content={after} />
         </details>
       )}
       {state === 'pending' && (
         <div className="actions">
           <button className="primary" onClick={onAccept}>
-            接受
+            {kind === 'insertion' ? '确认插入' : '接受'}
           </button>
           <button onClick={onReject}>拒绝</button>
         </div>
