@@ -58,7 +58,7 @@ async function openWriting(page: Page, reply: string, propose = false) {
   await installOverviewFixture(page)
   await page.goto('/')
   await waitForOverview(page)
-  await page.getByRole('button', { name: '草稿箱', exact: true }).click()
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.getByText('消息测试', { exact: true }).click()
   await expect(page.locator('.editable-prose')).toHaveText('保留原文。')
   return () => submitted

@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { changePassword } from '../api'
 import { passwordValidation } from '../passwordValidation'
 import { errorMessage } from '../../../shared/lib/errors'
@@ -7,9 +7,15 @@ import { PageHeader } from '../../../shared/ui/PageHeader'
 export function ChangePassword({
   onComplete,
   onCancel,
+  embedded = false,
+  onDirtyChange,
+  onBusyChange,
 }: {
   onComplete: () => void
   onCancel: () => void
+  embedded?: boolean
+  onDirtyChange?: (value: boolean) => void
+  onBusyChange?: (value: boolean) => void
 }) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -17,6 +23,15 @@ export function ChangePassword({
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const submitting = useRef(false)
+
+  useEffect(() => {
+    onDirtyChange?.(!!(currentPassword || newPassword || confirmation))
+    return () => onDirtyChange?.(false)
+  }, [currentPassword, newPassword, confirmation, onDirtyChange])
+  useEffect(() => {
+    onBusyChange?.(busy)
+    return () => onBusyChange?.(false)
+  }, [busy, onBusyChange])
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -43,9 +58,10 @@ export function ChangePassword({
     }
   }
 
+  const Container = embedded ? 'section' : 'main'
   return (
-    <main className="workspace studio-page">
-      <PageHeader kicker="账户安全" title="修改密码" />
+    <Container className={embedded ? '' : 'workspace studio-page'}>
+      {!embedded && <PageHeader kicker="账户安全" title="修改密码" />}
       <form className="dashboard-card password-form" onSubmit={submit}>
         <p className="settings-help">修改成功后，所有设备的登录都会失效，请使用新密码重新登录。</p>
         <fieldset disabled={busy}>
@@ -101,6 +117,6 @@ export function ChangePassword({
           </button>
         </div>
       </form>
-    </main>
+    </Container>
   )
 }

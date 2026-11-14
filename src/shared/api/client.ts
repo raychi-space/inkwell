@@ -56,7 +56,9 @@ export function resetCsrf() {
 
 export async function apiResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const version = sessionVersion
-  const protectedPath = path.startsWith('/api/v1/admin/') || path === '/api/v1/auth/logout'
+  const protectedPath =
+    path.startsWith('/api/v1/admin/') ||
+    ['/api/v1/auth/logout', '/api/v1/auth/username', '/api/v1/auth/password'].includes(path)
   const signal = protectedPath
     ? options.signal
       ? AbortSignal.any([options.signal, protectedRequests.signal])

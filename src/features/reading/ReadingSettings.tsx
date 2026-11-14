@@ -9,7 +9,6 @@ import { readingIntegration, type ReadingIntegration } from './api'
 import { LegacyReadingSettings } from './LegacyReadingSettings'
 import { ReadingDashboard } from './ReadingDashboard'
 import { ReadingSources } from './ReadingSources'
-import { ReadingModels } from './ReadingModels'
 
 const time = (value: string | null) =>
   value
@@ -31,10 +30,7 @@ export function ReadingSettings({
   const [busy, setBusy] = useState(false)
   const [dirty, setDirty] = useState(false),
     [pending, setPending] = useState(false)
-  const [tab, setTab] = useSessionState<'dashboard' | 'sources' | 'models'>(
-    'reading.tab',
-    'dashboard',
-  )
+  const [tab, setTab] = useSessionState<'dashboard' | 'sources'>('reading.tab', 'dashboard')
   const [revision, setRevision] = useState(0)
   const markDirty = useCallback(
     (value: boolean) => {
@@ -62,7 +58,6 @@ export function ReadingSettings({
   const tabs = [
     ['dashboard', '运行看板'],
     ['sources', '采集来源'],
-    ['models', '模型与限额'],
   ] as const
   function chooseTab(value: typeof tab) {
     if (value === tab) return true
@@ -113,13 +108,22 @@ export function ReadingSettings({
         kicker="READING"
         title="拾阅管理"
         actions={
-          <button
-            className="secondary-button"
-            disabled={busy || pending}
-            onClick={() => void refresh()}
-          >
-            {busy ? '正在查询…' : state?.managementConfigured ? '手动刷新' : '刷新状态'}
-          </button>
+          <>
+            <button
+              className="secondary-button"
+              disabled={busy || pending}
+              onClick={onOpenAssistants}
+            >
+              配置拾阅模型
+            </button>
+            <button
+              className="secondary-button"
+              disabled={busy || pending}
+              onClick={() => void refresh()}
+            >
+              {busy ? '正在查询…' : state?.managementConfigured ? '手动刷新' : '刷新状态'}
+            </button>
+          </>
         }
       />
       <div className="management-scroll reading-management">
@@ -138,12 +142,7 @@ export function ReadingSettings({
               onKeyDown={(event) => {
                 if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
                 event.preventDefault()
-                const next =
-                  event.key === 'Home'
-                    ? 0
-                    : event.key === 'End'
-                      ? 2
-                      : (index + (event.key === 'ArrowRight' ? 1 : 2)) % 3
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? 1 : (index + 1) % 2
                 if (chooseTab(tabs[next][0]))
                   document.getElementById('reading-tab-' + tabs[next][0])?.focus()
               }}
@@ -160,10 +159,8 @@ export function ReadingSettings({
           ) : state.managementConfigured ? (
             tab === 'dashboard' ? (
               <ReadingDashboard refresh={revision} />
-            ) : tab === 'sources' ? (
-              <ReadingSources refresh={revision} onDirty={markDirty} onBusy={markBusy} />
             ) : (
-              <ReadingModels refresh={revision} onDirty={markDirty} onBusy={markBusy} />
+              <ReadingSources refresh={revision} onDirty={markDirty} onBusy={markBusy} />
             )
           ) : (
             <Card>

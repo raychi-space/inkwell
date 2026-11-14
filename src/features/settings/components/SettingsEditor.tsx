@@ -335,14 +335,6 @@ export function SettingsEditor({
                 />
               </label>
               <label>
-                头像地址
-                <input
-                  value={value.avatarUrl ?? ''}
-                  onChange={(e) => change({ ...value, avatarUrl: e.target.value || null })}
-                  placeholder="https://…"
-                />
-              </label>
-              <label>
                 简短介绍
                 <textarea
                   rows={3}
@@ -353,9 +345,7 @@ export function SettingsEditor({
             </div>
             <fieldset className="settings-group">
               <legend>首页个人介绍</legend>
-              <p className="settings-help">
-                首页姓名使用站名；介绍、头像和下方外部链接也在本页修改。
-              </p>
+              <p className="settings-help">首页姓名使用站名；介绍和下方外部链接在本页修改。</p>
               <label className="settings-single-field">
                 当前关注方向
                 <input
