@@ -20,6 +20,14 @@ export async function logout() {
   resetAuthSession()
 }
 
+export async function changeUsername(currentPassword: string, username: string) {
+  await api<void>('/api/v1/auth/username', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, username }),
+  })
+  resetAuthSession()
+}
+
 export async function changePassword(currentPassword: string, newPassword: string) {
   await api<void>('/api/v1/auth/password', {
     method: 'POST',

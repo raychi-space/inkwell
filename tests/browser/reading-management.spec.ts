@@ -20,6 +20,7 @@ async function fixture(page: Page) {
     else if (path.endsWith('/auth/csrf')) body = { headerName: 'X-CSRF-TOKEN', token: 'test-only' }
     else if (path.endsWith('/settings')) body = { siteName: '测试站点' }
     else if (path.endsWith('/categories') || path.endsWith('/tags')) body = []
+    else if (path.endsWith('/ai/assistants') || path.endsWith('/ai/providers')) body = { items: [] }
     else if (path.endsWith('/contents')) body = { items: [], total: 0, page: 1, pageSize: 50 }
     else if (path.endsWith('/reading/integration'))
       body = { mode: 'aihot', managementConfigured: true }
@@ -95,7 +96,7 @@ test('refresh is read-only; task paging and configured model choices remain avai
     .getByRole('button', { name: '下一页' })
     .click()
   await expect(page.getByRole('navigation', { name: '任务分页' })).toContainText('2 / 2')
-  await page.getByRole('tab', { name: '模型与限额' }).click()
+  await page.getByRole('button', { name: '配置拾阅模型', exact: true }).click()
   const model = page.locator('select[aria-label$="模型"]').first()
   await expect(model.locator('option')).toHaveText([
     'fixture-default',
@@ -128,11 +129,11 @@ test('unsaved sources survive cancelled navigation and mutations block filters a
   await expect(page.getByLabel('来源名称', { exact: true })).toBeDisabled()
   await expect(page.getByLabel('健康状态', { exact: true })).toBeDisabled()
   await expect(page.getByRole('button', { name: '手动刷新', exact: true })).toBeDisabled()
-  await page.getByRole('tab', { name: '模型与限额' }).click()
+  await expect(page.getByRole('button', { name: '配置拾阅模型', exact: true })).toBeDisabled()
   await expect(page.getByRole('tab', { name: '采集来源' })).toHaveAttribute('aria-selected', 'true')
   f.release()
   await expect(page.getByText('来源已保存。', { exact: true })).toBeVisible()
-  await page.getByRole('tab', { name: '模型与限额' }).click()
+  await page.getByRole('button', { name: '配置拾阅模型', exact: true }).click()
   await expect(page.getByRole('heading', { name: '各环节模型' })).toBeVisible()
   expect(f.writes).toHaveLength(1)
 })
@@ -141,7 +142,7 @@ test('saving one setting retains other model and budget drafts; confirmed refres
   page,
 }) => {
   await fixture(page)
-  await page.getByRole('tab', { name: '模型与限额' }).click()
+  await page.getByRole('button', { name: '配置拾阅模型', exact: true }).click()
   const models = page.locator('select[aria-label$="模型"]')
   await models.nth(0).selectOption('deepseek-flash')
   await models.nth(1).selectOption('deepseek-flash-think')
@@ -171,7 +172,8 @@ for (const width of [1280, 390, 320])
       ['采集来源', 'RSS 来源', '来源分页'],
       ['模型与限额', '近7天环节用量', '模型用量分页'],
     ]) {
-      await page.getByRole('tab', { name: tab }).click()
+      if (tab === '模型与限额') await page.getByRole('button', { name: '配置拾阅模型', exact: true }).click()
+      else await page.getByRole('tab', { name: tab }).click()
       await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible()
       const pagination = page.getByRole('navigation', { name: pager })
       await expect(pagination).toBeVisible()
