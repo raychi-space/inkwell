@@ -552,7 +552,8 @@ function Studio({
         />
       ) : view === 'reading' ? (
         <ReadingSettings
-          onOpenAssistants={() => void showAssistants('reading')}
+          onOpenAssistants={() => void showAssistants()}
+          onOpenReadingModels={() => void showAssistants('reading')}
           onDirtyChange={setManagementDirty}
           onBusyChange={setManagementBusy}
         />

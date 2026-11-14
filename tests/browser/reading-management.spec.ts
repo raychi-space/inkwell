@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 const sample = (name: string) =>
   JSON.parse(readFileSync(new URL('./fixtures/reading-' + name + '.json', import.meta.url), 'utf8'))
-async function fixture(page: Page) {
+async function fixture(page: Page, mode: 'aihot' | 'legacy' = 'aihot') {
   const sources = sample('sources'),
     models = sample('models'),
     dashboard = sample('dashboard')
@@ -20,10 +20,11 @@ async function fixture(page: Page) {
     else if (path.endsWith('/auth/csrf')) body = { headerName: 'X-CSRF-TOKEN', token: 'test-only' }
     else if (path.endsWith('/settings')) body = { siteName: '测试站点' }
     else if (path.endsWith('/categories') || path.endsWith('/tags')) body = []
-    else if (path.endsWith('/ai/assistants') || path.endsWith('/ai/providers')) body = { items: [] }
+    else if (path.endsWith('/ai/assistants') || path.endsWith('/ai/providers') || path.endsWith('/ai/assistant-templates')) body = { items: [] }
     else if (path.endsWith('/contents')) body = { items: [], total: 0, page: 1, pageSize: 50 }
     else if (path.endsWith('/reading/integration'))
-      body = { mode: 'aihot', managementConfigured: true }
+      body = { mode, managementConfigured: mode === 'aihot' }
+    else if (path === '/api/v1/admin/reading') body = { settings: { version: 0, displayDays: 7, translationAssistantId: null }, sources: [] }
     else if (path.endsWith('/aihot/dashboard')) {
       const n = Number(url.searchParams.get('page') || 1)
       body = {
@@ -73,7 +74,7 @@ async function fixture(page: Page) {
   await page.goto('/')
   await waitForOverview(page)
   await page.getByRole('button', { name: '拾阅管理', exact: true }).click()
-  await expect(page.getByRole('heading', { name: '近 7 天采集与处理', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: mode === 'legacy' ? '展示与翻译' : '近 7 天采集与处理', exact: true })).toBeVisible()
   return {
     writes,
     hold: () => {
@@ -195,3 +196,13 @@ for (const width of [1280, 390, 320])
       await expect(pagination).toBeInViewport()
     }
   })
+
+
+test('legacy reading keeps its generic assistant configuration destination', async ({ page }) => {
+  await fixture(page, 'legacy')
+  await page.getByRole('button', { name: '打开助手管理', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '助手管理', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '写作助手', exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByRole('button', { name: '新增助手', exact: true })).toBeVisible()
+  await expect(page.getByText('拾阅模型管理尚未配置。', { exact: true })).toHaveCount(0)
+})
