@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react'
+import { BrandMark } from '../../../shared/ui/BrandMark'
 
 type Props = {
   username: string
@@ -22,6 +23,7 @@ export function LoginScreen({
   return (
     <main className="login-screen">
       <div className="login-card">
+        <BrandMark />
         <p className="eyebrow">RAYCHI · CONTENT STUDIO</p>
         <h1>墨池</h1>
         <p className="muted">在这里写下文章，再决定何时让它被看见。</p>

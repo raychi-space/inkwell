@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../../shared/ui/Icon'
+import { BrandMark } from '../../../shared/ui/BrandMark'
 
 type Props = {
   active:
@@ -64,7 +65,9 @@ export function ArticleSidebar(p: Props) {
           aria-label={p.collapsed ? '展开侧边栏' : '返回概览'}
           title={p.collapsed ? '展开侧边栏' : '返回概览'}
         >
-          <span className="brand-mark">R</span>
+          <span className="brand-mark">
+            <BrandMark inverse />
+          </span>
           <span className="brand-name sidebar-label" aria-hidden={p.collapsed}>
             <strong>{p.siteName || '墨池'}</strong>
             <small>墨池 · 内容工作台</small>
