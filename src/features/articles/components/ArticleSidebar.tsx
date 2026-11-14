@@ -4,15 +4,7 @@ import { BrandMark } from '../../../shared/ui/BrandMark'
 
 type Props = {
   active:
-    | 'overview'
-    | 'content'
-    | 'drafts'
-    | 'settings'
-    | 'reading'
-    | 'ai'
-    | 'password'
-    | 'analytics'
-    | 'trash'
+    'overview' | 'content' | 'settings' | 'reading' | 'ai' | 'personal' | 'analytics' | 'trash'
   username: string | null
   siteName: string
   avatarUrl: string | null
@@ -20,13 +12,12 @@ type Props = {
   onToggle: () => void
   onOverview: () => void
   onContent: () => void
-  onDrafts: () => void
   onSettings: () => void
   onAI: () => void
   onAnalytics: () => void
   onTrash: () => void
   onReading: () => void
-  onChangePassword: () => void
+  onPersonal: () => void
   onSignOut: () => void
 }
 
@@ -49,12 +40,12 @@ export function ArticleSidebar(p: Props) {
   const entries = [
     { id: 'overview', label: '概览', icon: 'overview', action: p.onOverview },
     { id: 'content', label: '内容管理', icon: 'content', action: p.onContent },
-    { id: 'drafts', label: '草稿箱', icon: 'draft', action: p.onDrafts },
-    { id: 'trash', label: '回收站', icon: 'trash', action: p.onTrash },
+    { id: 'analytics', label: '访问统计', icon: 'analytics', action: p.onAnalytics },
     { id: 'reading', label: '拾阅管理', icon: 'reading', action: p.onReading },
     { id: 'settings', label: '网站管理', icon: 'settings', action: p.onSettings },
     { id: 'ai', label: '助手管理', icon: 'assistant', action: p.onAI },
-    { id: 'analytics', label: '访问统计', icon: 'analytics', action: p.onAnalytics },
+    { id: 'trash', label: '回收站', icon: 'trash', action: p.onTrash },
+    { id: 'personal', label: '个人设置', icon: 'user', action: p.onPersonal },
   ] as const
   return (
     <aside className="sidebar">
@@ -145,11 +136,11 @@ export function ArticleSidebar(p: Props) {
               className="account-logout"
               onClick={() => {
                 setMenuOpen(false)
-                p.onChangePassword()
+                p.onPersonal()
               }}
             >
               <Icon name="settings" size={17} />
-              修改密码
+              个人设置
             </button>
             <button
               ref={logoutButton}

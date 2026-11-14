@@ -102,7 +102,7 @@ try {
   await row.getByRole('button', { name: '恢复为草稿', exact: true }).click()
   await dialog.getByRole('button', { name: '确认恢复为草稿' }).click()
   await dialog.waitFor({ state: 'detached' })
-  await page.getByRole('button', { name: '← 返回草稿箱', exact: true }).waitFor()
+  await page.getByRole('button', { name: '← 返回内容管理', exact: true }).waitFor()
   await page.locator('[contenteditable="true"]').first().waitFor()
   // Assert durable draft/editor state below; optional assistant-load errors can
   // replace a transient notice in fixtures with the Agent bridge disabled.
@@ -144,7 +144,7 @@ try {
     await req(`/api/v1/admin/contents/${post.id}/trash`, 'POST', { expectedVersion: post.version })
   }
   await page.route('**/admin/trash?page=**', route => route.fulfill({ status: 503, json: { code: 'UNAVAILABLE', message: '回收站暂时不可用。' } }))
-  await page.getByRole('button', { name: '草稿箱', exact: true }).click()
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.getByRole('button', { name: '回收站', exact: true }).click()
   await page.getByRole('heading', { name: '回收站', exact: true }).waitFor()
   // Navigation can reuse the session cache. Explicit refresh exercises the failed request.
@@ -159,7 +159,7 @@ try {
   assert.ok(await page.locator('.trash-item').count() >= 1)
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'long ASCII titles wrap')
   await req('/api/v1/auth/logout', 'POST', {}, 204)
-  await page.getByRole('button', { name: '草稿箱', exact: true }).click()
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
   await page.getByLabel('站长账号').waitFor()
   console.log('PASS recycle bin: actual trash/restore/purge, confirmation cancel/Escape, draft/public/feed/sitemap/image/history isolation, concurrent CAS/409, dirty disabled, real pagination, injected retry, session expiry, 390px/long titles')
 } catch (error) {

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useSessionState } from '../../../shared/lib/useSessionState'
 import { useAdminContents } from '../useAdminContents'
 import { Select } from '../../../shared/ui/Select'
@@ -7,7 +8,7 @@ import { PageHeader } from '../../../shared/ui/PageHeader'
 import type { Article } from '../types'
 
 type Props = {
-  mode: 'published' | 'drafts'
+  navigation: ReactNode
   categories: string[]
   tags: string[]
   busy: boolean
@@ -28,7 +29,7 @@ function wordCount(markdown: string) {
 }
 
 export function ContentDashboard({
-  mode,
+  navigation,
   categories,
   tags,
   busy,
@@ -36,6 +37,8 @@ export function ContentDashboard({
   onCreate,
   onOpen,
 }: Props) {
+  const mode = 'content'
+  const [status, setStatus] = useSessionState('content.status', 'all')
   const [sort, setSort] = useSessionState(mode + '.sort', 'recent')
   const [type, setType] = useSessionState(mode + '.type', 'all')
   const [category, setCategory] = useSessionState(mode + '.category', 'all')
@@ -43,7 +46,7 @@ export function ContentDashboard({
 
   const [page, setPage] = useSessionState(mode + '.page', 1)
   const { result, loading, error, refresh } = useAdminContents(page, {
-    status: mode === 'published' ? 'PUBLISHED' : 'DRAFT',
+    status: status === 'all' ? undefined : status,
     type: type === 'all' ? undefined : type,
     category: category === 'all' ? undefined : category,
     tag: tag === 'all' ? undefined : tag,
@@ -65,12 +68,7 @@ export function ContentDashboard({
     <main className="workspace studio-page dashboard-page">
       <PageHeader
         kicker="CONTENT STUDIO"
-        title={mode === 'published' ? '内容管理' : '草稿箱'}
-        subtitle={
-          mode === 'published'
-            ? '查看与管理已经发布的内容。'
-            : '未发布的内容都在这里，整理好后再发布。'
-        }
+        title="内容管理"
         actionsLabel="新建内容"
         actions={
           <>
@@ -86,6 +84,7 @@ export function ContentDashboard({
           </>
         }
       />
+      {navigation}
       {(notice || error) && (
         <p className="notice dashboard-notice" role="status">
           {notice || error}
@@ -97,7 +96,7 @@ export function ContentDashboard({
             eyebrow="YOUR WRITING"
             title={
               <span className="recent-title-group">
-                <span id="recent-title">{mode === 'published' ? '最近的内容' : '最近的草稿'}</span>
+                <span id="recent-title">最近的内容</span>
                 <span className="content-loading-slot">
                   {loading && (
                     <span
@@ -112,6 +111,16 @@ export function ContentDashboard({
             aside={<span>{result?.total ?? 0} 篇</span>}
           />
           <div className="content-filters">
+            <Select
+              label="状态"
+              value={status}
+              onChange={changeFilter(setStatus)}
+              options={[
+                { value: 'all', label: '全部状态' },
+                { value: 'PUBLISHED', label: '已发布' },
+                { value: 'DRAFT', label: '草稿' },
+              ]}
+            />
             <Select
               label="排序"
               value={sort}
@@ -153,12 +162,7 @@ export function ContentDashboard({
               ]}
             />
           </div>
-          <div
-            className="content-list"
-            tabIndex={0}
-            aria-busy={loading}
-            aria-label={mode === 'published' ? '已发布内容列表' : '草稿列表'}
-          >
+          <div className="content-list" tabIndex={0} aria-busy={loading} aria-label="内容列表">
             {visible.length ? (
               visible.map((article) => (
                 <button className="content-row" key={article.id} onClick={() => onOpen(article.id)}>
@@ -188,6 +192,9 @@ export function ContentDashboard({
                     >
                       {article.status === 'PUBLISHED' ? '已发布' : '草稿'}
                     </span>
+                    {article.status === 'PUBLISHED' && article.hasUnpublishedChanges && (
+                      <span className="status-pill">有未发布修改</span>
+                    )}
                     <time dateTime={article.updatedAt}>
                       {new Date(article.updatedAt).toLocaleDateString('zh-CN')}
                     </time>
@@ -195,20 +202,7 @@ export function ContentDashboard({
                 </button>
               ))
             ) : !loading && !error ? (
-              <EmptyState
-                title={
-                  scopedArticles.length
-                    ? '没有符合筛选条件的内容'
-                    : mode === 'published'
-                      ? '还没有已发布内容'
-                      : '还没有草稿'
-                }
-                hint={
-                  scopedArticles.length
-                    ? '试试调整筛选条件。'
-                    : '从上方选择一种类型，开始第一篇创作。'
-                }
-              />
+              <EmptyState title="没有符合条件的内容" hint="试试调整筛选条件，或开始新的创作。" />
             ) : null}
           </div>
           <nav aria-label="管理内容分页" className="actions">
@@ -232,7 +226,7 @@ export function ContentDashboard({
           </div>
           <dl className="stats-list">
             <div>
-              <dt>{mode === 'published' ? '本页已发布内容' : '本页草稿数'}</dt>
+              <dt>本页内容数</dt>
               <dd>{scopedArticles.length}</dd>
             </div>
             <div>
@@ -244,11 +238,6 @@ export function ContentDashboard({
               <dd>{counts.POST}</dd>
             </div>
           </dl>
-          <p className="stats-note">
-            {mode === 'published'
-              ? '阅读量待接入统计接口'
-              : '草稿仅自己可见，发布后才会展示在网站上。'}
-          </p>
         </Card>
       </div>
     </main>

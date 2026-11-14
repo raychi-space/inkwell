@@ -4654,3 +4654,111 @@ button.danger {
 .mdxeditor-full-height .cm-cursor {
   border-left-color: var(--studio-text);
 }
+
+/* Account and catalog management */
+.management-tabs {
+  margin: 0 0 12px;
+  flex-shrink: 0;
+}
+.reading-tabs button.active,
+.reading-tabs button[aria-current='page'] {
+  background: var(--studio-text);
+  color: var(--studio-panel);
+}
+.personal-settings,
+.taxonomy-management {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 0 16px;
+}
+.personal-settings .password-form {
+  margin: 0;
+  width: 100%;
+  max-width: 640px;
+}
+.profile-avatar-preview {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--studio-surface);
+}
+.profile-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.taxonomy-create {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.taxonomy-create label {
+  flex: 1;
+}
+.taxonomy-management .dashboard-card {
+  min-width: 0;
+}
+.taxonomy-management h2,
+.personal-settings h2 {
+  font-size: 17px;
+  margin-top: 0;
+}
+.taxonomy-management .actions {
+  flex-wrap: wrap;
+}
+.taxonomy-references {
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+.taxonomy-references button {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  .management-tabs {
+    margin-inline: 0;
+  }
+  .personal-settings,
+  .taxonomy-management {
+    padding-inline: 0;
+  }
+  .taxonomy-create {
+    flex-wrap: wrap;
+  }
+}
+
+.taxonomy-management label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.taxonomy-management input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--studio-border);
+  border-radius: 6px;
+  background: var(--studio-panel);
+  color: var(--studio-text);
+  font: inherit;
+}
+.taxonomy-management > .dashboard-card {
+  padding: 20px;
+}
+.personal-settings input[type='file']::file-selector-button {
+  padding: 8px 12px;
+  border: 1px solid var(--studio-border);
+  border-radius: 6px;
+  background: var(--studio-surface);
+  color: var(--studio-text);
+  font: inherit;
+  cursor: pointer;
+}

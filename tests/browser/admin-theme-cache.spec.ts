@@ -67,7 +67,7 @@ for (const width of [1440, 800, 680, 600, 560, 390, 320]) {
       }
     })
     const overview = await layout()
-    for (const name of ['访问统计', '内容管理', '草稿箱', '回收站', '拾阅管理', '网站管理', '助手管理']) {
+    for (const name of ['访问统计', '内容管理', '个人设置', '回收站', '拾阅管理', '网站管理', '助手管理']) {
       await go(page, name)
       expect(await layout(), name).toEqual(overview)
       if (name === '拾阅管理') {
@@ -80,8 +80,9 @@ for (const width of [1440, 800, 680, 600, 560, 390, 320]) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     }
     await page.getByRole('button', { name: /，账户菜单$/ }).click()
-    await page.getByRole('button', { name: '修改密码', exact: true }).click()
-    await expect(page.getByRole('heading', { name: '修改密码', exact: true })).toBeVisible()
+    await page.locator('.account-popover').getByRole('button', { name: '个人设置', exact: true }).click()
+    await page.getByRole('button', { name: '密码', exact: true }).click()
+    await expect(page.getByRole('heading', { name: '个人设置', exact: true })).toBeVisible()
     expect(await layout()).toEqual(overview)
   })
 }
@@ -147,12 +148,12 @@ test('switching sections reuses reads, keeps filters/pages and explicit refresh 
   await expect(page.getByText('第 2 页', { exact: true })).toBeVisible()
   const contentReads = () => reads.filter(path => path.startsWith('/api/v1/admin/contents?') && path.includes('pageSize=50')).length
   const before = contentReads()
-  await go(page, '草稿箱')
+  await go(page, '概览')
   await go(page, '内容管理')
   await expect(page.getByText('第 2 页', { exact: true })).toBeVisible()
-  expect(contentReads()).toBe(before + 1) // Draft list only.
+  expect(contentReads()).toBe(before) // Returning to the unified list uses its cached page.
   await page.getByRole('button', { name: '刷新', exact: true }).click()
-  await expect.poll(contentReads).toBe(before + 2)
+  await expect.poll(contentReads).toBe(before + 1)
   await go(page, '网站管理')
   await expect(page.getByLabel('站名', { exact: true })).toHaveValue('测试站点')
   await expect.poll(() => reads.filter(path => path.endsWith('/ai/providers')).length).toBe(1)
@@ -166,7 +167,7 @@ test('switching sections reuses reads, keeps filters/pages and explicit refresh 
   await page.getByRole('button', { name: '保存设置', exact: true }).click()
   await expect(page.getByText('站点设置已保存，访客刷新后即可看到。')).toBeVisible()
   await go(page, '内容管理')
-  await expect.poll(contentReads).toBe(before + 3)
+  await expect.poll(contentReads).toBe(before + 2)
   await go(page, '拾阅管理')
   await page.getByRole('tab', { name: '采集来源' }).click()
   await expect(page.locator('.reading-table')).toBeVisible()
@@ -221,7 +222,7 @@ test('theme control stays at the header right on desktop and mobile across manag
     for (const name of [
       '概览',
       '内容管理',
-      '草稿箱',
+      '个人设置',
       '回收站',
       '拾阅管理',
       '网站管理',
