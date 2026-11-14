@@ -129,6 +129,7 @@ test('catalog manages unused names, protects references, searches and opens asso
   const fresh = page.getByRole('row').filter({ has: page.getByRole('cell', { name: 'fresh', exact: true }) })
   await fresh.getByRole('button', { name: '重命名', exact: true }).click()
   await page.getByLabel('新名称', { exact: true }).fill('renamed')
+  await expect(page.getByLabel('新增标签', { exact: true })).toBeDisabled()
   page.once('dialog', d => d.dismiss())
   await page.getByRole('button', { name: '内容', exact: true }).click()
   await expect(page.getByLabel('新名称', { exact: true })).toHaveValue('renamed')

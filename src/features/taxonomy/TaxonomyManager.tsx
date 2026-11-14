@@ -128,12 +128,16 @@ export function TaxonomyManager(p: Props) {
               <input
                 required
                 maxLength={p.kind === 'categories' ? 80 : 40}
-                disabled={busy}
+                disabled={busy || editing !== null}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </label>
-            <button type="submit" className="primary" disabled={busy || !name.trim()}>
+            <button
+              type="submit"
+              className="primary"
+              disabled={busy || editing !== null || !name.trim()}
+            >
               新增
             </button>
           </form>
