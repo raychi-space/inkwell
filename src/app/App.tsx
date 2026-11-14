@@ -2,21 +2,22 @@ import { usePublicationFlow } from './usePublicationFlow'
 import { PublicationDialog } from '../features/articles/components/PublicationDialog'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { MDXEditorMethods } from '@mdxeditor/editor'
-import { logout, SessionBoundary, ChangePassword, type Session } from '../features/auth'
+import { logout, SessionBoundary, type Session } from '../features/auth'
 import {
   getArticle,
   createArticle,
   saveArticle,
   unpublishArticle,
   ArticleSidebar,
-  ContentDashboard,
   RichEditor,
   type Article,
 } from '../features/articles'
 import { categories, tags, addCategory } from '../features/taxonomy'
 import { SettingsEditor, getSettings, type SiteSettings } from '../features/settings'
 import { ProviderSettings } from '../features/ai/ProviderSettings'
-import { AgentSettings } from '../features/ai/AgentSettings'
+import { AssistantManagement } from './AssistantManagement'
+import { PersonalSettings } from './PersonalSettings'
+import { ContentManagement } from './ContentManagement'
 import { WritingAssistant } from '../features/ai/WritingAssistant'
 import { assistants as loadAssistants } from '../features/ai/api'
 import type { Assistant, EditorAgentAdapter } from '../features/ai/types'
@@ -88,16 +89,9 @@ function Studio({
   })
   const [current, setCurrent] = useState<Article | null>(null)
   const [view, setView] = useState<
-    | 'overview'
-    | 'content'
-    | 'drafts'
-    | 'settings'
-    | 'reading'
-    | 'ai'
-    | 'password'
-    | 'analytics'
-    | 'trash'
+    'overview' | 'content' | 'settings' | 'reading' | 'ai' | 'personal' | 'analytics' | 'trash'
   >('overview')
+  const [assistantTab, setAssistantTab] = useState<'writing' | 'reading'>('writing')
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [body, setBody] = useState('')
@@ -108,8 +102,8 @@ function Studio({
   const [newTag, setNewTag] = useState('')
   const [coverUrl, setCoverUrl] = useState('')
   const [dirty, setDirty] = useState(false)
-  const [readingDirty, setReadingDirty] = useState(false)
-  const [readingBusy, setReadingBusy] = useState(false)
+  const [managementDirty, setManagementDirty] = useState(false)
+  const [managementBusy, setManagementBusy] = useState(false)
   const [pendingUploads, setPendingUploads] = useState(0)
   const transfers = useRef(0)
   const [busy, setBusy] = useState(false)
@@ -225,12 +219,12 @@ function Studio({
 
   useEffect(() => {
     const leave = (event: BeforeUnloadEvent) => {
-      if (dirty || readingDirty || readingBusy || pendingUploads > 0 || publication.pending)
+      if (dirty || managementDirty || managementBusy || pendingUploads > 0 || publication.pending)
         event.preventDefault()
     }
     window.addEventListener('beforeunload', leave)
     return () => window.removeEventListener('beforeunload', leave)
-  }, [dirty, readingDirty, readingBusy, pendingUploads, publication.pending])
+  }, [dirty, managementDirty, managementBusy, pendingUploads, publication.pending])
 
   async function refreshTaxonomy() {
     try {
@@ -253,11 +247,11 @@ function Studio({
     setNewTag('')
     setDirty(false)
     setNotice('')
-    setView(article.status === 'PUBLISHED' ? 'content' : 'drafts')
+    setView('content')
   }
 
   function canLeave() {
-    if (busy || readingBusy || publication.pending || publication.opened || taxonomyBusy > 0) {
+    if (busy || managementBusy || publication.pending || publication.opened || taxonomyBusy > 0) {
       setNotice('请等待当前保存或分类标签操作完成。')
       return false
     }
@@ -265,7 +259,7 @@ function Studio({
       setNotice('请等待图片上传完成。')
       return false
     }
-    return (!dirty && !readingDirty) || window.confirm('当前修改尚未保存，确定离开吗？')
+    return (!dirty && !managementDirty) || window.confirm('当前修改尚未保存，确定离开吗？')
   }
 
   async function open(id: string) {
@@ -425,7 +419,7 @@ function Studio({
     try {
       const draft = await unpublishArticle(saved.id, saved.version)
       setCurrent(draft)
-      setView('drafts')
+      setView('content')
       setNotice('文章已撤回，公开页面与图片不再提供新的读取。')
     } catch (error) {
       setNotice(errorMessage(error))
@@ -444,7 +438,7 @@ function Studio({
     }
   }
 
-  async function showSection(section: 'overview' | 'content' | 'drafts' | 'trash') {
+  async function showSection(section: 'overview' | 'content' | 'trash') {
     if (!(await checkSession()) || !canLeave()) return
     setCurrent(null)
     setDirty(false)
@@ -460,18 +454,19 @@ function Studio({
     setNotice('')
   }
 
-  async function showPassword() {
+  async function showPersonal() {
     if (!(await checkSession()) || !canLeave()) return
     setCurrent(null)
     setDirty(false)
-    setView('password')
+    setView('personal')
     setNotice('')
   }
 
-  async function showAssistants() {
+  async function showAssistants(tab: 'writing' | 'reading' = 'writing') {
     if (!(await checkSession()) || !canLeave()) return
     setCurrent(null)
     setDirty(false)
+    setAssistantTab(tab)
     setView('ai')
     setNotice('')
   }
@@ -506,13 +501,12 @@ function Studio({
         onToggle={toggleSidebar}
         onOverview={() => void showSection('overview')}
         onContent={() => showSection('content')}
-        onDrafts={() => showSection('drafts')}
         onTrash={() => showSection('trash')}
         onReading={() => void showReading()}
         onAI={() => void showAssistants()}
         onAnalytics={() => void showAnalytics()}
         onSettings={() => void showSettings()}
-        onChangePassword={() => void showPassword()}
+        onPersonal={() => void showPersonal()}
         onSignOut={() => void signOut()}
       />
       {view === 'overview' ? (
@@ -539,18 +533,28 @@ function Studio({
         />
       ) : view === 'analytics' ? (
         <AnalyticsDashboard />
-      ) : view === 'password' ? (
-        <ChangePassword
-          onComplete={() => onSessionEnd('密码已修改，请使用新密码重新登录。')}
-          onCancel={() => void showSection('content')}
+      ) : view === 'personal' ? (
+        <PersonalSettings
+          username={session.username ?? ''}
+          initialValue={siteSettings}
+          onSaved={rememberSettings}
+          onSessionEnd={onSessionEnd}
+          onDirtyChange={setManagementDirty}
+          onBusyChange={setManagementBusy}
         />
       ) : view === 'ai' ? (
-        <AgentSettings />
+        <AssistantManagement
+          initialTab={assistantTab}
+          dirty={managementDirty}
+          pending={managementBusy}
+          onDirtyChange={setManagementDirty}
+          onBusyChange={setManagementBusy}
+        />
       ) : view === 'reading' ? (
         <ReadingSettings
-          onOpenAssistants={() => void showAssistants()}
-          onDirtyChange={setReadingDirty}
-          onBusyChange={setReadingBusy}
+          onOpenAssistants={() => void showAssistants('reading')}
+          onDirtyChange={setManagementDirty}
+          onBusyChange={setManagementBusy}
         />
       ) : view === 'settings' ? (
         <SettingsEditor
@@ -564,11 +568,8 @@ function Studio({
           <header className="studio-head editor-head has-theme-control">
             <div>
               <div className="editor-navigation">
-                <button
-                  className="back-link"
-                  onClick={() => showSection(view === 'drafts' ? 'drafts' : 'content')}
-                >
-                  ← 返回{view === 'drafts' ? '草稿箱' : '内容管理'}
+                <button className="back-link" onClick={() => showSection('content')}>
+                  ← 返回内容管理
                 </button>
                 <p className="eyebrow">
                   {current.status === 'PUBLISHED' ? '已发布' : '草稿'} · {typeNames[current.type]}
@@ -816,9 +817,13 @@ function Studio({
           </section>
         </main>
       ) : (
-        <ContentDashboard
-          key={view}
-          mode={view === 'drafts' ? 'drafts' : 'published'}
+        <ContentManagement
+          onTrash={() => void showSection('trash')}
+          onChanged={() => void refreshTaxonomy()}
+          onDirtyChange={setManagementDirty}
+          onBusyChange={setManagementBusy}
+          dirty={managementDirty}
+          pending={managementBusy}
           categories={categoryNames}
           tags={tagNames}
           busy={busy}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { providers, assistants, saveAssistant } from './api'
 import type { Provider, Assistant } from './types'
 import { Select } from '../../shared/ui/Select'
@@ -24,7 +24,15 @@ const emptyAssistant = {
   timeoutMs: 30000,
 }
 
-export function AgentSettings() {
+export function AgentSettings({
+  navigation,
+  onDirtyChange,
+  onBusyChange,
+}: {
+  navigation?: ReactNode
+  onDirtyChange?: (value: boolean) => void
+  onBusyChange?: (value: boolean) => void
+} = {}) {
   const [allProviders, setProviders] = useState<Provider[]>([])
   const [allAssistants, setAssistants] = useState<Assistant[]>([])
   const [assistantId, setAssistantId] = useState<string | null>(null)
@@ -34,6 +42,15 @@ export function AgentSettings() {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [assistantDirty, setAssistantDirty] = useState(false)
   const assistantSection = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    onDirtyChange?.(assistantDirty)
+    return () => onDirtyChange?.(false)
+  }, [assistantDirty, onDirtyChange])
+  useEffect(() => {
+    onBusyChange?.(busy)
+    return () => onBusyChange?.(false)
+  }, [busy, onBusyChange])
 
   async function refresh() {
     const [ps, as] = await Promise.all([providers(), assistants()])
@@ -102,6 +119,7 @@ export function AgentSettings() {
         title="助手管理"
         subtitle="为不同任务创建助手，配置各自的模型和工作方式。"
       />
+      {navigation}
       {notice && (
         <p className="notice dashboard-notice" role="status">
           {notice}
