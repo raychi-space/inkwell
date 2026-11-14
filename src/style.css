@@ -215,12 +215,47 @@ a {
   height: 46px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--studio-border);
-  border-radius: 10px;
-  font-family: Georgia, serif;
-  font-size: 25px;
-  font-weight: 700;
+  border: 0;
   color: var(--studio-on-accent);
+}
+.brand-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 40px;
+  vertical-align: middle;
+}
+.brand-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.brand-icon .brand-icon-dark {
+  display: none;
+}
+:root[data-theme='dark'] .brand-icon-light,
+.brand-icon-inverse .brand-icon-light {
+  display: none;
+}
+:root[data-theme='dark'] .brand-icon-dark,
+.brand-icon-inverse .brand-icon-dark {
+  display: block;
+}
+.brand-mark .brand-icon {
+  width: 100%;
+  height: 100%;
+}
+.login-card > .brand-icon {
+  width: 84px;
+  height: 56px;
+  margin-bottom: 12px;
+}
+.list-empty > .brand-icon {
+  display: block;
+  width: 72px;
+  height: 48px;
+  margin: 0 auto 12px;
 }
 .brand-name {
   display: grid;
