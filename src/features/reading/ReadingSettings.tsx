@@ -17,10 +17,12 @@ const time = (value: string | null) =>
 
 export function ReadingSettings({
   onOpenAssistants,
+  onOpenReadingModels,
   onDirtyChange,
   onBusyChange,
 }: {
   onOpenAssistants: () => void
+  onOpenReadingModels?: () => void
   onDirtyChange?: (value: boolean) => void
   onBusyChange?: (value: boolean) => void
 }) {
@@ -112,7 +114,7 @@ export function ReadingSettings({
             <button
               className="secondary-button"
               disabled={busy || pending}
-              onClick={onOpenAssistants}
+              onClick={onOpenReadingModels ?? onOpenAssistants}
             >
               配置拾阅模型
             </button>
