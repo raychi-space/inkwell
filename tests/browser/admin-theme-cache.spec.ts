@@ -81,8 +81,7 @@ for (const width of [1440, 800, 680, 600, 560, 390, 320]) {
     }
     await page.getByRole('button', { name: /，账户菜单$/ }).click()
     await page.locator('.account-popover').getByRole('button', { name: '个人设置', exact: true }).click()
-    await page.getByRole('button', { name: '密码', exact: true }).click()
-    await expect(page.getByRole('heading', { name: '个人设置', exact: true })).toBeVisible()
+      await expect(page.getByRole('heading', { name: '个人设置', exact: true })).toBeVisible()
     expect(await layout()).toEqual(overview)
   })
 }

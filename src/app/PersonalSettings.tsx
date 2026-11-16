@@ -3,6 +3,7 @@ import { ChangePassword, changeUsername } from '../features/auth'
 import { getSettings, type SiteSettings } from '../features/settings'
 import { saveAvatar } from '../features/settings/api'
 import { PageHeader } from '../shared/ui/PageHeader'
+import { Input } from '../shared/ui/Input'
 import { Icon } from '../shared/ui/Icon'
 import { errorMessage } from '../shared/lib/errors'
 
@@ -15,7 +16,6 @@ type Props = {
   onBusyChange: (value: boolean) => void
 }
 export function PersonalSettings(p: Props) {
-  const [tab, setTab] = useState<'avatar' | 'username' | 'password'>('avatar')
   const [settings, setSettings] = useState(p.initialValue)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState('')
@@ -23,15 +23,18 @@ export function PersonalSettings(p: Props) {
   const [username, setUsername] = useState(p.username)
   const [password, setPassword] = useState('')
   const [notice, setNotice] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [avatarNotice, setAvatarNotice] = useState('')
+  const [usernameNotice, setUsernameNotice] = useState('')
+  const [busy, setBusy] = useState<'avatar' | 'username' | 'refresh' | null>(null)
   const [passwordDirty, setPasswordDirty] = useState(false)
   const [passwordBusy, setPasswordBusy] = useState(false)
   const [generation, setGeneration] = useState(0)
   const input = useRef<HTMLInputElement>(null)
   const submitting = useRef(false)
   const settingsGeneration = useRef(0)
-  const dirty = !!file || username !== p.username || !!password || passwordDirty
-  const pending = busy || passwordBusy
+  const usernameDirty = username !== p.username || !!password
+  const dirty = !!file || usernameDirty || passwordDirty
+  const pending = busy !== null || passwordBusy
   useEffect(() => {
     let active = true
     const request = ++settingsGeneration.current
@@ -66,52 +69,58 @@ export function PersonalSettings(p: Props) {
     p.onBusyChange(pending)
     return () => p.onBusyChange(false)
   }, [pending, p.onBusyChange])
-  function reset() {
+  function resetAvatar() {
     setFile(null)
-    setUsername(p.username)
-    setPassword('')
-    setNotice('')
-    setGeneration((v) => v + 1)
+    setAvatarNotice('')
     if (input.current) input.current.value = ''
   }
-  function selectTab(next: typeof tab) {
-    if (next === tab || pending || (dirty && !window.confirm('当前修改尚未保存，确定放弃吗？')))
-      return
-    reset()
-    setTab(next)
+  function resetUsername() {
+    setUsername(p.username)
+    setPassword('')
+    setUsernameNotice('')
   }
-  async function submit(event: FormEvent) {
+  async function submit(event: FormEvent, section: 'avatar' | 'username') {
     event.preventDefault()
-    if (submitting.current) return
+    if (submitting.current || pending) return
+    if (section === 'avatar' && (!file || !settings || failed)) return
+    if (
+      section === 'username' &&
+      (file || passwordDirty) &&
+      !window.confirm('修改用户名将退出登录，其他未保存修改会丢失，确定继续吗？')
+    )
+      return
     submitting.current = true
-    settingsGeneration.current++
-    setBusy(true)
-    setNotice('')
+    setBusy(section)
+    const setSectionNotice = section === 'avatar' ? setAvatarNotice : setUsernameNotice
+    setSectionNotice('')
     try {
-      if (tab === 'avatar' && file && settings) {
+      if (section === 'avatar' && file && settings) {
+        settingsGeneration.current++
         const saved = await saveAvatar(file, settings.version)
         setSettings(saved)
         p.onSaved(saved)
-        setFile(null)
-        if (input.current) input.current.value = ''
-        setNotice('头像已保存。')
-      } else if (tab === 'username') {
+        resetAvatar()
+        setAvatarNotice('头像已保存。')
+      } else if (section === 'username') {
         await changeUsername(password, username)
         setPassword('')
         p.onSessionEnd('用户名已修改，请使用新用户名重新登录。')
       }
     } catch (e) {
-      setNotice(errorMessage(e))
+      setSectionNotice(errorMessage(e))
     } finally {
       submitting.current = false
-      setBusy(false)
+      setBusy(null)
     }
   }
   async function refresh() {
     if (pending || (dirty && !window.confirm('当前修改尚未保存，确定放弃并刷新吗？'))) return
-    reset()
+    resetAvatar()
+    resetUsername()
+    setGeneration((v) => v + 1)
+    setNotice('')
     const request = ++settingsGeneration.current
-    setBusy(true)
+    setBusy('refresh')
     try {
       const value = await getSettings(true)
       if (request === settingsGeneration.current) {
@@ -121,7 +130,7 @@ export function PersonalSettings(p: Props) {
     } catch (e) {
       if (request === settingsGeneration.current) setNotice(errorMessage(e))
     } finally {
-      if (request === settingsGeneration.current) setBusy(false)
+      if (request === settingsGeneration.current) setBusy(null)
     }
   }
   return (
@@ -136,127 +145,130 @@ export function PersonalSettings(p: Props) {
         }
       />
       <div className="management-scroll personal-settings">
-        <nav className="reading-tabs" aria-label="个人设置页签">
-          {(
-            [
-              ['avatar', '头像'],
-              ['username', '用户名'],
-              ['password', '密码'],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              aria-current={tab === key ? 'page' : undefined}
-              className={tab === key ? 'active' : ''}
-              disabled={pending}
-              onClick={() => selectTab(key)}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-        {tab === 'password' ? (
-          <ChangePassword
-            key={generation}
-            embedded
-            onDirtyChange={setPasswordDirty}
-            onBusyChange={setPasswordBusy}
-            onComplete={() => p.onSessionEnd('密码已修改，请使用新密码重新登录。')}
-            onCancel={reset}
-          />
-        ) : (
-          <form className="dashboard-card password-form" onSubmit={submit}>
-            <fieldset disabled={busy}>
-              {tab === 'avatar' ? (
-                <>
-                  <h2>头像</h2>
-                  <div className="profile-avatar-preview">
-                    {(preview || settings?.avatarUrl) && !failed ? (
-                      <img
-                        alt="头像预览"
-                        src={preview || settings?.avatarUrl || ''}
-                        onError={() => setFailed(true)}
-                      />
-                    ) : (
-                      <Icon name="user" size={48} />
-                    )}
-                  </div>
-                  <label>
-                    选择头像
-                    <input
-                      ref={input}
-                      type="file"
-                      accept="image/png,image/jpeg"
-                      onChange={(e) => {
-                        const next = e.target.files?.[0]
-                        setNotice('')
-                        if (!next) return
-                        if (
-                          !['image/png', 'image/jpeg'].includes(next.type) ||
-                          next.size > 2 * 1024 * 1024
-                        ) {
-                          setNotice('请选择不超过 2 MiB 的 PNG 或 JPEG 图片。')
-                          e.target.value = ''
-                          return
-                        }
-                        setFile(next)
-                      }}
-                    />
-                  </label>
-                  <p className="settings-help">
-                    PNG 或 JPEG，最大 2 MiB。保存后同步更新管理台和公开站头像。
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2>修改登录用户名</h2>
-                  <label>
-                    用户名
-                    <input
-                      autoComplete="username"
-                      required
-                      maxLength={100}
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                    />
-                  </label>
-                  <label>
-                    当前密码
-                    <input
-                      type="password"
-                      autoComplete="current-password"
-                      required
-                      maxLength={72}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </label>
-                  <p className="settings-help">修改后所有设备需使用新用户名重新登录。</p>
-                </>
-              )}
-            </fieldset>
-            {notice && (
-              <p role="status" className="notice">
-                {notice}
-              </p>
-            )}
-            <div className="actions">
-              <button type="button" disabled={busy} onClick={reset}>
-                取消
-              </button>
-              <button
-                className="primary"
-                type="submit"
-                disabled={
-                  busy ||
-                  (tab === 'avatar' ? !file || !settings || failed : username === p.username)
-                }
-              >
-                {busy ? '正在保存…' : tab === 'avatar' ? '保存头像' : '修改用户名并退出'}
-              </button>
-            </div>
-          </form>
+        {notice && (
+          <p role="status" className="notice">
+            {notice}
+          </p>
         )}
+        <form
+          className="dashboard-card password-form"
+          aria-label="头像设置"
+          onSubmit={(e) => void submit(e, 'avatar')}
+        >
+          <fieldset disabled={pending}>
+            <h2>头像</h2>
+            <div className="profile-avatar-preview">
+              {(preview || settings?.avatarUrl) && !failed ? (
+                <img
+                  alt="头像预览"
+                  src={preview || settings?.avatarUrl || ''}
+                  onError={() => setFailed(true)}
+                />
+              ) : (
+                <Icon name="user" size={48} />
+              )}
+            </div>
+            <label>
+              选择头像
+              <input
+                ref={input}
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={(e) => {
+                  const next = e.target.files?.[0]
+                  setAvatarNotice('')
+                  if (!next) return
+                  if (
+                    !['image/png', 'image/jpeg'].includes(next.type) ||
+                    next.size > 5 * 1024 * 1024
+                  ) {
+                    setAvatarNotice('请选择不超过 5 MiB 的 PNG 或 JPEG 图片。')
+                    e.target.value = ''
+                    return
+                  }
+                  setFile(next)
+                }}
+              />
+            </label>
+            <p className="settings-help">
+              PNG 或 JPEG，最大 5 MiB。保存后同步更新管理台和公开站头像。
+            </p>
+          </fieldset>
+          {avatarNotice && (
+            <p role="status" className="notice">
+              {avatarNotice}
+            </p>
+          )}
+          <div className="actions">
+            <button type="button" disabled={pending} onClick={resetAvatar}>
+              取消
+            </button>
+            <button
+              className="primary"
+              type="submit"
+              disabled={pending || !file || !settings || failed}
+            >
+              {busy === 'avatar' ? '正在保存…' : '保存头像'}
+            </button>
+          </div>
+        </form>
+        <form
+          className="dashboard-card password-form"
+          aria-label="用户名设置"
+          onSubmit={(e) => void submit(e, 'username')}
+        >
+          <fieldset disabled={pending}>
+            <h2>修改登录用户名</h2>
+            <label>
+              用户名
+              <Input
+                autoComplete="username"
+                required
+                maxLength={100}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </label>
+            <label>
+              当前密码
+              <Input
+                type="password"
+                autoComplete="current-password"
+                required
+                maxLength={72}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </label>
+            <p className="settings-help">修改后所有设备需使用新用户名重新登录。</p>
+          </fieldset>
+          {usernameNotice && (
+            <p role="status" className="notice">
+              {usernameNotice}
+            </p>
+          )}
+          <div className="actions">
+            <button type="button" disabled={pending} onClick={resetUsername}>
+              取消
+            </button>
+            <button className="primary" type="submit" disabled={pending || username === p.username}>
+              {busy === 'username' ? '正在保存…' : '修改用户名并退出'}
+            </button>
+          </div>
+        </form>
+        <ChangePassword
+          key={generation}
+          embedded
+          disabled={busy !== null}
+          onDirtyChange={setPasswordDirty}
+          onBusyChange={setPasswordBusy}
+          beforeSubmit={() =>
+            (!file && !usernameDirty) ||
+            window.confirm('修改密码将退出登录，其他未保存修改会丢失，确定继续吗？')
+          }
+          onComplete={() => p.onSessionEnd('密码已修改，请使用新密码重新登录。')}
+          onCancel={() => setGeneration((v) => v + 1)}
+        />
       </div>
     </main>
   )

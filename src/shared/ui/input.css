@@ -1,0 +1,50 @@
+.studio-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--studio-border);
+  border-radius: 8px;
+  background: var(--studio-panel);
+  color: var(--studio-text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  box-shadow: 0 1px 2px var(--studio-shadow);
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.studio-input::placeholder {
+  color: var(--studio-muted);
+}
+.studio-input::selection {
+  background: var(--studio-accent);
+  color: var(--studio-on-accent);
+}
+.studio-input:focus-visible {
+  border-color: var(--studio-accent);
+  box-shadow: 0 0 0 3px var(--studio-focus);
+}
+.studio-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.studio-input[aria-invalid='true'] {
+  border-color: var(--studio-danger);
+}
+.studio-input[aria-invalid='true']:focus-visible {
+  box-shadow: 0 0 0 3px var(--studio-danger-bg);
+}
+@media (max-width: 680px) {
+  .studio-input {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio-input {
+    transition: none;
+  }
+}
