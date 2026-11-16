@@ -1,3 +1,4 @@
+import { Button } from '../shared/ui/Button'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ChangePassword, changeUsername } from '../features/auth'
 import { getSettings, type SiteSettings } from '../features/settings'
@@ -139,9 +140,9 @@ export function PersonalSettings(p: Props) {
         kicker="ACCOUNT"
         title="个人设置"
         actions={
-          <button disabled={pending} onClick={() => void refresh()}>
+          <Button variant="secondary" disabled={pending} onClick={() => void refresh()}>
             刷新
-          </button>
+          </Button>
         }
       />
       <div className="management-scroll personal-settings">
@@ -170,7 +171,7 @@ export function PersonalSettings(p: Props) {
             </div>
             <label>
               选择头像
-              <input
+              <Input
                 ref={input}
                 type="file"
                 accept="image/png,image/jpeg"
@@ -200,16 +201,17 @@ export function PersonalSettings(p: Props) {
             </p>
           )}
           <div className="actions">
-            <button type="button" disabled={pending} onClick={resetAvatar}>
+            <Button variant="secondary" type="button" disabled={pending} onClick={resetAvatar}>
               取消
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               className="primary"
               type="submit"
               disabled={pending || !file || !settings || failed}
             >
               {busy === 'avatar' ? '正在保存…' : '保存头像'}
-            </button>
+            </Button>
           </div>
         </form>
         <form
@@ -248,12 +250,17 @@ export function PersonalSettings(p: Props) {
             </p>
           )}
           <div className="actions">
-            <button type="button" disabled={pending} onClick={resetUsername}>
+            <Button variant="secondary" type="button" disabled={pending} onClick={resetUsername}>
               取消
-            </button>
-            <button className="primary" type="submit" disabled={pending || username === p.username}>
+            </Button>
+            <Button
+              variant="primary"
+              className="primary"
+              type="submit"
+              disabled={pending || username === p.username}
+            >
               {busy === 'username' ? '正在保存…' : '修改用户名并退出'}
-            </button>
+            </Button>
           </div>
         </form>
         <ChangePassword

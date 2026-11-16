@@ -1,3 +1,4 @@
+import { Button } from '../shared/ui/Button'
 import { useSessionState } from '../shared/lib/useSessionState'
 import { ContentDashboard, type Article } from '../features/articles'
 import { TaxonomyManager } from '../features/taxonomy/TaxonomyManager'
@@ -30,7 +31,8 @@ export function ContentManagement(p: Props) {
           ['tags', '标签'],
         ] as const
       ).map(([key, label]) => (
-        <button
+        <Button
+          variant="unstyled"
           key={key}
           aria-current={tab === key ? 'page' : undefined}
           className={tab === key ? 'active' : ''}
@@ -41,7 +43,7 @@ export function ContentManagement(p: Props) {
           }}
         >
           {label}
-        </button>
+        </Button>
       ))}
     </nav>
   )

@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/ui/Button'
 import { useEffect, useRef, useState } from 'react'
 import { exportContent } from '../api'
 import { errorMessage } from '../../../shared/lib/errors'
@@ -51,7 +52,8 @@ export function ExportContent({
     }
   }
   return (
-    <button
+    <Button
+      variant="secondary"
       disabled={disabled || dirty || busy}
       onClick={() => void download()}
       title={
@@ -61,6 +63,6 @@ export function ExportContent({
       }
     >
       {busy ? '正在导出…' : '导出已保存内容'}
-    </button>
+    </Button>
   )
 }

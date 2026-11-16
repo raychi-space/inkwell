@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { createPortal } from 'react-dom'
 import {
   useLayoutEffect,
@@ -9,7 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 
-export type SelectOption = { value: string; label: string; icon?: ReactNode }
+export type SelectOption = { value: string; label: string; icon?: ReactNode; disabled?: boolean }
 
 type Props = {
   label: string
@@ -19,6 +20,7 @@ type Props = {
   labelIcon?: ReactNode
   disabled?: boolean
   floating?: boolean
+  hideLabel?: boolean
   hint?: string
 }
 
@@ -31,6 +33,7 @@ export function Select({
   labelIcon,
   disabled,
   floating = false,
+  hideLabel = false,
 }: Props) {
   const [position, setPosition] = useState({ left: 0, top: 0, width: 280, maxHeight: 240 })
   const [open, setOpen] = useState(false)
@@ -100,7 +103,7 @@ export function Select({
 
   function choose(index: number) {
     const option = options[index]
-    if (!option) return
+    if (!option || option.disabled) return
     onChange(option.value)
     setOpen(false)
     buttonRef.current?.focus()
@@ -117,7 +120,11 @@ export function Select({
         Math.min(containerBottom, window.innerHeight) - rect.bottom < menuHeight &&
         rect.top > menuHeight,
     )
-    setActiveIndex(selectedIndex)
+    setActiveIndex(
+      options[selectedIndex]?.disabled
+        ? options.findIndex((option) => !option.disabled)
+        : selectedIndex,
+    )
     setOpen(true)
   }
 
@@ -145,13 +152,16 @@ export function Select({
         openMenu()
         return
       }
-      setActiveIndex((index) =>
-        event.key === 'Home'
-          ? 0
-          : event.key === 'End'
-            ? options.length - 1
-            : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length,
-      )
+      setActiveIndex((index) => {
+        const enabled = options.map((option, i) => (option.disabled ? -1 : i)).filter((i) => i >= 0)
+        if (!enabled.length) return -1
+        if (event.key === 'Home') return enabled[0]
+        if (event.key === 'End') return enabled[enabled.length - 1]
+        const current = enabled.indexOf(index)
+        return enabled[
+          (current + (event.key === 'ArrowDown' ? 1 : -1) + enabled.length) % enabled.length
+        ]
+      })
     }
   }
 
@@ -170,8 +180,9 @@ export function Select({
           key={option.value}
           role="option"
           aria-selected={option.value === value}
+          aria-disabled={option.disabled || undefined}
           className={`select-option${index === activeIndex ? ' focused' : ''}`}
-          onMouseMove={() => setActiveIndex(index)}
+          onMouseMove={() => !option.disabled && setActiveIndex(index)}
           onClick={() => choose(index)}
         >
           <span className="select-value">
@@ -186,12 +197,13 @@ export function Select({
 
   return (
     <div className={'studio-select' + (labelIcon ? ' icon-label-select' : '')} ref={rootRef}>
-      <span className="select-label" id={`${id}-label`}>
+      <span className={hideLabel ? 'select-label sr-only' : 'select-label'} id={`${id}-label`}>
         {labelIcon}
         <span className={labelIcon ? 'sr-only' : undefined}>{label}</span>
       </span>
-      <button
-        disabled={disabled}
+      <Button
+        variant="unstyled"
+        disabled={disabled || options.every((option) => option.disabled)}
         ref={buttonRef}
         id={`${id}-button`}
         type="button"
@@ -211,8 +223,10 @@ export function Select({
           <span>{selected?.label ?? '请选择'}</span>
         </span>
         <span className="select-chevron" aria-hidden="true" />
-      </button>
-      {floating && menu ? createPortal(menu, document.body) : menu}
+      </Button>
+      {floating && menu
+        ? createPortal(menu, buttonRef.current?.closest('dialog') ?? document.body)
+        : menu}
       {hint && <small className="select-hint">{hint}</small>}
     </div>
   )

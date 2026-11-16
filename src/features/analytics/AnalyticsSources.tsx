@@ -1,3 +1,4 @@
+import { Button } from '../../shared/ui/Button'
 import type { AnalyticsOverview } from './api'
 
 const number = new Intl.NumberFormat('zh-CN')
@@ -20,14 +21,15 @@ export function AnalyticsSources({
       <div className="analytics-section-head">
         <h2 id="analytics-sources-title">访问来源</h2>
         {source && (
-          <button
+          <Button
+            variant="secondary"
             type="button"
             className="secondary-button"
             disabled={loading}
             onClick={() => onSourceChange('')}
           >
             清除来源筛选
-          </button>
+          </Button>
         )}
       </div>
       <div className="analytics-source-scroll">
@@ -43,7 +45,8 @@ export function AnalyticsSources({
             {report.sources.map((row) => (
               <tr key={row.name}>
                 <td>
-                  <button
+                  <Button
+                    variant="unstyled"
                     type="button"
                     className="analytics-source-button"
                     aria-pressed={source === row.name}
@@ -51,7 +54,7 @@ export function AnalyticsSources({
                     onClick={() => onSourceChange(source === row.name ? '' : row.name)}
                   >
                     {row.name === 'direct_or_unknown' ? '直接访问或未知' : row.name}
-                  </button>
+                  </Button>
                 </td>
                 <td>{number.format(row.pageViews)}</td>
                 <td>{percent.format(total ? row.pageViews / total : 0)}</td>

@@ -1,3 +1,5 @@
+import { Input } from './Input'
+import { Button } from './Button'
 import { useId, useState, useRef, useLayoutEffect, type KeyboardEvent } from 'react'
 
 /** Free text picker: Enter reuses an exact name or creates the typed name. */
@@ -132,17 +134,18 @@ export function NameCombobox({
           selected.map((tag) => (
             <span className="input-tag" key={tag}>
               {tag}
-              <button
+              <Button
+                variant="unstyled"
                 type="button"
                 aria-label={'移除标签 ' + tag}
                 disabled={disabled}
                 onClick={() => onRemove(tag)}
               >
                 ×
-              </button>
+              </Button>
             </span>
           ))}
-        <input
+        <Input
           id={id}
           role="combobox"
           aria-autocomplete="list"
@@ -166,14 +169,15 @@ export function NameCombobox({
           }}
           onKeyDown={keyDown}
         />
-        <button
+        <Button
+          variant="unstyled"
           type="button"
           aria-label={'确认' + label}
           disabled={disabled || committing || limitReached || !value.trim()}
           onClick={() => void commit(value)}
         >
           {committing ? '…' : '↵'}
-        </button>
+        </Button>
       </div>
       {open && (
         <div
@@ -184,7 +188,8 @@ export function NameCombobox({
         >
           <div id={id + '-list'} role="listbox" aria-label={'已有' + label}>
             {options.map((name, index) => (
-              <button
+              <Button
+                variant="unstyled"
                 type="button"
                 role="option"
                 aria-selected={active === index}
@@ -194,18 +199,19 @@ export function NameCombobox({
                 onClick={() => void commit(name)}
               >
                 {name}
-              </button>
+              </Button>
             ))}
           </div>
           {!exact && value.trim() && (
-            <button
+            <Button
+              variant="unstyled"
               type="button"
               className="name-create"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => void commit(value)}
             >
               新建「{value.trim()}」
-            </button>
+            </Button>
           )}
           {!options.length && !value.trim() && <p>输入名称，按回车添加</p>}
         </div>

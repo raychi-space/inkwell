@@ -1,3 +1,6 @@
+import { Input } from '../../shared/ui/Input'
+import { Checkbox } from '../../shared/ui/Checkbox'
+import { Button } from '../../shared/ui/Button'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { providers, saveProvider, testProvider } from './api'
 import type { Provider } from './types'
@@ -130,14 +133,15 @@ export function ProviderSettings() {
           title="模型服务商"
           subtitle="一个连接，管理多个模型。"
           aside={
-            <button
+            <Button
+              variant="secondary"
               className="secondary-button"
               disabled={busy}
               onClick={() => choose(providerDirty || !!newModel.trim(), '服务商', createProvider)}
             >
               <Icon name="plus" size={16} />
               新增服务商
-            </button>
+            </Button>
           }
         />
         {notice && (
@@ -148,7 +152,8 @@ export function ProviderSettings() {
         <div className="entity-workspace">
           <div className="entity-list" aria-label="服务商列表">
             {allProviders.map((v) => (
-              <button
+              <Button
+                variant="unstyled"
                 disabled={busy}
                 className={`entity-row${providerOpen && providerId === v.id ? ' selected' : ''}`}
                 aria-pressed={providerOpen && providerId === v.id}
@@ -171,7 +176,7 @@ export function ProviderSettings() {
                   title={v.enabled ? '已启用' : '已停用'}
                 />
                 <span className="sr-only">{v.enabled ? '已启用' : '已停用'}</span>
-              </button>
+              </Button>
             ))}
             {!allProviders.length && (
               <p className="entity-list-empty">添加一个服务商，连接你的模型。</p>
@@ -197,8 +202,7 @@ export function ProviderSettings() {
                     </div>
                   </div>
                   <label className="toggle-field">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={p.enabled}
                       onChange={(e) => updateProvider({ enabled: e.target.checked })}
                     />
@@ -207,7 +211,7 @@ export function ProviderSettings() {
                 </div>
                 <label>
                   服务商名称
-                  <input
+                  <Input
                     required
                     maxLength={100}
                     value={p.name}
@@ -217,7 +221,7 @@ export function ProviderSettings() {
                 </label>
                 <label>
                   API 地址
-                  <input
+                  <Input
                     required
                     type="url"
                     value={p.baseUrl}
@@ -242,7 +246,7 @@ export function ProviderSettings() {
                 {keyAction === 'replace' ? (
                   <label>
                     API Key
-                    <input
+                    <Input
                       type="password"
                       autoComplete="new-password"
                       required
@@ -270,7 +274,7 @@ export function ProviderSettings() {
                   </div>
                   {p.models.map((model, index) => (
                     <div className="model-row" key={index}>
-                      <input
+                      <Input
                         aria-label={`模型 ID ${index + 1}`}
                         required
                         value={model}
@@ -280,7 +284,8 @@ export function ProviderSettings() {
                           })
                         }
                       />
-                      <button
+                      <Button
+                        variant="unstyled"
                         type="button"
                         className="icon-button"
                         aria-label={`移除模型 ${index + 1}`}
@@ -289,11 +294,11 @@ export function ProviderSettings() {
                         }
                       >
                         <Icon name="close" size={16} />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                   <div className="model-add">
-                    <input
+                    <Input
                       aria-label="新模型 ID"
                       value={newModel}
                       placeholder="填写 API 模型 ID"
@@ -305,7 +310,8 @@ export function ProviderSettings() {
                         }
                       }}
                     />
-                    <button
+                    <Button
+                      variant="secondary"
                       className="secondary-button"
                       type="button"
                       disabled={!newModel.trim()}
@@ -313,7 +319,7 @@ export function ProviderSettings() {
                     >
                       <Icon name="plus" size={15} />
                       添加模型
-                    </button>
+                    </Button>
                   </div>
                   <p className="field-hint">
                     填写服务商接受的准确模型 ID，保存后即可在助手中选择。
@@ -328,9 +334,9 @@ export function ProviderSettings() {
                       ? '密钥已配置'
                       : '尚未保存密钥'}
                 </span>
-                <button className="primary" disabled={busy}>
+                <Button variant="primary" className="primary" disabled={busy}>
                   {busy ? '正在保存…' : '保存服务商'}
-                </button>
+                </Button>
               </footer>
               {providerId && (
                 <div className="provider-test">
@@ -340,14 +346,15 @@ export function ProviderSettings() {
                     onChange={setTestModel}
                     options={(savedProvider?.models ?? []).map((v) => ({ value: v, label: v }))}
                   />
-                  <button
+                  <Button
+                    variant="secondary"
                     type="button"
                     className="secondary-button"
                     disabled={busy || !testModel || providerDirty || !!newModel.trim()}
                     onClick={() => void test()}
                   >
                     测试连接与工具
-                  </button>
+                  </Button>
                   {providerDirty && <p className="field-hint">先保存修改，再测试连接。</p>}
                 </div>
               )}

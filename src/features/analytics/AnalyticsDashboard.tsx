@@ -1,3 +1,6 @@
+import { Card } from '../../shared/ui/Card'
+import { Input } from '../../shared/ui/Input'
+import { Button } from '../../shared/ui/Button'
 import { useSessionState } from '../../shared/lib/useSessionState'
 import { invalidateReadCache } from '../../shared/api/sessionCache'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -85,7 +88,8 @@ export function AnalyticsDashboard() {
         subtitle="公开站的访问与来源 · 北京时间"
         actions={
           <>
-            <button
+            <Button
+              variant="secondary"
               disabled={loading}
               onClick={() => {
                 invalidateReadCache()
@@ -94,7 +98,7 @@ export function AnalyticsDashboard() {
               }}
             >
               刷新
-            </button>
+            </Button>
             <AnalyticsCollection refresh={refresh} />
           </>
         }
@@ -110,17 +114,18 @@ export function AnalyticsDashboard() {
               ['今日访客数', overview?.summary.todayVisitors],
             ] as const
           ).map(([label, value]) => (
-            <section className="dashboard-card" key={label}>
+            <Card key={label}>
               <h2>{label}</h2>
               <strong>{value === undefined ? '—' : number.format(value)}</strong>
-            </section>
+            </Card>
           ))}
         </div>
         {loading && <p role="status">正在读取统计…</p>}
         {error && (
           <div className="dashboard-card analytics-error">
             <p role="alert">{error}</p>
-            <button
+            <Button
+              variant="secondary"
               type="button"
               className="secondary-button"
               onClick={() => {
@@ -129,7 +134,7 @@ export function AnalyticsDashboard() {
               }}
             >
               重试
-            </button>
+            </Button>
           </div>
         )}
         {overview && <AnalyticsCharts report={overview} />}
@@ -155,7 +160,7 @@ export function AnalyticsDashboard() {
         >
           <label>
             开始日期
-            <input
+            <Input
               type="date"
               required
               value={filters.from}
@@ -164,7 +169,7 @@ export function AnalyticsDashboard() {
           </label>
           <label>
             结束日期
-            <input
+            <Input
               type="date"
               required
               value={filters.until}
@@ -182,7 +187,7 @@ export function AnalyticsDashboard() {
           ).map(([key, label]) => (
             <label key={key}>
               {label}
-              <input
+              <Input
                 value={filters[key]}
                 onChange={(event) => field(key, event.target.value)}
                 placeholder="全部"
@@ -190,10 +195,11 @@ export function AnalyticsDashboard() {
               />
             </label>
           ))}
-          <button className="primary" type="submit" disabled={loading}>
+          <Button variant="primary" className="primary" type="submit" disabled={loading}>
             {loading ? '正在查询…' : '查询'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             type="button"
             className="secondary-button"
             disabled={loading}
@@ -205,7 +211,7 @@ export function AnalyticsDashboard() {
             }}
           >
             重置
-          </button>
+          </Button>
         </form>
         {overview && (
           <>
@@ -252,22 +258,24 @@ export function AnalyticsDashboard() {
                 <span>
                   第 {events?.page ?? 1} / {pages} 页
                 </span>
-                <button
+                <Button
+                  variant="secondary"
                   type="button"
                   className="secondary-button"
                   disabled={loading || !events || events.page <= 1}
                   onClick={() => void load(applied, (events?.page ?? 1) - 1)}
                 >
                   上一页
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
                   type="button"
                   className="secondary-button"
                   disabled={loading || !events || events.page >= pages}
                   onClick={() => void load(applied, (events?.page ?? 1) + 1)}
                 >
                   下一页
-                </button>
+                </Button>
               </div>
             </section>
             <p className="analytics-note">

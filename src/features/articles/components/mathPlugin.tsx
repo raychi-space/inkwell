@@ -1,3 +1,6 @@
+import { Select } from '../../../shared/ui/Select'
+import { Textarea } from '../../../shared/ui/Textarea'
+import { Button } from '../../../shared/ui/Button'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   DecoratorNode,
@@ -138,18 +141,22 @@ function FormulaDialog({
         {chooseMode && (
           <label>
             显示方式
-            <select
+            <Select
+              hideLabel
+              floating
+              label="显示方式"
               value={display ? 'block' : 'inline'}
-              onChange={(event) => setDisplay(event.target.value === 'block')}
-            >
-              <option value="inline">行内公式</option>
-              <option value="block">独立公式</option>
-            </select>
+              onChange={(selection) => setDisplay(selection === 'block')}
+              options={[
+                { value: 'inline', label: '行内公式' },
+                { value: 'block', label: '独立公式' },
+              ]}
+            />
           </label>
         )}
         <label>
           公式源码
-          <textarea
+          <Textarea
             autoFocus
             value={value}
             onChange={(event) => setValue(event.target.value)}
@@ -160,16 +167,16 @@ function FormulaDialog({
           <MathFormula value={value} display={display} />
         </div>
         <div className="actions">
-          <button type="submit" className="primary" disabled={!value.trim()}>
+          <Button variant="primary" type="submit" className="primary" disabled={!value.trim()}>
             保存公式
-          </button>
-          <button type="button" onClick={onClose}>
+          </Button>
+          <Button variant="secondary" type="button" onClick={onClose}>
             取消
-          </button>
+          </Button>
           {onDelete && (
-            <button type="button" onClick={onDelete}>
+            <Button variant="secondary" type="button" onClick={onDelete}>
               删除公式
-            </button>
+            </Button>
           )}
         </div>
       </form>
@@ -220,7 +227,8 @@ function FormulaNodeView({
   if (format & IS_SUPERSCRIPT) formula = <sup>{formula}</sup>
   return (
     <span contentEditable={false}>
-      <button
+      <Button
+        variant="unstyled"
         type="button"
         className="editor-math-trigger"
         aria-label={'编辑公式：' + value}
@@ -228,7 +236,7 @@ function FormulaNodeView({
         disabled={readOnly}
       >
         {formula}
-      </button>
+      </Button>
       {open && !readOnly && (
         <FormulaDialog
           initial={value}
@@ -251,7 +259,8 @@ export function InsertMath() {
   }, [readOnly])
   return (
     <>
-      <button
+      <Button
+        variant="unstyled"
         type="button"
         className="math-toolbar-button"
         aria-label="插入公式"
@@ -259,7 +268,7 @@ export function InsertMath() {
         onClick={() => setOpen(true)}
       >
         ∑ 公式
-      </button>
+      </Button>
       {open && !readOnly && (
         <FormulaDialog
           initial=""

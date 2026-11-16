@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/ui/Button'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { changePassword } from '../api'
 import { passwordValidation } from '../passwordValidation'
@@ -116,12 +117,12 @@ export function ChangePassword({
           </p>
         )}
         <div className="actions">
-          <button type="button" disabled={busy || disabled} onClick={onCancel}>
+          <Button variant="secondary" type="button" disabled={busy || disabled} onClick={onCancel}>
             取消
-          </button>
-          <button className="primary" disabled={busy || disabled} type="submit">
+          </Button>
+          <Button variant="primary" className="primary" disabled={busy || disabled} type="submit">
             {busy ? '正在修改…' : '修改密码并退出'}
-          </button>
+          </Button>
         </div>
       </form>
     </Container>

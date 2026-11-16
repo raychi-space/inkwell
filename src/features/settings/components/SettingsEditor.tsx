@@ -1,3 +1,7 @@
+import { Textarea } from '../../../shared/ui/Textarea'
+import { Input } from '../../../shared/ui/Input'
+import { Checkbox } from '../../../shared/ui/Checkbox'
+import { Button } from '../../../shared/ui/Button'
 import { useEffect, useRef, useState } from 'react'
 import {
   siGithub,
@@ -56,8 +60,7 @@ function SocialAccountsEditor({
           return (
             <div className="social-account-row" key={platform.id}>
               <label className="social-account-toggle">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={account?.enabled ?? false}
                   onChange={(event) => update(platform.id, { enabled: event.target.checked })}
                 />
@@ -66,7 +69,7 @@ function SocialAccountsEditor({
                 </svg>
                 <span>{platform.name}</span>
               </label>
-              <input
+              <Input
                 aria-label={`${platform.name} 链接`}
                 type="url"
                 maxLength={500}
@@ -100,7 +103,8 @@ function ProjectEditor({
           <div className="settings-project-head">
             <strong>项目 {index + 1}</strong>
             <div>
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={index === 0}
                 aria-label={`上移项目 ${index + 1}`}
@@ -111,8 +115,9 @@ function ProjectEditor({
                 }}
               >
                 ↑
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 type="button"
                 disabled={index === projects.length - 1}
                 aria-label={`下移项目 ${index + 1}`}
@@ -123,19 +128,20 @@ function ProjectEditor({
                 }}
               >
                 ↓
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 type="button"
                 onClick={() => onChange(projects.filter((_, n) => n !== index))}
               >
                 删除
-              </button>
+              </Button>
             </div>
           </div>
           <div className="settings-project-fields">
             <label>
               名称
-              <input
+              <Input
                 maxLength={80}
                 value={project.name}
                 onChange={(e) => update(index, { name: e.target.value })}
@@ -143,7 +149,7 @@ function ProjectEditor({
             </label>
             <label>
               当前状态
-              <input
+              <Input
                 maxLength={40}
                 value={project.status}
                 onChange={(e) => update(index, { status: e.target.value })}
@@ -151,7 +157,7 @@ function ProjectEditor({
             </label>
             <label className="settings-wide">
               一句话说明
-              <input
+              <Input
                 maxLength={240}
                 value={project.description}
                 onChange={(e) => update(index, { description: e.target.value })}
@@ -159,7 +165,7 @@ function ProjectEditor({
             </label>
             <label className="settings-wide">
               详情链接
-              <input
+              <Input
                 maxLength={500}
                 placeholder="https://… 或 /路径"
                 value={project.href}
@@ -169,7 +175,8 @@ function ProjectEditor({
           </div>
         </div>
       ))}
-      <button
+      <Button
+        variant="secondary"
         type="button"
         disabled={projects.length >= 3}
         onClick={() =>
@@ -177,7 +184,7 @@ function ProjectEditor({
         }
       >
         ＋ 添加项目
-      </button>
+      </Button>
     </fieldset>
   )
 }
@@ -196,7 +203,7 @@ function LinkEditor({
       <legend>{title}</legend>
       {links.map((link, index) => (
         <div className="link-row" key={index}>
-          <input
+          <Input
             aria-label={`${title} ${index + 1} 名称`}
             placeholder="名称"
             value={link.label}
@@ -206,7 +213,7 @@ function LinkEditor({
               )
             }
           />
-          <input
+          <Input
             aria-label={`${title} ${index + 1} 链接`}
             placeholder="https://… 或 /路径"
             value={link.href}
@@ -216,14 +223,22 @@ function LinkEditor({
               )
             }
           />
-          <button type="button" onClick={() => onChange(links.filter((_, n) => n !== index))}>
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={() => onChange(links.filter((_, n) => n !== index))}
+          >
             删除
-          </button>
+          </Button>
         </div>
       ))}
-      <button type="button" onClick={() => onChange([...links, { label: '', href: '' }])}>
+      <Button
+        variant="secondary"
+        type="button"
+        onClick={() => onChange([...links, { label: '', href: '' }])}
+      >
         ＋ 添加
-      </button>
+      </Button>
     </fieldset>
   )
 }
@@ -299,9 +314,14 @@ export function SettingsEditor({
         title="网站管理"
         subtitle="管理个人介绍、项目与网站上的外部链接。"
         actions={
-          <button className="primary" disabled={busy || !value} onClick={() => void save()}>
+          <Button
+            variant="primary"
+            className="primary"
+            disabled={busy || !value}
+            onClick={() => void save()}
+          >
             {busy ? '正在保存…' : '保存设置'}
-          </button>
+          </Button>
         }
       />
       {notice && (
@@ -329,14 +349,14 @@ export function SettingsEditor({
             <div className="fields">
               <label>
                 站名
-                <input
+                <Input
                   value={value.siteName}
                   onChange={(e) => change({ ...value, siteName: e.target.value })}
                 />
               </label>
               <label>
                 简短介绍
-                <textarea
+                <Textarea
                   rows={3}
                   value={value.intro}
                   onChange={(e) => change({ ...value, intro: e.target.value })}
@@ -348,7 +368,7 @@ export function SettingsEditor({
               <p className="settings-help">首页姓名使用站名；介绍和下方外部链接在本页修改。</p>
               <label className="settings-single-field">
                 当前关注方向
-                <input
+                <Input
                   maxLength={160}
                   value={value.homepage.focus}
                   onChange={(e) =>
@@ -367,7 +387,7 @@ export function SettingsEditor({
               <legend>最近在做 · 说明</legend>
               <label className="settings-single-field">
                 区块引言
-                <input
+                <Input
                   maxLength={240}
                   value={value.projectIntro}
                   onChange={(e) => change({ ...value, projectIntro: e.target.value })}
