@@ -28,3 +28,5 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 管理主题由 `shared/lib/theme.ts` 在挂载前初始化，`style.css` 的 `--studio-*` 颜色角色同时供页面、MDXEditor、对话和差异展示使用；公共页头和写作页在右上角复用 ThemePicker，主题只保存非敏感偏好。管理查询缓存由 `shared/api/sessionCache.ts` 管理有界结果、在途请求和导航控件，`readApi.ts` 是功能 API 的显式只读入口；原 `api` 和 `apiResponse` 保持认证、写入、任务、流和下载职责。会话重置清除内存并拒绝旧响应，写响应统一失效但不替换活动表单；有效期及扩展约束见[管理界面](management-ui.md#会话内查询缓存)。缓存测试在 `npm run test:cache`，CI 与认证、浏览器测试一同执行。
 
 `app/PersonalSettings` 组合auth的改用户名/既有改密与settings头像API；`ContentManagement`组合统一内容列表和taxonomy目录管理；`AssistantManagement`组合写作助手和reading模型/限额，跨功能依赖保留在app。taxonomy使用本功能API层和服务端引用计数，不改内容快照。
+
+`shared/ui/Input` 为原生文本/密码框提供统一的圆角边框、焦点环、禁用与aria-invalid状态，参考shadcn/ui Input并使用现有studio主题变量；目前由个人设置及既有改密表单复用，不新增UI框架依赖。

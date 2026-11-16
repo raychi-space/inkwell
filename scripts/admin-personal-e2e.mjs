@@ -35,7 +35,18 @@ try {
   await expect(page.getByRole('heading', { name: '概览', exact: true })).toBeVisible()
   await expect(page.locator('.studio-nav button')).toHaveText(['概览','内容管理','访问统计','拾阅管理','网站管理','助手管理','回收站','个人设置'])
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await expect(page.getByRole('navigation', { name: '个人设置页签' })).toHaveCount(0)
+  for (const name of ['头像设置', '用户名设置', '密码设置']) await expect(page.getByRole('form', { name, exact: true })).toBeAttached()
+  await expect(page.locator('.personal-settings .studio-input')).toHaveCount(5)
   const before = await req('/api/v1/admin/settings')
+  const oversized = Buffer.alloc(5 * 1024 * 1024 + 1); png.copy(oversized)
+  const rejected = await context.request.post(config.studio + '/api/v1/admin/profile/avatar', {
+    headers: { [csrf.headerName]: csrf.token },
+    multipart: { file: { name: 'oversized.png', mimeType: 'image/png', buffer: oversized }, version: String(before.version) },
+  })
+  assert.equal(rejected.status(), 413)
+  assert.equal((await rejected.json()).code, 'ASSET_TOO_LARGE')
+  assert.equal((await req('/api/v1/admin/settings')).version, before.version)
   let uploads = 0
   page.on('request', request => { if (request.url().endsWith('/profile/avatar')) uploads++ })
   await page.getByLabel('选择头像').setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png })
@@ -88,9 +99,8 @@ try {
   assert.equal(catalog.find(v=>v.name===name).trashCount,1)
   steps.push('real catalog create/rename/delete, draft/public/history reference protection, published snapshot isolation, trash count')
   await page.getByRole('button', { name:'个人设置',exact:true }).click()
-  await page.getByRole('button', { name:'用户名',exact:true }).click()
   await page.getByLabel('用户名',{exact:true}).fill(config.username+'-new')
-  await page.getByLabel('当前密码',{exact:true}).fill(config.password)
+  await page.getByRole('form',{name:'用户名设置'}).getByLabel('当前密码',{exact:true}).fill(config.password)
   await page.getByRole('button',{name:'修改用户名并退出',exact:true}).click()
   await expect(page.getByText('用户名已修改，请使用新用户名重新登录。')).toBeVisible()
   assert.equal((await req('/api/v1/auth/session','GET',undefined,200,other,null)).authenticated,false)
@@ -100,9 +110,8 @@ try {
   csrf = await login(context,config.username)
   await page.reload()
   await page.getByRole('button',{name:'个人设置',exact:true}).click()
-  await page.getByRole('button',{name:'密码',exact:true}).click()
   const nextPassword = randomUUID()+'-isolated'
-  await page.getByLabel('当前密码',{exact:true}).fill(config.password)
+  await page.getByRole('form',{name:'密码设置'}).getByLabel('当前密码',{exact:true}).fill(config.password)
   await page.getByLabel('新密码',{exact:true}).fill(nextPassword)
   await page.getByLabel('确认新密码',{exact:true}).fill(nextPassword)
   await page.getByRole('button',{name:'修改密码并退出',exact:true}).click()

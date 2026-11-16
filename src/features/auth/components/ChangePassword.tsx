@@ -2,18 +2,23 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { changePassword } from '../api'
 import { passwordValidation } from '../passwordValidation'
 import { errorMessage } from '../../../shared/lib/errors'
+import { Input } from '../../../shared/ui/Input'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 
 export function ChangePassword({
   onComplete,
   onCancel,
   embedded = false,
+  disabled = false,
+  beforeSubmit,
   onDirtyChange,
   onBusyChange,
 }: {
   onComplete: () => void
   onCancel: () => void
   embedded?: boolean
+  disabled?: boolean
+  beforeSubmit?: () => boolean
   onDirtyChange?: (value: boolean) => void
   onBusyChange?: (value: boolean) => void
 }) {
@@ -35,12 +40,13 @@ export function ChangePassword({
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (submitting.current) return
+    if (submitting.current || disabled) return
     const validation = passwordValidation(currentPassword, newPassword, confirmation)
     if (validation) {
       setNotice(validation)
       return
     }
+    if (beforeSubmit && !beforeSubmit()) return
     submitting.current = true
     setBusy(true)
     setNotice('')
@@ -62,12 +68,13 @@ export function ChangePassword({
   return (
     <Container className={embedded ? '' : 'workspace studio-page'}>
       {!embedded && <PageHeader kicker="账户安全" title="修改密码" />}
-      <form className="dashboard-card password-form" onSubmit={submit}>
+      <form className="dashboard-card password-form" aria-label="密码设置" onSubmit={submit}>
+        {embedded && <h2>修改密码</h2>}
         <p className="settings-help">修改成功后，所有设备的登录都会失效，请使用新密码重新登录。</p>
-        <fieldset disabled={busy}>
+        <fieldset disabled={busy || disabled}>
           <label>
             当前密码
-            <input
+            <Input
               type="password"
               autoComplete="current-password"
               required
@@ -78,7 +85,7 @@ export function ChangePassword({
           </label>
           <label>
             新密码
-            <input
+            <Input
               type="password"
               autoComplete="new-password"
               required
@@ -93,7 +100,7 @@ export function ChangePassword({
           </p>
           <label>
             确认新密码
-            <input
+            <Input
               type="password"
               autoComplete="new-password"
               required
@@ -109,10 +116,10 @@ export function ChangePassword({
           </p>
         )}
         <div className="actions">
-          <button type="button" disabled={busy} onClick={onCancel}>
+          <button type="button" disabled={busy || disabled} onClick={onCancel}>
             取消
           </button>
-          <button className="primary" disabled={busy} type="submit">
+          <button className="primary" disabled={busy || disabled} type="submit">
             {busy ? '正在修改…' : '修改密码并退出'}
           </button>
         </div>
