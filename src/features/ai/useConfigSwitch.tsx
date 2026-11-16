@@ -1,3 +1,4 @@
+import { Button } from '../../shared/ui/Button'
 import { useEffect, useRef, useState } from 'react'
 
 export function useConfigSwitch(busy: boolean) {
@@ -47,10 +48,11 @@ export function useConfigSwitch(busy: boolean) {
             <h2 id="switch-config-title">保留当前修改？</h2>
             <p>当前{pendingChoice.label}有未保存的修改，继续切换会放弃这些修改。</p>
             <div className="actions">
-              <button ref={cancelChoice} onClick={closeChoice}>
+              <Button variant="secondary" ref={cancelChoice} onClick={closeChoice}>
                 返回编辑
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 className="primary"
                 onClick={() => {
                   pendingChoice.action()
@@ -58,7 +60,7 @@ export function useConfigSwitch(busy: boolean) {
                 }}
               >
                 放弃修改并切换
-              </button>
+              </Button>
             </div>
           </section>
         </div>

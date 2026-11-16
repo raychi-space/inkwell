@@ -1,3 +1,4 @@
+import { Button } from '../shared/ui/Button'
 import { useEffect, useState } from 'react'
 import { AgentSettings } from '../features/ai/AgentSettings'
 import { ReadingModels } from '../features/reading/ReadingModels'
@@ -44,7 +45,8 @@ export function AssistantManagement(p: Props) {
           ['reading', '拾阅模型'],
         ] as const
       ).map(([key, label]) => (
-        <button
+        <Button
+          variant="unstyled"
           key={key}
           disabled={p.pending}
           className={tab === key ? 'active' : ''}
@@ -55,7 +57,7 @@ export function AssistantManagement(p: Props) {
           }}
         >
           {label}
-        </button>
+        </Button>
       ))}
     </nav>
   )
@@ -71,7 +73,8 @@ export function AssistantManagement(p: Props) {
         kicker="AI STUDIO"
         title="助手管理"
         actions={
-          <button
+          <Button
+            variant="secondary"
             disabled={p.pending}
             onClick={() => {
               if (!p.dirty || window.confirm('当前配置尚未保存，确定放弃并刷新吗？'))
@@ -79,7 +82,7 @@ export function AssistantManagement(p: Props) {
             }}
           >
             手动刷新
-          </button>
+          </Button>
         }
       />
       {navigation}

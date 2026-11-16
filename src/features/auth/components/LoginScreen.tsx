@@ -1,3 +1,5 @@
+import { Input } from '../../../shared/ui/Input'
+import { Button } from '../../../shared/ui/Button'
 import type { FormEvent } from 'react'
 import { BrandMark } from '../../../shared/ui/BrandMark'
 
@@ -30,7 +32,7 @@ export function LoginScreen({
         <form onSubmit={onSubmit}>
           <label>
             站长账号
-            <input
+            <Input
               autoComplete="username"
               value={username}
               onChange={(e) => onUsername(e.target.value)}
@@ -39,7 +41,7 @@ export function LoginScreen({
           </label>
           <label>
             密码
-            <input
+            <Input
               type="password"
               autoComplete="current-password"
               value={password}
@@ -47,9 +49,9 @@ export function LoginScreen({
               required
             />
           </label>
-          <button className="primary" disabled={busy}>
+          <Button variant="primary" className="primary" disabled={busy}>
             登录
-          </button>
+          </Button>
         </form>
         {notice && (
           <p className="notice error" role="alert">

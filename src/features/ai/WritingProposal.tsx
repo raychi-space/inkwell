@@ -1,3 +1,4 @@
+import { Button } from '../../shared/ui/Button'
 import { useMemo } from 'react'
 import { diffChars } from 'diff'
 import { MarkdownMessage } from '../../shared/ui/MarkdownMessage'
@@ -68,10 +69,12 @@ export function WritingProposal({
       )}
       {state === 'pending' && (
         <div className="actions">
-          <button className="primary" onClick={onAccept}>
+          <Button variant="primary" className="primary" onClick={onAccept}>
             {kind === 'insertion' ? '确认插入' : '接受'}
-          </button>
-          <button onClick={onReject}>拒绝</button>
+          </Button>
+          <Button variant="secondary" onClick={onReject}>
+            拒绝
+          </Button>
         </div>
       )}
     </section>

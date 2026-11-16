@@ -1,3 +1,6 @@
+import { Textarea } from '../../../shared/ui/Textarea'
+import { Input } from '../../../shared/ui/Input'
+import { Button } from '../../../shared/ui/Button'
 import { useEffect, useRef, type ReactNode } from 'react'
 
 type Fields = { title: string; summary: string; slug: string }
@@ -63,7 +66,7 @@ export function PublicationDialog({
             <>
               <label htmlFor="publication-heading">
                 发布标题
-                <input
+                <Input
                   required={article}
                   id="publication-heading"
                   maxLength={200}
@@ -73,7 +76,7 @@ export function PublicationDialog({
               </label>
               <label htmlFor="publication-summary">
                 摘要
-                <textarea
+                <Textarea
                   required={article}
                   id="publication-summary"
                   rows={5}
@@ -86,7 +89,7 @@ export function PublicationDialog({
           )}
           <label htmlFor="publication-slug">
             地址别名
-            <input
+            <Input
               required
               id="publication-slug"
               maxLength={120}
@@ -111,21 +114,22 @@ export function PublicationDialog({
           </p>
         )}
         <div className="actions">
-          <button type="button" disabled={pending} onClick={onClose}>
+          <Button variant="secondary" type="button" disabled={pending} onClick={onClose}>
             取消
-          </button>
+          </Button>
           {phase === 'failed' && (
-            <button type="button" onClick={onRetry}>
+            <Button variant="secondary" type="button" onClick={onRetry}>
               重新生成
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="primary"
             className="primary"
             type="submit"
             disabled={pending || taxonomyBusy || phase !== 'ready'}
           >
             确认发布
-          </button>
+          </Button>
         </div>
       </form>
     </dialog>

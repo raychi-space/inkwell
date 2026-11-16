@@ -1,0 +1,85 @@
+.studio-button:not(.studio-button-unstyled) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid var(--studio-border);
+  border-radius: 8px;
+  background: var(--studio-panel);
+  color: var(--studio-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+.studio-button.studio-button-primary {
+  border-color: var(--studio-accent);
+  background: var(--studio-accent);
+  color: var(--studio-on-accent);
+}
+.studio-button.studio-button-primary:hover:not(:disabled) {
+  background: var(--studio-accent-hover);
+}
+.studio-button.studio-button-secondary:hover:not(:disabled) {
+  background: var(--studio-surface);
+}
+.studio-button.studio-button-danger {
+  color: var(--studio-danger);
+  border-color: var(--studio-danger);
+}
+.studio-button.studio-button-danger:hover:not(:disabled) {
+  background: var(--studio-danger-bg);
+}
+.studio-button:focus-visible,
+.studio-checkbox:focus-visible {
+  outline: 2px solid var(--studio-accent);
+  outline-offset: 3px;
+}
+.studio-button:disabled,
+.studio-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.studio-checkbox {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--studio-border);
+  border-radius: 4px;
+  background: var(--studio-panel);
+  vertical-align: middle;
+  cursor: pointer;
+}
+.studio-checkbox:checked {
+  background: var(--studio-accent);
+  border-color: var(--studio-accent);
+}
+.studio-checkbox:checked::after {
+  content: '';
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid var(--studio-on-accent);
+  border-bottom: 2px solid var(--studio-on-accent);
+  transform: translateY(-1px) rotate(-45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio-button {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .studio-checkbox {
+    appearance: auto;
+  }
+}

@@ -1,3 +1,4 @@
+import { Select } from '../../shared/ui/Select'
 import { useId, useState, type PointerEvent } from 'react'
 import type { AnalyticsOverview } from './api'
 const number = new Intl.NumberFormat('zh-CN')
@@ -153,15 +154,18 @@ export function AnalyticsCharts({
             <h2>访问来自哪里</h2>
             <label>
               <span className="sr-only">地区维度</span>
-              <select
-                aria-label="地区维度"
+              <Select
+                hideLabel
+                floating
+                label="地区维度"
                 value={dimension}
-                onChange={(event) => setDimension(event.target.value as typeof dimension)}
-              >
-                <option value="countries">国家</option>
-                <option value="provinces">省份</option>
-                <option value="cities">城市</option>
-              </select>
+                onChange={(selection) => setDimension(selection as typeof dimension)}
+                options={[
+                  { value: 'countries', label: '国家' },
+                  { value: 'provinces', label: '省份' },
+                  { value: 'cities', label: '城市' },
+                ]}
+              />
             </label>
           </div>
           <div className="analytics-region-chart" role="list" aria-label="地区访问量排名">

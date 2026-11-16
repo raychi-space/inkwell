@@ -1,3 +1,7 @@
+import { Card } from '../../shared/ui/Card'
+import { Select } from '../../shared/ui/Select'
+import { Input } from '../../shared/ui/Input'
+import { Button } from '../../shared/ui/Button'
 import { useSessionState } from '../../shared/lib/useSessionState'
 import { useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../../shared/lib/errors'
@@ -93,7 +97,7 @@ export function ReadingModels({
           {!report.metadataAvailable && (
             <p role="status">Worker模型配置尚未同步，暂时不能切换模型。</p>
           )}
-          <section className="dashboard-card">
+          <Card>
             <div className="reading-card-heading">
               <h2>各环节模型</h2>
               <span>配置检查于 {readingTime(report.metadataAt)}</span>
@@ -117,34 +121,38 @@ export function ReadingModels({
                         {!c.configured && ' · 配置未确认'}
                       </td>
                       <td>
-                        <select
-                          aria-label={`${c.label}模型`}
+                        <Select
+                          hideLabel
+                          floating
+                          label={`${c.label}模型`}
                           disabled={busy || !report.metadataAvailable}
                           value={modelDrafts[c.key] ?? c.currentKey}
-                          onChange={(e) =>
+                          onChange={(selection) =>
                             setModelDrafts((prev) => {
                               const next = { ...prev }
-                              if (e.target.value === c.currentKey) delete next[c.key]
-                              else next[c.key] = e.target.value
+                              if (selection === c.currentKey) delete next[c.key]
+                              else next[c.key] = selection
                               return next
                             })
                           }
-                        >
-                          {!report.choices.some((m) => m.key === c.currentKey) && (
-                            <option value={c.currentKey} disabled>
-                              {c.currentLabel}（未配置）
-                            </option>
-                          )}
-                          {report.choices.map((m) => (
-                            <option key={m.key} value={m.key}>
-                              {m.label}
-                            </option>
-                          ))}
-                          <option value="">恢复环境默认</option>
-                        </select>
+                          options={[
+                            ...(c.currentKey && !report.choices.some((m) => m.key === c.currentKey)
+                              ? [
+                                  {
+                                    value: c.currentKey,
+                                    label: `${c.currentLabel}（未配置）`,
+                                    disabled: true,
+                                  },
+                                ]
+                              : []),
+                            ...report.choices.map((m) => ({ value: m.key, label: m.label })),
+                            { value: '', label: '恢复环境默认' },
+                          ]}
+                        />
                       </td>
                       <td>
-                        <button
+                        <Button
+                          variant="secondary"
                           className="secondary-button"
                           disabled={
                             busy || !report.metadataAvailable || modelDrafts[c.key] === undefined
@@ -162,15 +170,15 @@ export function ReadingModels({
                           }
                         >
                           保存模型
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </section>
-          <section className="dashboard-card">
+          </Card>
+          <Card>
             <div className="reading-card-heading">
               <h2>调用限额</h2>
               <span>任一限额为0时暂停该服务的模型请求</span>
@@ -209,7 +217,7 @@ export function ReadingModels({
                     ).map(([key, label, used]) => (
                       <label key={key}>
                         {label}
-                        <input
+                        <Input
                           aria-label={`${b.service}${label}限额`}
                           disabled={busy}
                           type="number"
@@ -237,36 +245,37 @@ export function ReadingModels({
                         <small>已用 {readingNumber(used)}</small>
                       </label>
                     ))}
-                    <button
+                    <Button
+                      variant="secondary"
                       className="secondary-button"
                       disabled={busy || !budgetDrafts[b.service]}
                     >
                       保存限额
-                    </button>
+                    </Button>
                   </form>
                 )
               })}
             </div>
-          </section>
-          <section className="dashboard-card">
+          </Card>
+          <Card>
             <div className="reading-card-heading">
               <h2>近7天环节用量</h2>
               <label>
                 筛选环节
-                <select
+                <Select
+                  hideLabel
+                  floating
+                  label="筛选环节"
                   value={filter}
-                  onChange={(e) => {
-                    setFilter(e.target.value)
+                  onChange={(selection) => {
+                    setFilter(selection)
                     setPage(1)
                   }}
-                >
-                  <option value="">全部</option>
-                  {report.capabilities.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: '', label: '全部' },
+                    ...report.capabilities.map((c) => ({ value: c.key, label: c.label })),
+                  ]}
+                />
               </label>
             </div>
             <div className="reading-table-wrap">
@@ -314,7 +323,7 @@ export function ReadingModels({
               onPage={setPage}
               label="模型用量分页"
             />
-          </section>
+          </Card>
         </>
       )}
     </div>

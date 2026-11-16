@@ -1,3 +1,5 @@
+import { Card } from '../../shared/ui/Card'
+import { Select } from '../../shared/ui/Select'
 import { useSessionState } from '../../shared/lib/useSessionState'
 import { useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../../shared/lib/errors'
@@ -73,14 +75,14 @@ export function ReadingDashboard({ refresh }: { refresh: number }) {
               ['待处理', readingNumber(report.counts.pending)],
               ['已发布', readingNumber(report.counts.published)],
             ].map(([label, value]) => (
-              <section className="dashboard-card" key={label}>
+              <Card key={label}>
                 <h2>{label}</h2>
                 <strong>{value}</strong>
-              </section>
+              </Card>
             ))}
           </div>
           <ReadingTrend rows={report.trend} />
-          <section className="dashboard-card">
+          <Card>
             <div className="reading-card-heading">
               <h2>模型用量与限额</h2>
               <span>
@@ -127,41 +129,49 @@ export function ReadingDashboard({ refresh }: { refresh: number }) {
                 </tbody>
               </table>
             </div>
-          </section>
-          <section className="dashboard-card">
+          </Card>
+          <Card>
             <div className="reading-card-heading">
               <h2>最近任务</h2>
               <div className="reading-filters">
                 <label>
                   状态
-                  <select
+                  <Select
+                    hideLabel
+                    floating
+                    label="状态"
                     value={status}
-                    onChange={(e) => {
-                      setStatus(e.target.value)
+                    onChange={(selection) => {
+                      setStatus(selection)
                       setPage(1)
                     }}
-                  >
-                    <option value="failed">异常</option>
-                    <option value="all">全部</option>
-                    <option value="running">进行中</option>
-                    <option value="ok">成功</option>
-                    <option value="skipped">跳过</option>
-                  </select>
+                    options={[
+                      { value: 'failed', label: '异常' },
+                      { value: 'all', label: '全部' },
+                      { value: 'running', label: '进行中' },
+                      { value: 'ok', label: '成功' },
+                      { value: 'skipped', label: '跳过' },
+                    ]}
+                  />
                 </label>
                 <label>
                   类型
-                  <select
+                  <Select
+                    hideLabel
+                    floating
+                    label="类型"
                     value={kind}
-                    onChange={(e) => {
-                      setKind(e.target.value)
+                    onChange={(selection) => {
+                      setKind(selection)
                       setPage(1)
                     }}
-                  >
-                    <option value="all">全部</option>
-                    <option value="schedule">调度</option>
-                    <option value="collection">来源采集</option>
-                    <option value="model">模型调用</option>
-                  </select>
+                    options={[
+                      { value: 'all', label: '全部' },
+                      { value: 'schedule', label: '调度' },
+                      { value: 'collection', label: '来源采集' },
+                      { value: 'model', label: '模型调用' },
+                    ]}
+                  />
                 </label>
               </div>
             </div>
@@ -195,7 +205,7 @@ export function ReadingDashboard({ refresh }: { refresh: number }) {
               </table>
             </div>
             <ReadingPager {...report.tasks} busy={busy} onPage={setPage} label="任务分页" />
-          </section>
+          </Card>
         </>
       )}
     </div>

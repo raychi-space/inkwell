@@ -37,7 +37,7 @@ try {
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
   await expect(page.getByRole('navigation', { name: '个人设置页签' })).toHaveCount(0)
   for (const name of ['头像设置', '用户名设置', '密码设置']) await expect(page.getByRole('form', { name, exact: true })).toBeAttached()
-  await expect(page.locator('.personal-settings .studio-input')).toHaveCount(5)
+  await expect(page.locator('.personal-settings .studio-input:not([type=file])')).toHaveCount(5)
   const before = await req('/api/v1/admin/settings')
   const oversized = Buffer.alloc(5 * 1024 * 1024 + 1); png.copy(oversized)
   const rejected = await context.request.post(config.studio + '/api/v1/admin/profile/avatar', {

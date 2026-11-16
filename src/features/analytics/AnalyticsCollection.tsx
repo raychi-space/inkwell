@@ -1,3 +1,4 @@
+import { Button } from '../../shared/ui/Button'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Power } from 'lucide-react'
 import { errorMessage } from '../../shared/lib/errors'
@@ -60,7 +61,8 @@ export function AnalyticsCollection({ refresh = 0 }: { refresh?: number }) {
 
   return (
     <div className="analytics-power-area">
-      <button
+      <Button
+        variant="unstyled"
         type="button"
         className="analytics-power"
         role="switch"
@@ -72,7 +74,7 @@ export function AnalyticsCollection({ refresh = 0 }: { refresh?: number }) {
         onClick={() => void toggle()}
       >
         <Power size={20} aria-hidden="true" />
-      </button>
+      </Button>
       {settings && !settings.configured && <p role="status">访问统计尚未配置，暂时无法开启。</p>}
       {message && (
         <p role="status" className="sr-only">
@@ -82,7 +84,8 @@ export function AnalyticsCollection({ refresh = 0 }: { refresh?: number }) {
       {error && (
         <div>
           <p role="alert">{error}</p>
-          <button
+          <Button
+            variant="secondary"
             type="button"
             className="secondary-button"
             disabled={busy}
@@ -92,7 +95,7 @@ export function AnalyticsCollection({ refresh = 0 }: { refresh?: number }) {
             }}
           >
             重新加载设置
-          </button>
+          </Button>
         </div>
       )}
     </div>

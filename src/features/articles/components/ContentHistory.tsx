@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/ui/Button'
 import { useEffect, useRef, useState } from 'react'
 import { contentRevision, contentRevisions, restoreContentRevision } from '../api'
 import type { Article, ContentRevision, ContentRevisionSummary, Page } from '../types'
@@ -28,9 +29,9 @@ export function ContentHistory(props: Props) {
   const [opened, setOpened] = useState(false)
   return (
     <>
-      <button disabled={props.disabled} onClick={() => setOpened(true)}>
+      <Button variant="secondary" disabled={props.disabled} onClick={() => setOpened(true)}>
         历史版本
-      </button>
+      </Button>
       {opened && <HistoryDialog {...props} onClose={() => setOpened(false)} />}
     </>
   )
@@ -142,7 +143,8 @@ function HistoryDialog({
       {error && (
         <div role="alert">
           <p>{error}</p>
-          <button
+          <Button
+            variant="secondary"
             disabled={pending}
             onClick={() => {
               invalidateReadCache()
@@ -150,13 +152,14 @@ function HistoryDialog({
             }}
           >
             重新加载
-          </button>
+          </Button>
         </div>
       )}
       <ol className="history-list">
         {result?.items.map((item) => (
           <li key={item.id}>
-            <button
+            <Button
+              variant="secondary"
               disabled={pending || loading}
               aria-pressed={selected?.id === item.id}
               onClick={() => void choose(item.id)}
@@ -168,7 +171,7 @@ function HistoryDialog({
               <time dateTime={item.createdAt}>
                 {new Date(item.createdAt).toLocaleString('zh-CN')}
               </time>
-            </button>
+            </Button>
           </li>
         ))}
       </ol>
@@ -177,21 +180,23 @@ function HistoryDialog({
       )}
       {result && result.total > 20 && (
         <div className="actions" aria-label="历史分页">
-          <button
+          <Button
+            variant="secondary"
             disabled={page === 1 || loading || pending}
             onClick={() => setPage((value) => value - 1)}
           >
             上一页
-          </button>
+          </Button>
           <span>
             第{page}页 · 共{result.total}条
           </span>
-          <button
+          <Button
+            variant="secondary"
             disabled={page * 20 >= result.total || loading || pending}
             onClick={() => setPage((value) => value + 1)}
           >
             下一页
-          </button>
+          </Button>
         </div>
       )}
       {selected && (
@@ -209,30 +214,32 @@ function HistoryDialog({
       )}
       {confirming && <p role="status">确认用所选版本替换当前工作稿？当前公开版本保持原样。</p>}
       <div className="actions">
-        <button disabled={pending} onClick={onClose}>
+        <Button variant="secondary" disabled={pending} onClick={onClose}>
           关闭历史
-        </button>
+        </Button>
         {confirming ? (
           <>
-            <button disabled={pending} onClick={() => setConfirming(false)}>
+            <Button variant="secondary" disabled={pending} onClick={() => setConfirming(false)}>
               取消恢复
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               className="primary"
               disabled={pending || dirty || disabled}
               onClick={() => void restore()}
             >
               {pending ? '正在恢复…' : '确认恢复工作稿'}
-            </button>
+            </Button>
           </>
         ) : (
-          <button
+          <Button
+            variant="primary"
             className="primary"
             disabled={!selected || loading || dirty || disabled || pending}
             onClick={() => setConfirming(true)}
           >
             恢复到工作稿
-          </button>
+          </Button>
         )}
       </div>
     </dialog>

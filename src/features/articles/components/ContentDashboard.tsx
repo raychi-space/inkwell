@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/ui/Button'
 import type { ReactNode } from 'react'
 import { useSessionState } from '../../../shared/lib/useSessionState'
 import { useAdminContents } from '../useAdminContents'
@@ -72,15 +73,20 @@ export function ContentDashboard({
         actionsLabel="新建内容"
         actions={
           <>
-            <button disabled={loading || busy} onClick={refresh}>
+            <Button variant="secondary" disabled={loading || busy} onClick={refresh}>
               刷新
-            </button>
-            <button disabled={busy} onClick={() => onCreate('POST')}>
+            </Button>
+            <Button variant="secondary" disabled={busy} onClick={() => onCreate('POST')}>
               ＋ 写帖子
-            </button>
-            <button className="primary" disabled={busy} onClick={() => onCreate('ARTICLE')}>
+            </Button>
+            <Button
+              variant="primary"
+              className="primary"
+              disabled={busy}
+              onClick={() => onCreate('ARTICLE')}
+            >
               ＋ 写文章
-            </button>
+            </Button>
           </>
         }
       />
@@ -165,7 +171,12 @@ export function ContentDashboard({
           <div className="content-list" tabIndex={0} aria-busy={loading} aria-label="内容列表">
             {visible.length ? (
               visible.map((article) => (
-                <button className="content-row" key={article.id} onClick={() => onOpen(article.id)}>
+                <Button
+                  variant="unstyled"
+                  className="content-row"
+                  key={article.id}
+                  onClick={() => onOpen(article.id)}
+                >
                   <span className="content-row-main">
                     <span className="content-title">
                       {article.title ||
@@ -199,23 +210,28 @@ export function ContentDashboard({
                       {new Date(article.updatedAt).toLocaleDateString('zh-CN')}
                     </time>
                   </span>
-                </button>
+                </Button>
               ))
             ) : !loading && !error ? (
               <EmptyState title="没有符合条件的内容" hint="试试调整筛选条件，或开始新的创作。" />
             ) : null}
           </div>
           <nav aria-label="管理内容分页" className="actions">
-            <button disabled={loading || page <= 1} onClick={() => setPage((value) => value - 1)}>
+            <Button
+              variant="secondary"
+              disabled={loading || page <= 1}
+              onClick={() => setPage((value) => value - 1)}
+            >
               上一页
-            </button>
+            </Button>
             <span>第 {result?.page ?? page} 页</span>
-            <button
+            <Button
+              variant="secondary"
               disabled={loading || !result || page * result.pageSize >= result.total}
               onClick={() => setPage((value) => value + 1)}
             >
               下一页
-            </button>
+            </Button>
           </nav>
         </Card>
         <Card className="stats-card" aria-labelledby="stats-title">

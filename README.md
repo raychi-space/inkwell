@@ -113,3 +113,5 @@ npm run dev
 助手管理内“写作助手”和“拾阅模型”集中配置入口；拾阅模型、限额及用量仍使用AIHOT既有接口。拾阅管理保留运行看板和采集来源，可跳至拾阅模型页，不复用写作助手的密钥或任务执行。
 
 `tests/browser/admin-personal-taxonomy.spec.ts` 验证界面及失败保护；`scripts/admin-personal-e2e.mjs` 用显式隔离本机真实PostgreSQL/API和生产构建管理台验证头像、冲突、目录引用、快照、用户名和改密。需 `RAYCHI_E2E_CONFIRM_ISOLATED=1`、`RAYCHI_ADMIN_E2E_CREDENTIALS`（含专用 `_test` 库标识及loopback API/studio/账号）、`RAYCHI_ADMIN_E2E_PNG`；可通过 `RAYCHI_ADMIN_E2E_OUTPUT` 保存脱敏步骤。脚本会修改隔离账号，并以0600写回凭据文件，不可指向现有内容库或真实账号。
+
+管理台生产页面的输入、多行输入、复选框、按钮和选择器统一使用 `shared/ui` 组件，主题与交互约定见[管理界面](docs/management-ui.md#基础控件)。
