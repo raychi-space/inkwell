@@ -11,6 +11,7 @@ const source = resolve('src')
 const errors = []
 for (const path of walk(source)) {
   const local = relative(source, path).replaceAll('\\', '/')
+  if ((local.startsWith('app/') || local.startsWith('features/')) && !local.endsWith('/AgentEditorFixture.tsx') && /<(?:input|textarea|select|button)\b/.test(readFileSync(path, 'utf8'))) errors.push(`${local}: use shared UI controls`)
   const feature = local.match(/^features\/([^/]+)/)?.[1]
   for (const match of readFileSync(path, 'utf8').matchAll(/(?:from\s+|import\s*)['"]([^'"]+)['"]/g)) {
     const specifier = match[1]

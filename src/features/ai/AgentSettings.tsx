@@ -1,3 +1,7 @@
+import { Textarea } from '../../shared/ui/Textarea'
+import { Input } from '../../shared/ui/Input'
+import { Checkbox } from '../../shared/ui/Checkbox'
+import { Button } from '../../shared/ui/Button'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { providers, assistants, saveAssistant } from './api'
 import type { Provider, Assistant } from './types'
@@ -136,20 +140,22 @@ export function AgentSettings({
             title="助手"
             subtitle="选择模型，再告诉它应该怎样帮助你。"
             aside={
-              <button
+              <Button
+                variant="secondary"
                 className="secondary-button"
                 disabled={busy}
                 onClick={() => choose(assistantDirty, '助手', createAssistant)}
               >
                 <Icon name="plus" size={16} />
                 新增助手
-              </button>
+              </Button>
             }
           />
           <div className="entity-workspace">
             <div className="entity-list" aria-label="助手列表">
               {allAssistants.map((v) => (
-                <button
+                <Button
+                  variant="unstyled"
                   disabled={busy}
                   className={`entity-row${assistantOpen && assistantId === v.id ? ' selected' : ''}`}
                   aria-pressed={assistantOpen && assistantId === v.id}
@@ -168,7 +174,7 @@ export function AgentSettings({
                     title={v.enabled ? '已启用' : '已停用'}
                   />
                   <span className="sr-only">{v.enabled ? '已启用' : '已停用'}</span>
-                </button>
+                </Button>
               ))}
               {!allAssistants.length && (
                 <p className="entity-list-empty">还没有助手，点击右上角创建。</p>
@@ -189,8 +195,7 @@ export function AgentSettings({
                   <div className="entity-detail-heading">
                     <h3>{assistantId ? '编辑助手' : '新建助手'}</h3>
                     <label className="toggle-field">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={a.enabled}
                         onChange={(e) => updateAssistant({ enabled: e.target.checked })}
                       />
@@ -199,7 +204,7 @@ export function AgentSettings({
                   </div>
                   <label>
                     助手名称
-                    <input
+                    <Input
                       required
                       maxLength={100}
                       placeholder="例如：写作搭档"
@@ -245,7 +250,7 @@ export function AgentSettings({
                   )}
                   <label>
                     身份与写作提示词
-                    <textarea
+                    <Textarea
                       required
                       rows={4}
                       placeholder="描述助手的职责、表达习惯和工作要求…"
@@ -255,7 +260,7 @@ export function AgentSettings({
                   </label>
                   <label>
                     固定背景资料
-                    <textarea
+                    <Textarea
                       rows={3}
                       placeholder="可填写站点背景、常用术语或写作偏好。"
                       value={a.fixedContext}
@@ -267,7 +272,7 @@ export function AgentSettings({
                     <div className="field-pair">
                       <label>
                         最大输出 Token
-                        <input
+                        <Input
                           required
                           type="number"
                           min={128}
@@ -280,7 +285,7 @@ export function AgentSettings({
                       </label>
                       <label>
                         保留完整对话轮数
-                        <input
+                        <Input
                           required
                           type="number"
                           min={0}
@@ -293,7 +298,7 @@ export function AgentSettings({
                       </label>
                       <label>
                         上下文字符预算
-                        <input
+                        <Input
                           required
                           type="number"
                           min={1024}
@@ -306,7 +311,7 @@ export function AgentSettings({
                       </label>
                       <label>
                         执行超时（毫秒）
-                        <input
+                        <Input
                           required
                           type="number"
                           min={100}
@@ -320,12 +325,13 @@ export function AgentSettings({
                 </fieldset>
                 <footer className="entity-form-actions">
                   <span>{assistantDirty ? '有未保存的修改' : '配置会用于后续对话'}</span>
-                  <button
+                  <Button
+                    variant="primary"
                     className="primary"
                     disabled={busy || !a.providerId || !selectedModels.includes(a.model)}
                   >
                     {busy ? '正在保存…' : '保存助手'}
-                  </button>
+                  </Button>
                 </footer>
               </form>
             )}

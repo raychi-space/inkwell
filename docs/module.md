@@ -29,4 +29,6 @@ Vite 将同源 `/api` 代理到 wellspring。正文的持久格式是 Markdown�
 
 `app/PersonalSettings` 组合auth的改用户名/既有改密与settings头像API；`ContentManagement`组合统一内容列表和taxonomy目录管理；`AssistantManagement`组合写作助手和reading模型/限额，跨功能依赖保留在app。taxonomy使用本功能API层和服务端引用计数，不改内容快照。
 
-`shared/ui/Input` 为原生文本/密码框提供统一的圆角边框、焦点环、禁用与aria-invalid状态，参考shadcn/ui Input并使用现有studio主题变量；目前由个人设置及既有改密表单复用，不新增UI框架依赖。
+`shared/ui/Input` 为原生文本/密码框提供统一的圆角边框、焦点环、禁用与aria-invalid状态，参考shadcn/ui Input并使用现有studio主题变量；由生产管理页面的表单复用，不新增UI框架依赖。
+
+管理台基础控件统一由 `shared/ui/{Input,Textarea,Checkbox,Button,Select}` 提供，Card/PageHeader 保持现有容器与页头职责。业务页面通过组合使用，基础样式与键盘交互在共享组件维护。

@@ -1,3 +1,5 @@
+import { Card } from '../shared/ui/Card'
+import { Button } from '../shared/ui/Button'
 import { useEffect, useState } from 'react'
 import { listArticles } from '../features/articles/api'
 import type { Article } from '../features/articles/types'
@@ -138,20 +140,26 @@ export function OverviewDashboard({
         actionsLabel="概览操作"
         actions={
           <>
-            <button
+            <Button
+              variant="secondary"
               onClick={() => {
                 invalidateReadCache()
                 setRevision((value) => value + 1)
               }}
             >
               刷新
-            </button>
-            <button disabled={busy} onClick={() => onCreate('POST')}>
+            </Button>
+            <Button variant="secondary" disabled={busy} onClick={() => onCreate('POST')}>
               ＋ 写帖子
-            </button>
-            <button className="primary" disabled={busy} onClick={() => onCreate('ARTICLE')}>
+            </Button>
+            <Button
+              variant="primary"
+              className="primary"
+              disabled={busy}
+              onClick={() => onCreate('ARTICLE')}
+            >
               ＋ 写文章
-            </button>
+            </Button>
           </>
         }
       />
@@ -163,17 +171,19 @@ export function OverviewDashboard({
         )}
         <div className="analytics-metrics overview-metrics">
           {metrics.map(([label, value]) => (
-            <section className="dashboard-card" key={label}>
+            <Card key={label}>
               <h2>{label}</h2>
               <strong>{value === undefined ? '—' : number.format(value)}</strong>
-            </section>
+            </Card>
           ))}
         </div>
         <div className="overview-grid">
           <section className="overview-trend" aria-label="近 7 天访问量">
             <div className="overview-section-heading">
               <h2>近 7 天访问量</h2>
-              <button onClick={onAnalytics}>访问统计 →</button>
+              <Button variant="secondary" onClick={onAnalytics}>
+                访问统计 →
+              </Button>
             </div>
             {collectionStatus && <p role="status">{collectionStatus}</p>}
             {analytics.error ? (
@@ -187,7 +197,9 @@ export function OverviewDashboard({
           <section className="dashboard-card overview-reading">
             <div className="overview-section-heading">
               <h2>拾阅状态</h2>
-              <button onClick={onReading}>拾阅管理 →</button>
+              <Button variant="secondary" onClick={onReading}>
+                拾阅管理 →
+              </Button>
             </div>
             {reading.error ? (
               <p role="status">{reading.error}</p>
@@ -225,7 +237,9 @@ export function OverviewDashboard({
         <section className="dashboard-card overview-recent">
           <div className="overview-section-heading">
             <h2>最近内容</h2>
-            <button onClick={onContent}>内容管理 →</button>
+            <Button variant="secondary" onClick={onContent}>
+              内容管理 →
+            </Button>
           </div>
           {content.error ? (
             <p role="status">{content.error}</p>
@@ -234,7 +248,8 @@ export function OverviewDashboard({
           ) : content.value.recent.length ? (
             <div className="overview-content-list">
               {content.value.recent.map((item) => (
-                <button
+                <Button
+                  variant="unstyled"
                   className="overview-content-row"
                   key={item.id}
                   onClick={() => onOpen(item.id)}
@@ -251,7 +266,7 @@ export function OverviewDashboard({
                         : '已发布'}
                   </span>
                   <time dateTime={item.updatedAt}>{date.format(new Date(item.updatedAt))}</time>
-                </button>
+                </Button>
               ))}
             </div>
           ) : (

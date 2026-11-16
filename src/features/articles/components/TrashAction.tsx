@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/ui/Button'
 import { useEffect, useRef, useState } from 'react'
 import { moveContentToTrash, purgeTrashedContent, recoverTrashedContent } from '../api'
 import type { Article } from '../types'
@@ -82,16 +83,17 @@ export function TrashActionDialog({
         </p>
       )}
       <div className="actions">
-        <button disabled={pending} onClick={onClose}>
+        <Button variant="secondary" disabled={pending} onClick={onClose}>
           取消
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="unstyled"
           className={kind === 'purge' ? 'danger' : 'primary'}
           disabled={pending}
           onClick={() => void commit()}
         >
           {pending ? '处理中…' : '确认' + labels[kind]}
-        </button>
+        </Button>
       </div>
     </dialog>
   )
@@ -110,13 +112,14 @@ export function MoveToTrash({
   const [opened, setOpened] = useState(false)
   return (
     <>
-      <button
+      <Button
+        variant="secondary"
         disabled={disabled}
         title={disabled ? '请先保存修改并等待当前操作完成' : undefined}
         onClick={() => setOpened(true)}
       >
         移到回收站
-      </button>
+      </Button>
       {opened && (
         <TrashActionDialog
           kind="move"

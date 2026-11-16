@@ -3,10 +3,11 @@ import { expect, test, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 const sample = (name: string) =>
   JSON.parse(readFileSync(new URL('./fixtures/reading-' + name + '.json', import.meta.url), 'utf8'))
-async function fixture(page: Page, mode: 'aihot' | 'legacy' = 'aihot') {
+async function fixture(page: Page, mode: 'aihot' | 'legacy' = 'aihot', missingModel = false) {
   const sources = sample('sources'),
     models = sample('models'),
     dashboard = sample('dashboard')
+  if (missingModel) Object.assign(models.capabilities[0], { currentKey: 'retired', currentLabel: '旧模型' })
   const writes: string[] = []
   let release: (() => void) | undefined
   let holdWrites = false
@@ -98,13 +99,15 @@ test('refresh is read-only; task paging and configured model choices remain avai
     .click()
   await expect(page.getByRole('navigation', { name: '任务分页' })).toContainText('2 / 2')
   await page.getByRole('button', { name: '配置拾阅模型', exact: true }).click()
-  const model = page.locator('select[aria-label$="模型"]').first()
-  await expect(model.locator('option')).toHaveText([
+  const model = page.getByRole('combobox', { name: /模型 / }).first()
+  await model.click()
+  await expect(page.getByRole('option').locator('.select-value')).toHaveText([
     'fixture-default',
     'deepseek-flash',
     'deepseek-flash-think',
     '恢复环境默认',
   ])
+  await page.keyboard.press('Escape')
   expect(f.writes).toEqual([])
 })
 
@@ -144,9 +147,11 @@ test('saving one setting retains other model and budget drafts; confirmed refres
 }) => {
   await fixture(page)
   await page.getByRole('button', { name: '配置拾阅模型', exact: true }).click()
-  const models = page.locator('select[aria-label$="模型"]')
-  await models.nth(0).selectOption('deepseek-flash')
-  await models.nth(1).selectOption('deepseek-flash-think')
+  const models = page.getByRole('combobox', { name: /模型 / })
+  await models.nth(0).click()
+  await page.getByRole('option', {name:'deepseek-flash',exact:true}).click()
+  await models.nth(1).click()
+  await page.getByRole('option', {name:'deepseek-flash-think',exact:true}).click()
   await page.getByLabel('llm每分钟限额', { exact: true }).fill('7')
   await models
     .nth(0)
@@ -154,7 +159,7 @@ test('saving one setting retains other model and budget drafts; confirmed refres
     .getByRole('button', { name: '保存模型' })
     .click()
   await expect(page.getByRole('status').filter({ hasText: '已保存' })).toBeVisible()
-  await expect(models.nth(1)).toHaveValue('deepseek-flash-think')
+  await expect(models.nth(1)).toContainText('deepseek-flash-think')
   await expect(page.getByLabel('llm每分钟限额', { exact: true })).toHaveValue('7')
   page.once('dialog', (d) => d.dismiss())
   await page.getByRole('button', { name: '手动刷新', exact: true }).click()
@@ -205,4 +210,28 @@ test('legacy reading keeps its generic assistant configuration destination', asy
   await expect(page.getByRole('button', { name: '写作助手', exact: true })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('button', { name: '新增助手', exact: true })).toBeVisible()
   await expect(page.getByText('拾阅模型管理尚未配置。', { exact: true })).toHaveCount(0)
+})
+
+
+test('model selector skips unavailable choices with keyboard and closes without changing drafts', async ({ page }) => {
+  await fixture(page, 'aihot', true)
+  await page.getByRole('button', { name: '配置拾阅模型', exact: true }).click()
+  const model = page.getByRole('combobox', { name: /模型 / }).first()
+  await model.focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('option', { name: '旧模型（未配置）' })).toHaveAttribute('aria-disabled', 'true')
+  await page.keyboard.press('Home')
+  const firstAvailable = page.getByRole('option', { name: 'fixture-default', exact: true })
+  await expect(firstAvailable).toHaveClass(/focused/)
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByRole('option', { name: '恢复环境默认' })).toHaveClass(/focused/)
+  await page.keyboard.press('Escape')
+  await expect(model).toBeFocused()
+  await expect(model).toContainText('旧模型（未配置）')
+  await expect(model.locator('xpath=ancestor::tr').getByRole('button', { name: '保存模型' })).toBeDisabled()
+  await model.press('Enter')
+  await page.keyboard.press('Home')
+  await page.keyboard.press('Enter')
+  await expect(model).toContainText('fixture-default')
+  await expect(model.locator('xpath=ancestor::tr').getByRole('button', { name: '保存模型' })).toBeEnabled()
 })

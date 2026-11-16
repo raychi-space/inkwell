@@ -1,3 +1,5 @@
+import { Textarea } from '../shared/ui/Textarea'
+import { Button } from '../shared/ui/Button'
 import { usePublicationFlow } from './usePublicationFlow'
 import { PublicationDialog } from '../features/articles/components/PublicationDialog'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
@@ -490,7 +492,12 @@ function Studio({
   return (
     <div className={'shell' + (sidebarCollapsed ? ' sidebar-collapsed' : '')}>
       {!sidebarCollapsed && (
-        <button className="sidebar-backdrop" aria-label="收起侧边栏遮罩" onClick={toggleSidebar} />
+        <Button
+          variant="unstyled"
+          className="sidebar-backdrop"
+          aria-label="收起侧边栏遮罩"
+          onClick={toggleSidebar}
+        />
       )}
       <ArticleSidebar
         active={view}
@@ -569,9 +576,13 @@ function Studio({
           <header className="studio-head editor-head has-theme-control">
             <div>
               <div className="editor-navigation">
-                <button className="back-link" onClick={() => showSection('content')}>
+                <Button
+                  variant="unstyled"
+                  className="back-link"
+                  onClick={() => showSection('content')}
+                >
                   ← 返回内容管理
-                </button>
+                </Button>
                 <p className="eyebrow">
                   {current.status === 'PUBLISHED' ? '已发布' : '草稿'} · {typeNames[current.type]}
                   {dirty ? ' · 尚未保存' : ''}
@@ -633,16 +644,18 @@ function Studio({
                 onNotice={setNotice}
               />
               {current.type === 'ARTICLE' && (
-                <button
+                <Button
+                  variant="secondary"
                   aria-expanded={assistantOpen}
                   aria-controls="writing-conversation"
                   disabled={agentBusy || agentLocked}
                   onClick={() => setAssistantOpen((v) => !v)}
                 >
                   {assistantOpen ? '收起助手' : '写作助手'}
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                variant="secondary"
                 onClick={() =>
                   void (current.type === 'ARTICLE' ? publication.prepare(false) : save())
                 }
@@ -657,8 +670,9 @@ function Studio({
                 }
               >
                 保存
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 className="primary"
                 onClick={() => void publish()}
                 disabled={
@@ -672,14 +686,15 @@ function Studio({
                 }
               >
                 {current.status === 'PUBLISHED' ? '发布更新' : '发布'}
-              </button>
+              </Button>
               {current.status === 'PUBLISHED' && (
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => void unpublish()}
                   disabled={busy || publication.pending || agentLocked || agentBusy}
                 >
                   撤回
-                </button>
+                </Button>
               )}
             </div>
             <ThemePicker />
@@ -764,7 +779,7 @@ function Studio({
                       </Suspense>
                     </div>
                   ) : (
-                    <textarea
+                    <Textarea
                       className="markdown-editor"
                       aria-label="正文 Markdown"
                       rows={18}

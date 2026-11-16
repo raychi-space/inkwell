@@ -1,3 +1,4 @@
+import { Button } from '../../shared/ui/Button'
 import { useSessionState } from '../../shared/lib/useSessionState'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError } from '../../shared/api/client'
@@ -111,20 +112,22 @@ export function ReadingSettings({
         title="拾阅管理"
         actions={
           <>
-            <button
+            <Button
+              variant="secondary"
               className="secondary-button"
               disabled={busy || pending}
               onClick={onOpenReadingModels ?? onOpenAssistants}
             >
               配置拾阅模型
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               className="secondary-button"
               disabled={busy || pending}
               onClick={() => void refresh()}
             >
               {busy ? '正在查询…' : state?.managementConfigured ? '手动刷新' : '刷新状态'}
-            </button>
+            </Button>
           </>
         }
       />
@@ -132,7 +135,8 @@ export function ReadingSettings({
         {error && <p role="alert">{error}</p>}
         <div className="reading-tabs" role="tablist" aria-label="拾阅管理页签">
           {tabs.map(([key, label], index) => (
-            <button
+            <Button
+              variant="secondary"
               key={key}
               id={'reading-tab-' + key}
               role="tab"
@@ -150,7 +154,7 @@ export function ReadingSettings({
               }}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
         <div id="reading-tabpanel" role="tabpanel" aria-labelledby={'reading-tab-' + tab}>

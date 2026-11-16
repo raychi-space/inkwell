@@ -1,3 +1,4 @@
+import { Button } from '../../shared/ui/Button'
 import { useState } from 'react'
 import type { ReadingDashboard } from './management-api'
 
@@ -42,20 +43,22 @@ export function ReadingPager({
       <span>
         共 {readingNumber(total)} 条 · {page} / {pages}
       </span>
-      <button
+      <Button
+        variant="secondary"
         className="secondary-button"
         disabled={busy || page <= 1}
         onClick={() => onPage(page - 1)}
       >
         上一页
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
         className="secondary-button"
         disabled={busy || page >= pages}
         onClick={() => onPage(page + 1)}
       >
         下一页
-      </button>
+      </Button>
     </nav>
   )
 }

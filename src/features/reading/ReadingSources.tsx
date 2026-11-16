@@ -1,3 +1,8 @@
+import { Card } from '../../shared/ui/Card'
+import { Select } from '../../shared/ui/Select'
+import { Input } from '../../shared/ui/Input'
+import { Checkbox } from '../../shared/ui/Checkbox'
+import { Button } from '../../shared/ui/Button'
 import { useSessionState } from '../../shared/lib/useSessionState'
 import { useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../../shared/lib/errors'
@@ -146,10 +151,11 @@ export function ReadingSources({
     <div className="reading-panel">
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
-      <section className="dashboard-card">
+      <Card>
         <div className="reading-card-heading">
           <h2>RSS 来源</h2>
-          <button
+          <Button
+            variant="primary"
             className="primary-button"
             disabled={busy}
             onClick={() => {
@@ -157,7 +163,7 @@ export function ReadingSources({
             }}
           >
             新增来源
-          </button>
+          </Button>
         </div>
         <form
           className="reading-filters"
@@ -168,7 +174,7 @@ export function ReadingSources({
         >
           <label>
             搜索来源
-            <input
+            <Input
               disabled={busy}
               value={search}
               maxLength={100}
@@ -177,36 +183,38 @@ export function ReadingSources({
           </label>
           <label>
             启用状态
-            <select
-              aria-label="启用状态"
+            <Select
+              hideLabel
+              floating
+              label="启用状态"
               disabled={busy}
               value={enabled}
-              onChange={(e) => changeFilter(() => setEnabled(e.target.value))}
-            >
-              <option value="">全部</option>
-              <option value="true">已启用</option>
-              <option value="false">已暂停</option>
-            </select>
+              onChange={(selection) => changeFilter(() => setEnabled(selection))}
+              options={[
+                { value: '', label: '全部' },
+                { value: 'true', label: '已启用' },
+                { value: 'false', label: '已暂停' },
+              ]}
+            />
           </label>
           <label>
             健康状态
-            <select
-              aria-label="健康状态"
+            <Select
+              hideLabel
+              floating
+              label="健康状态"
               disabled={busy}
               value={health}
-              onChange={(e) => changeFilter(() => setHealth(e.target.value))}
-            >
-              <option value="">全部</option>
-              {Object.entries(healthStatus).map(([value, label]) => (
-                <option value={value} key={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+              onChange={(selection) => changeFilter(() => setHealth(selection))}
+              options={[
+                { value: '', label: '全部' },
+                ...Object.entries(healthStatus).map(([value, label]) => ({ value, label })),
+              ]}
+            />
           </label>
-          <button className="secondary-button" disabled={busy}>
+          <Button variant="secondary" className="secondary-button" disabled={busy}>
             查询
-          </button>
+          </Button>
         </form>
         {busy && <p role="status">正在查询或保存来源…</p>}
         <div className="reading-table-wrap">
@@ -233,14 +241,16 @@ export function ReadingSources({
                   <td>{s.lastError ?? '—'}</td>
                   <td>
                     <div className="reading-row-actions">
-                      <button
+                      <Button
+                        variant="secondary"
                         className="secondary-button"
                         disabled={busy}
                         onClick={() => void open(s.id)}
                       >
                         编辑
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="secondary"
                         className="secondary-button"
                         disabled={busy}
                         onClick={() =>
@@ -254,8 +264,9 @@ export function ReadingSources({
                         }
                       >
                         检查RSS
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="secondary"
                         className="secondary-button"
                         disabled={busy || !s.enabled}
                         onClick={() =>
@@ -271,7 +282,7 @@ export function ReadingSources({
                         }
                       >
                         立即采集
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -292,9 +303,9 @@ export function ReadingSources({
             label="来源分页"
           />
         )}
-      </section>
+      </Card>
       {draft && (
-        <section className="dashboard-card">
+        <Card>
           <h2>{draft.id ? '编辑来源' : '新增RSS来源'}</h2>
           <form
             className="reading-source-form"
@@ -306,7 +317,7 @@ export function ReadingSources({
             <fieldset disabled={busy}>
               <label>
                 来源名称
-                <input
+                <Input
                   required
                   maxLength={200}
                   value={draft.name}
@@ -315,7 +326,7 @@ export function ReadingSources({
               </label>
               <label>
                 RSS 地址
-                <input
+                <Input
                   type="url"
                   required
                   maxLength={2048}
@@ -326,7 +337,7 @@ export function ReadingSources({
               </label>
               <label>
                 采集间隔（分钟）
-                <input
+                <Input
                   type="number"
                   required
                   min={1}
@@ -337,8 +348,7 @@ export function ReadingSources({
               </label>
               {draft.id && (
                 <label className="reading-checkbox">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={draft.enabled}
                     onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })}
                   />
@@ -346,10 +356,11 @@ export function ReadingSources({
                 </label>
               )}
               <div className="reading-row-actions">
-                <button className="primary-button" disabled={!dirty}>
+                <Button variant="primary" className="primary-button" disabled={!dirty}>
                   {draft.id ? '保存来源' : '新增并启用'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
                   type="button"
                   className="secondary-button"
                   onClick={() => {
@@ -357,11 +368,11 @@ export function ReadingSources({
                   }}
                 >
                   取消
-                </button>
+                </Button>
               </div>
             </fieldset>
           </form>
-        </section>
+        </Card>
       )}
     </div>
   )

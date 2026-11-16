@@ -78,11 +78,11 @@ textarea,
 select {
   outline: none;
 }
-input:focus,
-textarea:focus,
+input:not(.studio-input):not(.studio-checkbox):focus,
+textarea:not(.studio-input):focus,
 select:focus,
 button:focus-visible {
-  border-color: var(--studio-muted) !important;
+  border-color: var(--studio-accent);
   box-shadow: 0 0 0 3px var(--studio-focus);
 }
 a {
@@ -100,18 +100,7 @@ a {
   font-size: 14px;
   line-height: 1.8;
 }
-.primary {
-  background: var(--studio-accent);
-  border: 1px solid var(--studio-accent);
-  color: var(--studio-on-accent);
-  border-radius: 8px;
-  padding: 11px 19px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.primary:hover:not(:disabled) {
-  background: var(--studio-accent-hover);
-}
+
 .notice {
   padding: 12px 14px;
   border-radius: 7px;
@@ -164,21 +153,15 @@ a {
   font-weight: 700;
   color: var(--studio-muted);
 }
-.login-card input,
-.fields input,
-.fields textarea,
-.fields select,
-.taxonomy-add input,
-.link-row input,
-.markdown-editor,
-.content-filters select {
+.markdown-editor {
   width: 100%;
-  border: 1px solid var(--studio-surface);
-  border-radius: 7px;
+  border: 1px solid var(--studio-border);
+  border-radius: 8px;
   background: var(--studio-panel);
   padding: 11px 12px;
   color: var(--studio-text);
 }
+
 .login-card button {
   margin-top: 8px;
 }
@@ -586,18 +569,7 @@ a {
   gap: 9px;
   flex-wrap: wrap;
 }
-.actions button:not(.primary) {
-  padding: 10px 15px;
-  border: 1px solid var(--studio-surface);
-  border-radius: 7px;
-  background: var(--studio-panel);
-  color: var(--studio-muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-.actions button:hover:not(:disabled) {
-  border-color: var(--studio-muted);
-}
+
 .editor-page {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 295px;
@@ -1104,14 +1076,14 @@ a {
   justify-content: space-between;
   gap: 10px;
   width: 100%;
-  min-height: 39px;
+  min-height: 40px;
   padding: 10px 11px;
-  border: 1px solid var(--studio-surface);
-  border-radius: 7px;
+  border: 1px solid var(--studio-border);
+  border-radius: 8px;
   background: var(--studio-panel);
-  color: var(--studio-muted);
+  color: var(--studio-text);
   text-align: left;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .select-trigger:hover,
@@ -2093,24 +2065,6 @@ a {
   color: var(--studio-muted);
   margin: 6px 0 0;
 }
-.secondary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border: 1px solid var(--studio-border);
-  background: var(--studio-panel);
-  color: var(--studio-accent);
-  border-radius: 8px;
-  padding: 10px 13px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.secondary-button:hover:not(:disabled) {
-  background: var(--studio-panel);
-  border-color: var(--studio-muted);
-}
 
 .reading-service-card,
 .reading-source-card,
@@ -2132,9 +2086,6 @@ a {
 .reading-template-row {
   padding-top: 0;
   border-top: 1px solid var(--studio-panel);
-}
-.reading-template-row select {
-  min-width: 180px;
 }
 .reading-source-list {
   display: grid;
@@ -2181,29 +2132,12 @@ a {
   color: var(--studio-muted);
   font-size: 11px;
 }
-.reading-source-fields input,
-.reading-source-fields select,
-.reading-service-fields select,
-.reading-template-row select {
-  width: 100%;
-  border: 1px solid var(--studio-surface);
-  border-radius: 7px;
-  background: var(--studio-panel);
-  color: var(--studio-text);
-  padding: 10px 11px;
-  font: inherit;
-  font-size: 13px;
-}
+
 .reading-actions {
   justify-content: flex-end;
   padding-top: 0;
 }
-.danger-button {
-  border: 0;
-  background: transparent;
-  color: var(--studio-danger);
-  padding: 10px 12px;
-}
+
 @media (max-width: 900px) {
   .reading-source-list,
   .reading-source-fields {
@@ -2357,12 +2291,7 @@ a {
   font-weight: 500;
   font-size: 11px;
 }
-.entity-detail input[type='checkbox'] {
-  width: 14px;
-  height: 14px;
-  margin: 0;
-  accent-color: var(--studio-accent);
-}
+
 .field-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2800,11 +2729,7 @@ a {
 .management-page .fields label {
   gap: 6px;
 }
-.management-page .fields input:not([type='checkbox']),
-.management-page .fields textarea {
-  padding: 9px 11px;
-  font-size: 12px;
-}
+
 .management-page .settings-group legend {
   font-size: 13px;
 }
@@ -2834,10 +2759,7 @@ a {
   .studio-page .content-row {
     padding: 16px;
   }
-  .management-page .fields input:not([type='checkbox']),
-  .management-page .select-trigger {
-    min-height: 40px;
-  }
+
   .entity-row {
     min-height: 58px;
   }
@@ -3056,27 +2978,14 @@ a {
   display: grid;
   gap: 8px;
 }
-.publication-dialog input,
-.publication-dialog textarea {
-  width: 100%;
-  box-sizing: border-box;
-}
+
 .publication-dialog .actions {
   justify-content: flex-end;
 }
 .publication-dialog {
   box-sizing: border-box;
 }
-.publication-dialog input,
-.publication-dialog textarea {
-  padding: 10px 12px;
-  border: 1px solid var(--studio-border);
-  border-radius: 8px;
-  background: var(--studio-panel);
-  color: inherit;
-  font: inherit;
-  line-height: 1.5;
-}
+
 .publication-dialog input[readonly] {
   background: var(--studio-panel);
   color: var(--studio-muted);
@@ -3771,17 +3680,7 @@ a {
   min-width: 0;
   font-size: 12px;
 }
-.analytics-filter input,
-.analytics-section-head select {
-  width: 100%;
-  min-width: 0;
-  padding: 7px 9px;
-  min-height: 34px;
-  border: 1px solid var(--studio-surface);
-  border-radius: 6px;
-  background: var(--studio-panel);
-  color: var(--studio-text);
-}
+
 .analytics-filter button,
 .analytics-pagination button {
   padding: 7px 12px;
@@ -3949,7 +3848,7 @@ a {
   color: var(--studio-muted);
   font-size: 12px;
 }
-.analytics-section-head select {
+.analytics-section-head .select-trigger {
   width: auto;
   font-size: 12px;
 }
@@ -4138,7 +4037,7 @@ a {
   .analytics-filter button,
   .analytics-pagination button,
   .analytics-sources button,
-  .analytics-section-head select {
+  .analytics-section-head .select-trigger {
     min-height: 40px;
   }
 }
@@ -4239,10 +4138,6 @@ a {
   max-width: min(540px, calc(100vw - 32px));
   overflow-wrap: anywhere;
 }
-button.danger {
-  color: var(--studio-danger);
-  border-color: var(--studio-danger);
-}
 
 .reading-integration-status {
   display: grid;
@@ -4341,18 +4236,7 @@ button.danger {
   gap: 5px;
   font-size: 12px;
 }
-.reading-panel input,
-.reading-panel select {
-  box-sizing: border-box;
-  max-width: 100%;
-  min-width: 0;
-  padding: 8px 10px;
-  border: 1px solid var(--studio-border);
-  border-radius: 6px;
-  background: var(--studio-panel);
-  color: inherit;
-  font: inherit;
-}
+
 .reading-table-wrap {
   width: 100%;
   max-width: 100%;
@@ -4743,27 +4627,23 @@ button.danger {
   gap: 6px;
   font-size: 12px;
 }
-.taxonomy-management input {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  min-height: 40px;
-  padding: 8px 10px;
-  border: 1px solid var(--studio-border);
-  border-radius: 6px;
-  background: var(--studio-panel);
-  color: var(--studio-text);
-  font: inherit;
-}
+
 .taxonomy-management > .dashboard-card {
   padding: 20px;
 }
-.personal-settings input[type='file']::file-selector-button {
-  padding: 8px 12px;
-  border: 1px solid var(--studio-border);
-  border-radius: 6px;
-  background: var(--studio-surface);
-  color: var(--studio-text);
-  font: inherit;
-  cursor: pointer;
+
+.select-option[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.reading-template-row > .studio-select {
+  min-width: 180px;
+}
+.analytics-section-head .studio-select {
+  min-width: 100px;
+}
+@media (max-width: 680px) {
+  .studio-input {
+    font-size: 16px;
+  }
 }

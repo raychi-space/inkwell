@@ -75,8 +75,8 @@ for (const width of [1440, 800, 680, 600, 560, 390, 320]) {
         const tabs = await page.getByRole('tablist').boundingBox()
         expect(Math.abs(tabs!.x - header!.x)).toBeLessThan(1)
       }
-      if ([1440, 390].includes(width) && ['内容管理', '拾阅管理'].includes(name))
-        await page.screenshot({ path: testInfo.outputPath(name === '内容管理' ? 'content.png' : 'reading.png') })
+      if ([1440, 390].includes(width) && ['内容管理', '拾阅管理', '网站管理', '助手管理', '个人设置', '访问统计', '回收站'].includes(name))
+        await page.screenshot({ path: testInfo.outputPath(name + '.png') })
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     }
     await page.getByRole('button', { name: /，账户菜单$/ }).click()

@@ -1,3 +1,5 @@
+import { Textarea } from '../../shared/ui/Textarea'
+import { Button } from '../../shared/ui/Button'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { createTurn, streamTurn } from './api'
 import type {
@@ -525,9 +527,9 @@ export function WritingAssistant({
               {insertion.contextBefore.slice(-50) || '文档开头'}｜
               {insertion.contextAfter.slice(0, 50) || '文档末尾'}
             </p>
-            <button disabled={pending || !!proposal} onClick={clearSelection}>
+            <Button variant="secondary" disabled={pending || !!proposal} onClick={clearSelection}>
               取消插入
-            </button>
+            </Button>
           </div>
         )}
         {selection && (
@@ -537,13 +539,13 @@ export function WritingAssistant({
               {selection.beforeMarkdown.slice(0, 100)}
               {selection.beforeMarkdown.length > 100 ? '…' : ''}
             </p>
-            <button disabled={pending || !!proposal} onClick={clearSelection}>
+            <Button variant="secondary" disabled={pending || !!proposal} onClick={clearSelection}>
               移除引用
-            </button>
+            </Button>
           </div>
         )}
         <div className="composer-input">
-          <textarea
+          <Textarea
             ref={composerRef}
             aria-label="消息"
             rows={expanded ? 10 : 3}
@@ -562,7 +564,8 @@ export function WritingAssistant({
               }
             }}
           />
-          <button
+          <Button
+            variant="unstyled"
             type="button"
             className="composer-expand"
             aria-label={expanded ? '收起输入框' : '展开输入框'}
@@ -574,37 +577,48 @@ export function WritingAssistant({
             }}
           >
             <Icon name={expanded ? 'contract' : 'expand'} size={16} />
-          </button>
+          </Button>
         </div>
         <div className="agent-actions">
-          <button
+          <Button
+            variant="secondary"
             disabled={pending || !!proposal || !assistantId}
             onMouseDown={(e) => e.preventDefault()}
             onClick={chooseInsertion}
             aria-pressed={!!insertion}
           >
             写入光标处
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             className="primary"
             disabled={pending || !!proposal || !assistantId}
             onClick={submit}
           >
             {pending ? '发送中…' : '发送'}
-          </button>
+          </Button>
         </div>
       </div>
       {notice && (
         <div className="conversation-toast" role="status">
           <span>{notice}</span>
           {retry && (
-            <button disabled={pending || !!proposal} onClick={() => void execute(retry, true)}>
+            <Button
+              variant="secondary"
+              disabled={pending || !!proposal}
+              onClick={() => void execute(retry, true)}
+            >
               重试
-            </button>
+            </Button>
           )}
-          <button className="toast-close" aria-label="关闭提示" onClick={() => setNotice('')}>
+          <Button
+            variant="unstyled"
+            className="toast-close"
+            aria-label="关闭提示"
+            onClick={() => setNotice('')}
+          >
             <Icon name="close" size={14} />
-          </button>
+          </Button>
         </div>
       )}
     </section>

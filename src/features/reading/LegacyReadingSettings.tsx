@@ -1,3 +1,7 @@
+import { Select } from '../../shared/ui/Select'
+import { Input } from '../../shared/ui/Input'
+import { Checkbox } from '../../shared/ui/Checkbox'
+import { Button } from '../../shared/ui/Button'
 import { useEffect, useMemo, useState } from 'react'
 import { errorMessage } from '../../shared/lib/errors'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -198,64 +202,65 @@ export function LegacyReadingSettings({ onOpenAssistants }: { onOpenAssistants: 
           <div className="reading-service-fields">
             <label>
               翻译助手
-              <select
+              <Select
+                hideLabel
+                floating
+                label="翻译助手"
                 value={shelf.settings.translationAssistantId ?? ''}
                 disabled={busy === 'assistant'}
-                onChange={(event) => void bindAssistant(event.target.value)}
-              >
-                <option value="">不翻译新标题</option>
-                {assistants
-                  .filter((item) => item.enabled)
-                  .map((assistant) => (
-                    <option value={assistant.id} key={assistant.id}>
-                      {assistant.name}
-                    </option>
-                  ))}
-              </select>
+                onChange={(selection) => void bindAssistant(selection)}
+                options={[
+                  { value: '', label: '不翻译新标题' },
+                  ...assistants
+                    .filter((item) => item.enabled)
+                    .map((assistant) => ({ value: assistant.id, label: assistant.name })),
+                ]}
+              />
             </label>
-            <button className="secondary-button" onClick={onOpenAssistants}>
+            <Button variant="secondary" className="secondary-button" onClick={onOpenAssistants}>
               打开助手管理
-            </button>
+            </Button>
           </div>
           {!assistants.some((item) => item.name === '通用翻译助手' && item.enabled) && (
             <div className="reading-template-row">
-              <select
+              <Select
+                hideLabel
+                floating
+                label="服务商"
                 value={providerId}
-                onChange={(event) => {
-                  const id = event.target.value
+                onChange={(selection) => {
+                  const id = selection
                   const provider = providers.find((item) => item.id === id)
                   setProviderId(id)
                   setModel(provider?.models[0] ?? '')
                 }}
-              >
-                <option value="">选择服务商</option>
-                {providers
-                  .filter((item) => item.enabled && item.hasApiKey)
-                  .map((provider) => (
-                    <option key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </option>
-                  ))}
-              </select>
-              <select
+                options={[
+                  { value: '', label: '选择服务商' },
+                  ...providers
+                    .filter((item) => item.enabled && item.hasApiKey)
+                    .map((provider) => ({ value: provider.id, label: provider.name })),
+                ]}
+              />
+              <Select
+                hideLabel
+                floating
+                label="模型"
                 value={model}
                 disabled={!selectedProvider}
-                onChange={(event) => setModel(event.target.value)}
-              >
-                <option value="">选择模型</option>
-                {selectedProvider?.models.map((name) => (
-                  <option value={name} key={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <button
+                onChange={(selection) => setModel(selection)}
+                options={[
+                  { value: '', label: '选择模型' },
+                  ...(selectedProvider?.models.map((name) => ({ value: name, label: name })) ?? []),
+                ]}
+              />
+              <Button
+                variant="secondary"
                 className="secondary-button"
                 disabled={!providerId || !model || busy === 'assistant'}
                 onClick={() => void createTranslator()}
               >
                 创建通用翻译助手
-              </button>
+              </Button>
             </div>
           )}
         </section>
@@ -279,9 +284,14 @@ export function LegacyReadingSettings({ onOpenAssistants }: { onOpenAssistants: 
           <CardHead eyebrow="NEW SOURCE" title="添加来源" />
           <SourceFields value={newSource} onChange={setNewSource} />
           <div className="reading-actions">
-            <button className="primary" disabled={busy === 'new'} onClick={() => void addSource()}>
+            <Button
+              variant="primary"
+              className="primary"
+              disabled={busy === 'new'}
+              onClick={() => void addSource()}
+            >
               添加来源
-            </button>
+            </Button>
           </div>
         </section>
         {notice && (
@@ -325,8 +335,7 @@ function SourceEditor({
         }
         aside={
           <label className="reading-switch">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={value.enabled}
               onChange={(event) => onChange({ ...value, enabled: event.target.checked })}
             />
@@ -336,15 +345,15 @@ function SourceEditor({
       />
       <SourceFields value={value} onChange={onChange} />
       <div className="reading-actions">
-        <button className="secondary-button" disabled={busy} onClick={onSync}>
+        <Button variant="secondary" className="secondary-button" disabled={busy} onClick={onSync}>
           立即检查
-        </button>
-        <button className="primary" disabled={busy} onClick={onSave}>
+        </Button>
+        <Button variant="primary" className="primary" disabled={busy} onClick={onSave}>
           保存
-        </button>
-        <button className="danger-button" disabled={busy} onClick={onDelete}>
+        </Button>
+        <Button variant="danger" className="danger-button" disabled={busy} onClick={onDelete}>
           删除
-        </button>
+        </Button>
       </div>
     </article>
   )
@@ -361,7 +370,7 @@ function SourceFields({
     <div className="reading-source-fields">
       <label>
         名称
-        <input
+        <Input
           value={value.name}
           maxLength={120}
           onChange={(event) => onChange({ ...value, name: event.target.value })}
@@ -369,7 +378,7 @@ function SourceFields({
       </label>
       <label>
         说明
-        <input
+        <Input
           value={value.description}
           maxLength={240}
           onChange={(event) => onChange({ ...value, description: event.target.value })}
@@ -377,7 +386,7 @@ function SourceFields({
       </label>
       <label>
         站点地址
-        <input
+        <Input
           type="url"
           value={value.siteUrl}
           onChange={(event) => onChange({ ...value, siteUrl: event.target.value })}
@@ -385,7 +394,7 @@ function SourceFields({
       </label>
       <label>
         列表地址
-        <input
+        <Input
           type="url"
           value={value.listingUrl}
           onChange={(event) => onChange({ ...value, listingUrl: event.target.value })}
@@ -393,24 +402,28 @@ function SourceFields({
       </label>
       <label>
         来源类型
-        <select
+        <Select
+          hideLabel
+          floating
+          label="来源类型"
           value={value.adapter}
-          onChange={(event) => {
-            const adapter = event.target.value as ReadingSourceInput['adapter']
+          onChange={(selection) => {
+            const adapter = selection as ReadingSourceInput['adapter']
             const url =
               adapter === 'OPENAI_DEVELOPERS'
                 ? 'https://developers.openai.com/blog'
                 : 'https://www.anthropic.com/engineering'
             onChange({ ...value, adapter, siteUrl: url, listingUrl: url })
           }}
-        >
-          <option value="OPENAI_DEVELOPERS">OpenAI Developers</option>
-          <option value="ANTHROPIC_ENGINEERING">Anthropic Engineering</option>
-        </select>
+          options={[
+            { value: 'OPENAI_DEVELOPERS', label: 'OpenAI Developers' },
+            { value: 'ANTHROPIC_ENGINEERING', label: 'Anthropic Engineering' },
+          ]}
+        />
       </label>
       <label>
         显示顺序
-        <input
+        <Input
           type="number"
           min={0}
           max={10000}

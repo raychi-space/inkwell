@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/ui/Button'
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../../shared/ui/Icon'
 import { BrandMark } from '../../../shared/ui/BrandMark'
@@ -50,7 +51,8 @@ export function ArticleSidebar(p: Props) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <button
+        <Button
+          variant="unstyled"
           className="brand"
           onClick={p.collapsed ? p.onToggle : p.onOverview}
           aria-label={p.collapsed ? '展开侧边栏' : '返回概览'}
@@ -63,21 +65,23 @@ export function ArticleSidebar(p: Props) {
             <strong>{p.siteName || '墨池'}</strong>
             <small>墨池 · 内容工作台</small>
           </span>
-        </button>
+        </Button>
         {!p.collapsed && (
-          <button
+          <Button
+            variant="unstyled"
             className="sidebar-collapse"
             onClick={p.onToggle}
             aria-label="收起侧边栏"
             title="收起侧边栏"
           >
             <Icon name="collapse" size={17} />
-          </button>
+          </Button>
         )}
       </div>
       <nav className="studio-nav" aria-label="管理导航">
         {entries.map((entry) => (
-          <button
+          <Button
+            variant="unstyled"
             key={entry.id}
             className={p.active === entry.id ? 'active' : ''}
             aria-label={entry.label}
@@ -89,7 +93,7 @@ export function ArticleSidebar(p: Props) {
             <span className="sidebar-label" aria-hidden={p.collapsed}>
               {entry.label}
             </span>
-          </button>
+          </Button>
         ))}
       </nav>
       <div
@@ -102,7 +106,8 @@ export function ArticleSidebar(p: Props) {
           }
         }}
       >
-        <button
+        <Button
+          variant="unstyled"
           className="account-trigger"
           ref={accountButton}
           onClick={() => setMenuOpen((v) => !v)}
@@ -125,14 +130,15 @@ export function ArticleSidebar(p: Props) {
           <span className="sidebar-label" aria-hidden={p.collapsed}>
             <Icon name="chevron" size={15} />
           </span>
-        </button>
+        </Button>
         {menuOpen && (
           <div className="account-popover" id="sidebar-account-menu">
             <div className="account-popover-heading">
               <strong>{p.username ?? '站主'}</strong>
               <small>当前登录账户</small>
             </div>
-            <button
+            <Button
+              variant="unstyled"
               className="account-logout"
               onClick={() => {
                 setMenuOpen(false)
@@ -141,8 +147,9 @@ export function ArticleSidebar(p: Props) {
             >
               <Icon name="settings" size={17} />
               个人设置
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="unstyled"
               ref={logoutButton}
               className="account-logout"
               onClick={() => {
@@ -152,7 +159,7 @@ export function ArticleSidebar(p: Props) {
             >
               <Icon name="logout" size={17} />
               退出登录
-            </button>
+            </Button>
           </div>
         )}
       </div>

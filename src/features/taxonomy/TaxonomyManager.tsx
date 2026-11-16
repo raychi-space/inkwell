@@ -1,3 +1,6 @@
+import { Card } from '../../shared/ui/Card'
+import { Input } from '../../shared/ui/Input'
+import { Button } from '../../shared/ui/Button'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   addCategory,
@@ -114,7 +117,7 @@ export function TaxonomyManager(p: Props) {
       <PageHeader kicker="CONTENT STUDIO" title="内容管理" />
       {p.navigation}
       <div className="management-scroll taxonomy-management">
-        <section className="dashboard-card">
+        <Card>
           <h2>{label}管理</h2>
           <form
             className="taxonomy-create"
@@ -125,7 +128,7 @@ export function TaxonomyManager(p: Props) {
           >
             <label>
               新增{label}
-              <input
+              <Input
                 required
                 maxLength={p.kind === 'categories' ? 80 : 40}
                 disabled={busy || editing !== null}
@@ -133,17 +136,18 @@ export function TaxonomyManager(p: Props) {
                 onChange={(e) => setName(e.target.value)}
               />
             </label>
-            <button
+            <Button
+              variant="primary"
               type="submit"
               className="primary"
               disabled={busy || editing !== null || !name.trim()}
             >
               新增
-            </button>
+            </Button>
           </form>
           <label>
             搜索{label}
-            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} />
           </label>
           {notice && (
             <p role="status" className="notice">
@@ -168,7 +172,7 @@ export function TaxonomyManager(p: Props) {
                   <tr key={v.name}>
                     <td>
                       {editing === v.name ? (
-                        <input
+                        <Input
                           aria-label="新名称"
                           maxLength={p.kind === 'categories' ? 80 : 40}
                           value={nextName}
@@ -185,24 +189,27 @@ export function TaxonomyManager(p: Props) {
                     <td>{v.historyCount}</td>
                     <td>
                       <div className="actions">
-                        <button
+                        <Button
+                          variant="secondary"
                           type="button"
                           disabled={busy}
                           onClick={() => void showReferences(v.name)}
                         >
                           查看引用（{v.referenceCount}）
-                        </button>
+                        </Button>
                         {editing === v.name ? (
                           <>
-                            <button
+                            <Button
+                              variant="secondary"
                               disabled={busy || !nextName.trim() || nextName === v.name}
                               onClick={() =>
                                 void mutate(() => renameTaxonomy(p.kind, v.name, nextName))
                               }
                             >
                               保存名称
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              variant="secondary"
                               disabled={busy}
                               onClick={() => {
                                 setEditing(null)
@@ -210,11 +217,12 @@ export function TaxonomyManager(p: Props) {
                               }}
                             >
                               取消
-                            </button>
+                            </Button>
                           </>
                         ) : (
                           <>
-                            <button
+                            <Button
+                              variant="secondary"
                               disabled={busy || dirty || v.protectedName || v.referenceCount > 0}
                               onClick={() => {
                                 setEditing(v.name)
@@ -222,8 +230,9 @@ export function TaxonomyManager(p: Props) {
                               }}
                             >
                               重命名
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              variant="secondary"
                               disabled={busy || dirty || v.protectedName || v.referenceCount > 0}
                               onClick={() => {
                                 if (window.confirm(`确定删除${label}“${v.name}”吗？`))
@@ -231,7 +240,7 @@ export function TaxonomyManager(p: Props) {
                               }}
                             >
                               删除
-                            </button>
+                            </Button>
                           </>
                         )}
                       </div>
@@ -245,9 +254,9 @@ export function TaxonomyManager(p: Props) {
           <p className="settings-help">
             仅未被引用的项可更名或删除，“未分类”保留。各列按内容去重，同一篇内容可出现在多列。
           </p>
-        </section>
+        </Card>
         {referenceName && (
-          <section className="dashboard-card" aria-label="关联内容">
+          <Card aria-label="关联内容">
             <h2>“{referenceName}”的关联内容</h2>
             {references === null ? (
               <p>正在查询…</p>
@@ -255,7 +264,8 @@ export function TaxonomyManager(p: Props) {
               <ul className="taxonomy-references">
                 {references.map((v) => (
                   <li key={v.id}>
-                    <button
+                    <Button
+                      variant="secondary"
                       disabled={busy}
                       onClick={() => (v.status === 'TRASHED' ? p.onTrash() : p.onOpen(v.id))}
                     >
@@ -265,14 +275,14 @@ export function TaxonomyManager(p: Props) {
                         : v.status === 'PUBLISHED'
                           ? '已发布'
                           : '草稿'}
-                    </button>
+                    </Button>
                   </li>
                 ))}
               </ul>
             ) : (
               <p>暂无引用。</p>
             )}
-          </section>
+          </Card>
         )}
       </div>
     </main>

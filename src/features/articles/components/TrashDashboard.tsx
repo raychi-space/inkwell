@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/ui/Button'
 import { useSessionState } from '../../../shared/lib/useSessionState'
 import { invalidateReadCache } from '../../../shared/api/sessionCache'
 import { useEffect, useState } from 'react'
@@ -56,7 +57,8 @@ export function TrashDashboard({
         title="回收站"
         subtitle="已移除的内容保留在这里，不会自动清空。恢复后为草稿，需要手动发布。"
         actions={
-          <button
+          <Button
+            variant="secondary"
             disabled={busy || loading}
             onClick={() => {
               invalidateReadCache()
@@ -64,7 +66,7 @@ export function TrashDashboard({
             }}
           >
             刷新
-          </button>
+          </Button>
         }
       />
       {notice && (
@@ -76,7 +78,8 @@ export function TrashDashboard({
       {error && (
         <div role="alert">
           <p className="notice">{error}</p>
-          <button
+          <Button
+            variant="secondary"
             disabled={busy}
             onClick={() => {
               invalidateReadCache()
@@ -84,7 +87,7 @@ export function TrashDashboard({
             }}
           >
             重新加载
-          </button>
+          </Button>
         </div>
       )}
       {result && (
@@ -106,30 +109,40 @@ export function TrashDashboard({
                   </p>
                 </div>
                 <div className="actions">
-                  <button disabled={busy} onClick={() => setSelected({ item, kind: 'recover' })}>
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => setSelected({ item, kind: 'recover' })}
+                  >
                     恢复为草稿
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="danger"
                     className="danger"
                     disabled={busy}
                     onClick={() => setSelected({ item, kind: 'purge' })}
                   >
                     永久删除
-                  </button>
+                  </Button>
                 </div>
               </li>
             ))}
           </ul>
           <div className="actions">
-            <button disabled={busy || page === 1} onClick={() => setPage((value) => value - 1)}>
+            <Button
+              variant="secondary"
+              disabled={busy || page === 1}
+              onClick={() => setPage((value) => value - 1)}
+            >
               上一页
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               disabled={busy || page * 20 >= result.total}
               onClick={() => setPage((value) => value + 1)}
             >
               下一页
-            </button>
+            </Button>
           </div>
         </>
       )}

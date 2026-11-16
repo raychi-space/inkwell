@@ -1,3 +1,5 @@
+import { Input } from '../../shared/ui/Input'
+import { Button } from '../../shared/ui/Button'
 import { useState } from 'react'
 import {
   Bot,
@@ -104,7 +106,8 @@ export function AssistantIconPicker({
       </summary>
       <div className="icon-picker-panel">
         <div className="icon-picker-tabs" role="group" aria-label="图标类型">
-          <button
+          <Button
+            variant="secondary"
             type="button"
             aria-pressed={kind === 'icons'}
             onClick={() => {
@@ -113,8 +116,9 @@ export function AssistantIconPicker({
             }}
           >
             线条图标
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             type="button"
             aria-pressed={kind === 'emoji'}
             onClick={() => {
@@ -123,9 +127,9 @@ export function AssistantIconPicker({
             }}
           >
             Emoji
-          </button>
+          </Button>
         </div>
-        <input
+        <Input
           aria-label="搜索助手图标"
           placeholder="搜索图标，如写作、编程…"
           value={query}
@@ -133,7 +137,8 @@ export function AssistantIconPicker({
         />
         <div className="assistant-icon-grid" role="group" aria-label="助手图标库">
           {choices.map((item) => (
-            <button
+            <Button
+              variant="secondary"
               type="button"
               key={item.id}
               title={item.label}
@@ -143,7 +148,7 @@ export function AssistantIconPicker({
             >
               <AssistantAvatar icon={item.id} />
               <span>{item.label}</span>
-            </button>
+            </Button>
           ))}
         </div>
         {!choices.length && <p role="status">没有匹配的图标，请换个关键词。</p>}

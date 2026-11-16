@@ -48,3 +48,22 @@
     transition: none;
   }
 }
+.studio-textarea {
+  height: auto;
+  min-height: 96px;
+  resize: vertical;
+}
+.studio-input[type='file'] {
+  height: auto;
+  padding: 5px;
+}
+.studio-input::file-selector-button {
+  margin-right: 10px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--studio-surface);
+  color: var(--studio-text);
+  font: inherit;
+  cursor: pointer;
+}
