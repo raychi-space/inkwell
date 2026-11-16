@@ -4672,11 +4672,16 @@ button.danger {
   gap: 16px;
   padding: 0 0 16px;
 }
+.personal-settings > * {
+  flex-shrink: 0;
+}
 .personal-settings .password-form {
   margin: 0;
   width: 100%;
   max-width: 640px;
+  overflow: visible;
 }
+
 .profile-avatar-preview {
   width: 112px;
   height: 112px;
