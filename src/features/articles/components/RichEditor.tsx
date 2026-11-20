@@ -29,6 +29,7 @@ import type { EditorAgentAdapter } from '../../../shared/types/editor'
 import { createEditorAgentAdapter } from './editorAgentAdapter'
 import { errorMessage } from '../../../shared/lib/errors'
 import { InsertMath, mathPlugin } from './mathPlugin'
+import { markdownPastePlugin } from './markdownPastePlugin'
 
 export function RichEditor({
   article,
@@ -87,6 +88,7 @@ export function RichEditor({
       }),
       mathPlugin(),
       markdownShortcutPlugin(),
+      markdownPastePlugin(),
       imagePlugin({
         disableImageResize: true,
         imageUploadHandler: async (file: File) => {

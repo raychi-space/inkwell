@@ -26,3 +26,7 @@ npm run build
 浏览器回归使用 `npm run test:writing`。macOS 使用 Chrome，Linux CI 安装 Playwright Chromium。
 
 第三方许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 文章编辑
+
+粘贴 Markdown 源文到文章正文时，标题、粗体、列表和 GFM 表格会转换为可编辑内容。按一次撤销即可恢复粘贴前的正文。普通文本直接插入，剪贴板图片会自动上传。
