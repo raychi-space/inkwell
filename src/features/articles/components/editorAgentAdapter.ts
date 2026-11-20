@@ -18,20 +18,15 @@ import type {
   SelectionSnapshot,
   InsertionSnapshot,
 } from '../../../shared/types/editor'
-import { fromMarkdown } from 'mdast-util-from-markdown'
 import type { Nodes } from 'mdast'
-import { gfm } from 'micromark-extension-gfm'
-import { gfmFromMarkdown, gfmToMarkdown } from 'mdast-util-gfm'
+import { gfmToMarkdown } from 'mdast-util-gfm'
 import { toMarkdown } from 'mdast-util-to-markdown'
-import { math } from 'micromark-extension-math'
-import { mathFromMarkdown, mathToMarkdown } from 'mdast-util-math'
+import { mathToMarkdown } from 'mdast-util-math'
+import { parseEditorMarkdown } from './editorMarkdown'
 
 /** A single-block edit keeps its existing heading/list/quote container. */
 function inlineFragment(markdown: string) {
-  let node: Nodes = fromMarkdown(markdown, {
-    extensions: [gfm(), math()],
-    mdastExtensions: [gfmFromMarkdown(), mathFromMarkdown()],
-  })
+  let node: Nodes = parseEditorMarkdown(markdown)
   if (node.children.length === 1 && node.children[0].type === 'paragraph') return markdown
   while (
     ['root', 'blockquote', 'list', 'listItem'].includes(node.type) &&
