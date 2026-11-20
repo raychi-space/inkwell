@@ -34,3 +34,7 @@ npm run build
 ## 个人设置
 
 头像、昵称和密码各自编辑、保存和取消。昵称保存后更新管理台显示名，沿用当前登录会话。修改密码需要当前密码和两次新密码，成功后使用新密码重新登录。页面会在离开实际有未保存修改的编辑时提醒。
+
+## 访问地图
+
+访问统计根据日期、IP、地区和来源筛选显示地图，在原始记录保留期内去重并按地区合并。底图来自 [Natural Earth](https://www.naturalearthdata.com/downloads/110m-physical-vectors/110m-land/)。

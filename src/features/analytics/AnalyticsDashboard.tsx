@@ -6,14 +6,15 @@ import { invalidateReadCache } from '../../shared/api/sessionCache'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   analyticsOverview,
-  analyticsEvents,
+  analyticsMap,
   type AnalyticsFilters,
   type AnalyticsOverview,
-  type AnalyticsEvents,
+  type AnalyticsMapReport,
 } from './api'
 import { AnalyticsCollection } from './AnalyticsCollection'
 import { AnalyticsCharts } from './AnalyticsCharts'
 import { AnalyticsSources } from './AnalyticsSources'
+import { AnalyticsVisitMap } from './AnalyticsVisitMap'
 import { errorMessage } from '../../shared/lib/errors'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
@@ -37,36 +38,33 @@ function initialFilters(): AnalyticsFilters {
     city: '',
   }
 }
-const region = (parts: string[]) =>
-  parts.filter((value) => value && value !== 'unknown').join(' / ') || '未知'
-
 export function AnalyticsDashboard() {
   const [filters, setFilters] = useSessionState('analytics.filters', initialFilters)
   const [applied, setApplied] = useSessionState('analytics.applied', initialFilters)
-  const [savedPage, setSavedPage] = useSessionState('analytics.page', 1)
-  const initialQuery = useRef({ filters: applied, page: savedPage })
+  const initialQuery = useRef(applied)
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null)
-  const [events, setEvents] = useState<AnalyticsEvents | null>(null)
+  const [map, setMap] = useState<AnalyticsMapReport | null>(null)
+  const [mapError, setMapError] = useState(false)
   const [loading, setLoading] = useState(false)
   const [refresh, setRefresh] = useState(0)
   const [error, setError] = useState('')
   const request = useRef<AbortController | null>(null)
-  const load = useCallback(async (query: AnalyticsFilters, page = 1) => {
+  const load = useCallback(async (query: AnalyticsFilters) => {
     request.current?.abort()
     const controller = new AbortController()
     request.current = controller
     setLoading(true)
     setError('')
     try {
-      const [report, details] = await Promise.all([
+      const [report, locations] = await Promise.all([
         analyticsOverview(query, controller.signal),
-        analyticsEvents(query, page, controller.signal),
+        analyticsMap(query, controller.signal).catch(() => null),
       ])
       if (controller.signal.aborted) return
       setOverview(report)
-      setEvents(details)
+      setMap(locations)
+      setMapError(locations === null)
       setApplied(query)
-      setSavedPage(page)
     } catch (failure) {
       if (!controller.signal.aborted) setError(errorMessage(failure))
     } finally {
@@ -74,12 +72,11 @@ export function AnalyticsDashboard() {
     }
   }, [])
   useEffect(() => {
-    void load(initialQuery.current.filters, initialQuery.current.page)
+    void load(initialQuery.current)
     return () => request.current?.abort()
   }, [load])
   const field = (key: keyof AnalyticsFilters, value: string) =>
     setFilters((previous) => ({ ...previous, [key]: value }))
-  const pages = events ? Math.max(1, Math.ceil(events.total / events.pageSize)) : 1
   return (
     <main className="workspace studio-page analytics-page">
       <PageHeader
@@ -94,7 +91,7 @@ export function AnalyticsDashboard() {
               onClick={() => {
                 invalidateReadCache()
                 setRefresh((value) => value + 1)
-                void load(applied, savedPage)
+                void load(applied)
               }}
             >
               刷新
@@ -215,73 +212,20 @@ export function AnalyticsDashboard() {
         </form>
         {overview && (
           <>
-            <section
-              className="dashboard-card analytics-details"
-              aria-labelledby="analytics-details-title"
-            >
-              <div className="analytics-section-head">
-                <h2 id="analytics-details-title">访问明细</h2>
-                <span>
-                  {applied.from} 至 {applied.until} · {number.format(events?.total ?? 0)} 条
-                </span>
-              </div>
-              <div className="analytics-table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>访问时间</th>
-                      <th>原始 IP</th>
-                      <th>归属地</th>
-                      <th>来源</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {events?.items.map((item) => (
-                      <tr key={item.id}>
-                        <td>{time.format(new Date(item.occurredAt))}</td>
-                        <td>{item.ip ?? '未记录'}</td>
-                        <td>{region([item.country, item.province, item.city])}</td>
-                        <td>
-                          {item.source === 'direct_or_unknown' ? '直接访问或未知' : item.source}
-                        </td>
-                      </tr>
-                    ))}
-                    {!events?.items.length && (
-                      <tr>
-                        <td colSpan={4}>这个条件下还没有访问记录。</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="analytics-pagination">
-                <span>
-                  第 {events?.page ?? 1} / {pages} 页
-                </span>
-                <Button
-                  variant="secondary"
-                  type="button"
-                  className="secondary-button"
-                  disabled={loading || !events || events.page <= 1}
-                  onClick={() => void load(applied, (events?.page ?? 1) - 1)}
-                >
-                  上一页
-                </Button>
-                <Button
-                  variant="secondary"
-                  type="button"
-                  className="secondary-button"
-                  disabled={loading || !events || events.page >= pages}
-                  onClick={() => void load(applied, (events?.page ?? 1) + 1)}
-                >
-                  下一页
-                </Button>
-              </div>
-            </section>
+            <AnalyticsVisitMap
+              key={JSON.stringify(applied)}
+              report={map}
+              unavailable={mapError}
+              loading={loading}
+              onRetry={() => {
+                invalidateReadCache()
+                void load(applied)
+              }}
+            />
             <p className="analytics-note">
-              明细与原始 IP 保留 {overview.retention.rawDays} 天；趋势保留{' '}
+              原始 IP 保留 {overview.retention.rawDays} 天；趋势保留{' '}
               {overview.retention.aggregateDays}{' '}
-              天。总量卡片为全站累计及今日数据，筛选作用于图表和明细。访客按匿名浏览器标识估算，自{' '}
+              天。总量卡片为全站累计及今日数据，筛选作用于图表和地图。访客按匿名浏览器标识估算，自{' '}
               {time.format(new Date(overview.retention.visitorTrackingSince))}{' '}
               开始去重；更换设备或清除存储可能重复计数。
             </p>

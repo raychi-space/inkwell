@@ -28,10 +28,13 @@ async function fixture(page: Page, options: { configured?: boolean; failure?: nu
       const sources = [{name: 'google.com', pageViews: 8}, {name: 'direct_or_unknown', pageViews: 4}, {name: 'github.com', pageViews: 2}].filter(row => !source || row.name === source)
       const count = source ? sources.reduce((total, row) => total + row.pageViews, 0) : 14
       body = { from: query.get('from'), to: query.get('to'), summary: { pageViews: 1234, visitors: 74, todayPageViews: 24, todayVisitors: 8 }, trend: [{day: query.get('from'), pageViews: source === 'direct_or_unknown' ? 0 : 2}, {day: new Date(Date.parse(query.get('to')!) - 86400000).toISOString().slice(0, 10), pageViews: count - (source === 'direct_or_unknown' ? 0 : 2)}], countries: [{name: '中国', pageViews: count}], provinces: [{name: '江苏省', pageViews: count}], cities: [{name: '南京市', pageViews: count}], sources, retention }
-    } else if (path.endsWith('/analytics/events')) {
-      const query = new URL(request.url()).searchParams, page = Number(query.get('page') ?? 1)
-      const filtered = query.has('ip') || query.has('source')
-      body = { items: [{ id: 'event-'+page, occurredAt: '2026-11-07T09:00:00Z', path: filtered ? '/search' : page === 1 ? '/reading' : '/more', source: query.get('source') ?? 'google.com', ip: filtered || page === 1 ? '114.114.114.114' : '114.114.114.115', country: '中国', province: '江苏省', city: '南京市' }], total: filtered ? 1 : 21, page, pageSize: 20 }
+    } else if (path.endsWith('/analytics/map')) {
+      const query = new URL(request.url()).searchParams
+      const from = query.get('from'), to = query.get('to')
+      const uniqueIps = query.has('ip') || query.has('source') ? 1 : 2
+      body = { from, to, coverage: { from, to }, uniqueIps, unlocatedIps: 0, detailLevel: 'city',
+        points: [{ id: '1799962', level: 'city', country: '中国', province: '江苏省', city: '南京市',
+          latitude: 32.062, longitude: 118.778, uniqueIps, pageViews: uniqueIps === 2 ? 7 : 5 }] }
     } else if (path.endsWith('/auth/session')) body = { authenticated: true, username: 'fixture' }
     else if (path.endsWith('/auth/csrf')) body = { token: 'fixture', headerName: 'X-CSRF-TOKEN' }
     else if (path.endsWith('/settings')) body = { siteName: '测试站点' }
@@ -91,7 +94,7 @@ test('unconfigured analytics cannot be enabled by the control', async ({ page })
 })
 
 
-test('charts, geographic dimension, IP filtering and pagination render on desktop', async ({ page }) => {
+test('charts and world map show deduplicated IPs and respond to IP filtering on desktop', async ({ page }) => {
   await fixture(page)
   for (const name of ['总浏览量', '总访客数', '今日浏览量', '今日访客数']) await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
   await expect(page.getByRole('img', { name: /每日访问量/ })).toBeVisible()
@@ -100,17 +103,19 @@ test('charts, geographic dimension, IP filtering and pagination render on deskto
   await page.getByRole('option', {name:'城市',exact:true}).click()
   await expect(page.getByRole('list', { name: '地区访问量排名' })).toContainText('南京市')
   await expect(page.getByLabel('页面路径', { exact: true })).toHaveCount(0)
-  await expect(page.getByRole('columnheader', { name: '访问页面', exact: true })).toHaveCount(0)
-  await expect(page.getByRole('cell', { name: '/reading', exact: true })).toHaveCount(0)
-  await expect(page.getByRole('cell', { name: '114.114.114.114', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: '下一页', exact: true }).click()
-  await expect(page.getByRole('cell', { name: '114.114.114.115', exact: true })).toBeVisible()
+  const map = page.getByRole('region', { name: '访问地图' })
+  const marker = map.getByRole('button', { name: /南京市，2 个独立 IP/ })
+  await marker.hover()
+  await expect(map).toContainText('2 个独立 IP · 7 次浏览')
+  await map.getByRole('button', { name: '放大地图' }).click()
+  await expect(map.locator('.analytics-map-viewport')).toHaveAttribute('data-zoomed', 'true')
+  await map.getByRole('button', { name: '全图' }).click()
+  await expect(map.locator('.analytics-map-viewport')).toHaveAttribute('data-zoomed', 'false')
   await page.getByLabel('IP 地址', { exact: true }).fill('114.114.114.114')
   await page.getByRole('button', { name: '查询', exact: true }).click()
-  await expect(page.getByRole('cell', { name: '114.114.114.114', exact: true })).toBeVisible()
-  await expect(page.getByRole('cell', { name: '/search', exact: true })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: '下一页', exact: true })).toBeDisabled()
-  await expect(page.getByText('第 1 / 1 页')).toBeVisible()
+  await expect(map.getByRole('button', { name: /南京市，1 个独立 IP/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '访问明细' })).toHaveCount(0)
+  await expect(map.getByRole('button', { name: '下一页', exact: true })).toHaveCount(0)
   const heading = await page.getByRole('heading', {name:'访问统计',exact:true}).boundingBox()
   const power = await page.getByRole('switch', {name:'访问统计功能'}).boundingBox()
   expect(power!.x).toBeGreaterThan(heading!.x + heading!.width)
@@ -121,7 +126,7 @@ test('charts, geographic dimension, IP filtering and pagination render on deskto
 test('statistics scrolls its content while retaining the common desktop page header and sidebar', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 600 })
   await fixture(page)
-  await expect(page.getByRole('heading', { name: '访问明细', exact: true })).toBeAttached()
+  await expect(page.getByRole('heading', { name: '访问地图', exact: true })).toBeAttached()
   const header = page.locator('main .dashboard-head')
   const sidebar = page.locator('.sidebar')
   const before = { header: await header.boundingBox(), sidebar: await sidebar.boundingBox() }
@@ -130,13 +135,15 @@ test('statistics scrolls its content while retaining the common desktop page hea
   await expect.poll(() => page.locator('.analytics-scroll').evaluate(element => element.scrollTop)).toBeGreaterThan(0)
   expect((await header.boundingBox())!.y).toBe(before.header!.y)
   expect((await sidebar.boundingBox())!.y).toBe(before.sidebar!.y)
-  await expect(page.getByRole('button', { name: '下一页', exact: true })).toBeInViewport()
+  const zoom = page.getByRole('button', { name: '放大地图', exact: true })
+  await zoom.scrollIntoViewIfNeeded()
+  await expect(zoom).toBeInViewport()
 })
 
-test('statistics remains vertically reachable and its details pan horizontally on a narrow phone', async ({ page }) => {
+test('statistics remains scrollable and map markers work on a narrow phone', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 })
   await fixture(page)
-  const next = page.getByRole('button', { name: '下一页', exact: true })
+  const marker = page.getByRole('button', { name: /南京市，2 个独立 IP/ })
   await expect(page.locator('.analytics-metrics')).toHaveAttribute('aria-busy', 'false')
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 })
@@ -148,15 +155,10 @@ test('statistics remains vertically reachable and its details pan horizontally o
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
   await cdp.detach()
-  await expect(next).toBeVisible()
-  await next.scrollIntoViewIfNeeded()
-  await expect(next).toBeInViewport()
-  const table = page.locator('.analytics-details .analytics-table-scroll')
-  expect(await table.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true)
-  await table.evaluate(element => { element.scrollLeft = element.scrollWidth })
-  expect(await table.evaluate(element => element.scrollLeft)).toBeGreaterThan(0)
+  await marker.scrollIntoViewIfNeeded()
+  await marker.click()
+  await expect(page.getByRole('region', { name: '访问地图' })).toContainText('2 个独立 IP · 7 次浏览')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-  await expect(page.getByRole('columnheader', { name: '来源', exact: true })).toBeInViewport()
 })
 
 test('statistics retains loaded values on a failed query and recovers on retry', async ({ page }) => {
@@ -169,11 +171,11 @@ test('statistics retains loaded values on a failed query and recovers on retry',
   await page.getByRole('button', { name: '查询', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('统计读取失败')
   await expect(page.locator('.analytics-metrics strong').first()).toHaveText('1,234')
-  await expect(page.getByRole('cell', { name: '114.114.114.114', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: /南京市，2 个独立 IP/ })).toBeVisible()
   await page.unroute(pattern)
   await page.getByRole('button', { name: '重试', exact: true }).click()
   await expect(page.getByRole('alert')).toHaveCount(0)
-  await expect(page.getByText('第 1 / 1 页')).toBeVisible()
+  await expect(page.getByRole('button', { name: /南京市，1 个独立 IP/ })).toBeVisible()
 })
 
 test('daily values appear by hover and keyboard without the old expanded table', async ({ page }) => {
@@ -226,7 +228,7 @@ test('source ranking filters real request parameters, preserves the date range a
   const queries: { path: string; query: URLSearchParams }[] = []
   page.on('request', request => {
     const url = new URL(request.url())
-    if (/\/analytics\/(overview|events)$/.test(url.pathname)) queries.push({ path: url.pathname, query: url.searchParams })
+    if (/\/analytics\/(overview|map)$/.test(url.pathname)) queries.push({ path: url.pathname, query: url.searchParams })
   })
   await fixture(page)
   const sources = page.getByRole('region', { name: '访问来源', exact: true })
@@ -234,8 +236,6 @@ test('source ranking filters real request parameters, preserves the date range a
   const cards = await page.locator('.analytics-metrics strong').allTextContents()
   const from = await page.getByLabel('开始日期', { exact: true }).inputValue()
   const until = await page.getByLabel('结束日期', { exact: true }).inputValue()
-  await page.getByRole('button', { name: '下一页', exact: true }).click()
-  await expect(page.getByText('第 2 / 2 页')).toBeVisible()
   await page.getByLabel('开始日期', { exact: true }).fill('2026-10-01')
   queries.length = 0
   await sources.getByRole('button', { name: 'google.com', exact: true }).click()
@@ -244,13 +244,13 @@ test('source ranking filters real request parameters, preserves the date range a
   await expect(page.getByLabel('来源域名', { exact: true })).toHaveValue('google.com')
   await expect(page.getByLabel('开始日期', { exact: true })).toHaveValue(from)
   await expect(page.getByLabel('结束日期', { exact: true })).toHaveValue(until)
-  await expect(page.getByText('第 1 / 1 页')).toBeVisible()
+  await expect(page.getByRole('button', { name: /南京市，1 个独立 IP/ })).toBeVisible()
   expect(await page.locator('.analytics-metrics strong').allTextContents()).toEqual(cards)
   expect(queries).toHaveLength(2)
-  for (const { path, query } of queries) {
+  for (const { query } of queries) {
     expect(query.get('source')).toBe('google.com')
     expect(query.get('from')).toBe(from)
-    if (path.endsWith('/events')) expect(query.get('page')).toBe('1')
+    expect(query.has('page')).toBe(false)
   }
   await sources.getByRole('button', { name: '清除来源筛选', exact: true }).click()
   await expect(sources.getByRole('button', { name: 'github.com', exact: true })).toBeVisible()
@@ -258,7 +258,7 @@ test('source ranking filters real request parameters, preserves the date range a
   await sources.getByRole('button', { name: '直接访问或未知', exact: true }).click()
   await expect(page.getByLabel('来源域名', { exact: true })).toHaveValue('direct_or_unknown')
   await expect(sources.getByRole('button', { name: '直接访问或未知', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.locator('.analytics-details tbody')).toContainText('直接访问或未知')
+  await expect(page.getByRole('button', { name: /南京市，1 个独立 IP/ })).toBeVisible()
   await page.getByLabel('IP 地址', { exact: true }).fill('114.114.114.114')
   await page.getByRole('button', { name: '查询', exact: true }).click()
   await expect(page.locator('.analytics-metrics')).toHaveAttribute('aria-busy', 'false')
@@ -326,3 +326,42 @@ for (const variant of ['empty', 'zero', 'single', 'many'] as const) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   })
 }
+
+test('map outage preserves the trend and a retry can report unavailable IP history', async ({ page }) => {
+  await fixture(page)
+  const pattern = '**/api/v1/admin/analytics/map?**'
+  await page.route(pattern, route => route.fulfill({ status: 503, json: { code: 'ANALYTICS_UNAVAILABLE' } }))
+  await page.getByRole('button', { name: '刷新', exact: true }).click()
+  const map = page.getByRole('region', { name: '访问地图' })
+  await expect(map.getByRole('alert')).toContainText('访问地图暂时无法读取')
+  await expect(page.getByRole('img', { name: /每日访问量/ })).toBeVisible()
+  await page.unroute(pattern)
+  await page.route(pattern, route => {
+    const query = new URL(route.request().url()).searchParams
+    return route.fulfill({ json: { from: query.get('from'), to: query.get('to'), coverage: null,
+      uniqueIps: 0, unlocatedIps: 0, detailLevel: 'city', points: [] } })
+  })
+  await map.getByRole('button', { name: '重试地图' }).click()
+  await expect(map).toContainText('所选日期没有可用的 IP 历史')
+})
+
+test('nearby points share a marker until zoom makes both reachable', async ({ page }) => {
+  await fixture(page)
+  await page.route('**/api/v1/admin/analytics/map?**', route => {
+    const query = new URL(route.request().url()).searchParams
+    const from = query.get('from'), to = query.get('to')
+    return route.fulfill({ json: { from, to, coverage: { from, to }, uniqueIps: 3, unlocatedIps: 0, detailLevel: 'city',
+      points: [
+        { id: '1799962', level: 'city', country: '中国', province: '江苏省', city: '南京市', latitude: 32.062, longitude: 118.778, uniqueIps: 2, pageViews: 7 },
+        { id: '1808926', level: 'city', country: '中国', province: '浙江省', city: '杭州市', latitude: 30.294, longitude: 120.161, uniqueIps: 1, pageViews: 1 },
+      ] } })
+  })
+  await page.getByRole('button', { name: '刷新', exact: true }).click()
+  const map = page.getByRole('region', { name: '访问地图' })
+  await map.getByRole('button', { name: '2 个归属地，3 个独立 IP' }).click()
+  await expect(map).toContainText('南京市')
+  await expect(map).toContainText('杭州市')
+  for (let i = 0; i < 4; i++) await map.getByRole('button', { name: '放大地图' }).click()
+  await expect(map.getByRole('button', { name: /南京市，2 个独立 IP/ })).toBeInViewport()
+  await expect(map.getByRole('button', { name: /杭州市，1 个独立 IP/ })).toBeInViewport()
+})
