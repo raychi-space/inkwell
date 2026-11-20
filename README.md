@@ -1,117 +1,28 @@
 # inkwell
 
-系统导航：[架构](https://github.com/raychi-space/raychi/blob/main/ARCHITECTURE.md)、[文档地图](https://github.com/raychi-space/raychi/blob/main/docs/README.md)、[当前产品](https://github.com/raychi-space/raychi/blob/main/docs/product-specs/current-behavior.md)。这些跨仓资料为私有；本仓运行、契约与工作约束可独立查阅，缺权限时由负责人提供相关范围与约束。
+RayChi 的内容管理台，使用 React 和 Vite。通过 [wellspring](https://github.com/raychi-space/wellspring) 登录、编辑和发布内容。
 
-<a id="系统文档审阅入口"></a>
+## 本地开发
 
-新系统文档由 [raychi#67](https://github.com/raychi-space/raychi/pull/67) 提供；该 PR 未合并时，上述 main 新路径尚不可用，可从[文档地图审阅版](https://github.com/raychi-space/raychi/blob/1b6cb94c68e00d7f375edec17ef9822fba5d1778/docs/README.md)进入架构、产品和流程。私有仓仍需访问权限。
-
-**Part of Raychi · 管理台**。站长在这里登录，编辑并发布文章和帖子，同时管理草稿、分类、标签与站点设置。React 19 + Vite + [MDXEditor](https://mdxeditor.dev/)；公开展示由 [lantern](https://github.com/raychi-space/lantern) 负责，内容规则与数据由 [wellspring](https://github.com/raychi-space/wellspring) 负责。
-
-正文在同一个编辑区域所见即所得，保存时转换为 Markdown。直接粘贴 PNG/JPEG 图片会上传到私有附件目录，编辑器用认证地址显示，Markdown 中保存稳定的公开地址。未发布图片的公开直链返回 404。已发布文章的“保存工作稿”不会影响访客；点击“发布更新”才替换公开快照。
-
-## 本机运行
-
-需要 Node.js 20.19+（20.x）或 22.12+，以及已运行的 wellspring；这是当前锁文件中 Vite / React 插件的运行要求。CI 使用 Node 22，完整跨仓验证按项目验证脚本使用 Node 26。
+使用 Node.js 26，并先本地启动 wellspring。
 
 ```bash
-cp .env.example .env.local
 npm ci
 npm run dev
 ```
 
-打开 <http://127.0.0.1:5173>。Vite 将 `/api` 代理到 `RAYCHI_API_URL`（默认 `http://127.0.0.1:8080`）；生产环境需在同源入口转发 `/api`。执行 `npm run build` 检查类型并构建。
+开发入口默认在 `http://127.0.0.1:5173`。Vite 将本地 `/api` 请求转发到 `RAYCHI_API_URL`，默认值是 `http://127.0.0.1:8080`。
 
-公式可通过工具栏插入和编辑，助手回复同步渲染公式；保存仍为 Markdown/TeX。格式与编辑器边界见[编辑器约定](docs/editor-v0.1.md)。本仓库独立构建，不读取相邻仓库的文件。
+## 验证
 
-模块内部职责见[模块说明](docs/module.md)，早期 v0.2 范围见[产品范围文档](docs/product-scope-v0.2.md)；当前操作见下文，Agent 长期约定见 [AGENTS.md](AGENTS.md)。跨仓任务按[项目流程](https://github.com/raychi-space/raychi/blob/main/docs/workflow.md)处理；实时状态看[Raychi Project](https://github.com/orgs/raychi-space/projects/1)及对应 Issue/PR。
+```bash
+npm run lint
+npm run format:check
+npm run test:auth
+npm run test:cache
+npm run build
+```
 
-## 管理页面
+浏览器回归使用 `npm run test:writing`。macOS 使用 Chrome，Linux CI 安装 Playwright Chromium。
 
-[管理台使用说明](docs/management-ui.md) 介绍网站设置、可收缩的图标侧栏与头像账户菜单。页面右上角的主题图标可切换默认暖灰、深色和跟随系统主题。只读查询使用有界会话内缓存，切换页面保留筛选与分页；手动刷新或写入后重新查询，缓存数据只保留在当前页面内存中。内容管理、个人设置、网站管理和助手管理使用一致的页面框架；桌面端页头与侧栏固定，内容区域独立滚动。
-
-登录后默认进入“概览”，查看今日访问、全站内容数量、近 7 天趋势、拾阅状态和最近内容；手动刷新只读取数据，详情见[管理台使用说明](docs/management-ui.md#概览)。
-
-登录页、侧栏和空状态统一使用鳐鱼品牌标识；浏览器与 Apple 图标随构建 base URL 提供。图标适配深浅主题，侧栏始终使用适合深色背景的版本；现有头像、功能图标和第三方服务商品牌保留。见[品牌资源说明](docs/brand.md)。
-
-左侧“拾阅管理”在 AIHOT 模式只展示内容服务连接状态、最近内容更新与检查时间，刷新不会触发采集或模型调用；来源、模型和预算在独立服务中维护。后端未启用新模式时继续提供原有博客来源、排序、手动检查与翻译助手设置。
-
-## 目录约束
-
-- `src/main.tsx` 仅挂载应用；`src/app/` 组合页面状态和功能组件。
-- `src/features/auth/` 保存会话请求、类型和登录视图；`src/features/articles/` 保存内容请求、类型及编辑器组件；`src/features/taxonomy/` 和 `src/features/settings/` 分别管理分类标签与站点配置。
-- `src/shared/api/` 统一处理 HTTP、Cookie 和 CSRF；`src/shared/ui/` 放通用界面组件，`src/shared/lib/` 放不依赖具体业务的工具。
-- 功能组件从自身功能目录或 `shared/` 导入；`index.ts` 是 auth/articles/settings/taxonomy 的公开入口，跨功能协作由 `app/` 完成。SettingsEditor 位于 settings/components；设置与分类标签类型分别在各功能的 types.ts。编辑器从 LazyRichEditor 懒加载，入口不提前加载 MDXEditor。新增接口路径放在对应功能的 `api.ts`，不要散落在组件中。
-- `docs/` 存放技术约定；构建配置、环境示例和 CI 留在仓库根目录。
-
-## 写作助手
-
-[写作助手 v1](docs/writing-assistant-v1.md) 说明服务商/助手管理、连续流式对话、选区与全文预览确认、发布元数据及第一期支持的选区范围。需 wellspring 启用独立 Agent 服务；正文改写需用户确认；摘要和发布信息在保存工作稿后生成，确认发布前可以编辑。
-
-正文编辑区和工具栏固定在写作页面内，正文与助手历史分别滚动。普通对话通过 SSE 更新同一回复气泡，工具参数不显示；没有选区时可以生成全文修改建议。接受前后校验正文快照，接受标记未保存并形成一次撤销记录，拒绝不改正文。对话显示当前账户头像与助手身份。对话输入支持回车发送、展开为多行及中文输入法；助手管理可选择并保存 Lucide/Emoji 图标。配置和发布证据见[固定工作区与图标验收](https://github.com/raychi-space/raychi/issues/39#issuecomment-5971077966)。
-
-助手回复随流式内容渲染 Markdown，修改建议以独立卡片显示实际新增/删除及确认状态。选区支持段落、标题、引用、列表中的常见行内格式，单块修改保留块类型；表格、图片和代码块暂不支持局部选区。详细边界与验证入口见[写作助手说明](docs/writing-assistant-v1.md#选区支持与确认)。
-
-
-## 保存与发布预览（2026-10-03）
-
-写作页左侧正文、右侧助手。文章保存先持久化工作稿，再通过选中的助手生成发布标题、摘要和英文地址别名，全程不弹窗，也不公开。发布按钮先完成相同保存步骤，再在发布预览弹窗内确认；生成期间禁止提交，完成后可编辑标题、摘要与新文章别名。已发布文章保留原地址。别名取英文标题前五词并使用连字符连接；重名时自动附加内容 ID 短后缀，预览中仍可改写。
-
-文章模型失败保留已保存工作稿并可重试；没有已启用助手时提示先配置。帖子仅保存正文和标签，不需要标题、摘要或模型；地址由服务器生成随机 UUID，发布后保持不变。生成期间暂时锁定编辑，防止结果覆盖较新的正文；关闭浏览器可中断元数据回写，正文已保存。相同已准备工作稿再次点击发布会复用结果。确认发布采用新 metadataReviewed 契约，后台不再覆盖确认的摘要。旧客户端仍支持原发布后摘要任务。发布标题与正文标题独立，手动修改发布标题不会改写正文。
-
-运行 `npm run test:writing` 验证浏览器交互（安装 Chromium：`npx playwright install chromium`；macOS 使用 Chrome）。测试模拟 HTTP/模型结果，真实后端兼容性由 wellspring 测试和跨仓验收记录证明。
-
-分类与标签在发布预览弹窗编辑，正文区不再展示。输入时过滤已有词，鼠标或方向键选中，支持中文输入法；分类单选，标签多选且可移除。新标签先留在本地或工作稿，回车、保存和取消预览均不创建标签目录；确认发布时由后端在同一事务中创建缺失标签并发布快照。分类仍通过分类接口创建。候选菜单浮到弹窗外层，窄屏可操作。
-
-## 登录会话
-
-初次加载先检查会话，再展示登录页或管理台。管理接口返回 `401 AUTH_REQUIRED` 时统一返回登录页，卸载受保护界面并取消其他管理请求；文章、工作稿、设置和助手状态不沿用到下一次登录。切换管理页面、浏览器重新获得焦点或标签重新可见时重新检查。网络故障、普通权限错误、服务商认证错误不会被当作站长退出。CSRF 失败会额外核对会话，但不自动重发保存/发布请求。运行 `npm run test:auth` 验证并发失效、过期响应与错误边界。
-
-## 代码与故障回归（2026-10-03）
-
-`npm run lint` 检查功能和 shared 依赖边界；`npm run format:check` 检查统一排版，`npm run format` 修复排版。CI 执行上述检查。网站级 HTTP 回归脚本位于 raychi 的 `scripts/site-e2e.py`，只允许显式确认的隔离环境；运行方式见项目的完整网站验收文档。
-
-筛选刷新期间保留现有列表与本页统计，忽略旧筛选的晚到响应；刷新失败显示错误并保留内容。管理列表在后端按状态、类型、分类、标签筛选并排序，每页最多 50 条；更改筛选重置页码。字数、文章数、帖子数明确显示为本页统计，列表总数来自筛选后的 total。发布准备流程与管理列表请求分别由专用 hook 管理。
-
-账户头像菜单支持修改密码：校验当前密码，确认新密码，成功后清除受保护状态并使用新密码重新登录；其他设备的登录同步失效。见[管理台使用说明](docs/management-ui.md#修改密码)。
-
-## 搜索引擎收录
-
-管理台 HTML 带 `robots: noindex, nofollow`，登录和编辑入口不参与公开站收录；内容授权仍由服务端会话与权限处理。公开站 SEO/RSS 在 lantern 实现，见[主任务 #43](https://github.com/raychi-space/raychi/issues/43)。
-
-## 访问统计
-
-左侧“访问统计”提供累计/今日浏览量与匿名访客四卡、北京时间每日折线、国家/省份/城市分布，以及可按日期、IP、地区和来源筛选的分页明细。明细只展示访问时间、IP、归属地和来源，不展示具体访问页面。底层按页面统计能力保留供后续页面接入；原始 IP 明细保留 30 天，累计访客不补造无法还原的旧身份。
-
-每日折线悬停或手机点按可查看日期和 PV；键盘聚焦图表后用左右方向键逐日查看，Home/End 跳至首尾，Escape 关闭提示。访问来源排行显示来源域名、PV 和当前筛选区间的占比；点击来源联动筛选图表与明细，保留已应用的日期和其他条件并回到第一页，可再次点击或清除来源筛选。四卡仍为全站口径。来源只保留域名，未提供来源时显示“直接访问或未知”，不能还原具体来源文章或搜索词。
-
-页头最右侧电源图标关闭/开启功能；管理偏好默认开启，保存后即时生效且重启保留，关闭后历史仍可查询。服务需先配置，故障不当作零流量。仅 ADMIN 可读明细，请求沿用 Cookie/CSRF 客户端；接口见 [统计 v2](https://github.com/raychi-space/wellspring/blob/main/docs/api/analytics-v2.md)，实现入口见[模块说明](docs/module.md)。
-
-## 单篇内容导出
-
-编辑页“导出已保存内容”下载该篇工作稿、最近发布快照及图片ZIP，未保存/上传/发布中禁用；导出不自动保存或发布。版本冲突需重新加载，退出或离开编辑页会中止尚未完成的下载。包含私密工作稿，外部评论、站点配置和模型密钥不在其中；不提供自动导入。语义见 [wellspring内容导出v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/content-export-v1.md)。`scripts/content-export-e2e.mjs` 使用明确隔离的真实API与生产管理台下载、解包并核对SHA256；页面失败反馈/延迟中止采用拦截测试，真实认证、图片、ZIP、版本冲突和会话失效则由实际后端验证。
-
-## 工作稿历史
-
-“历史版本”查看最近100条工作稿记录，分页/预览后明确确认才恢复；未保存修改或其他写入中禁用恢复，公开版本不改变。原有内容从下次变更前基线开始，图片沿用现有附件，不承诺恢复丢失文件。恢复后重新初始化富文本，MDXEditor初始Markdown规范化不当作用户编辑；正常保存保持现有编辑器与Undo行为。契约见 [修订历史v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/content-history-v1.md)。`scripts/content-history-e2e.mjs` 使用真实隔离API/MySQL与生产管理台验证预览/取消/确认、公开快照和图片、并发版本/409、脏稿保护、POST分页及390px；历史列表故障重试是明确的前端拦截测试。
-
-回收站：编辑页的“移到回收站”只对已保存内容可用；移入立即隐藏公开内容，正文/图片/历史保留。导航“回收站”可明确确认恢复为草稿或永久删除，无自动清空。恢复后必须手动发布。契约见 [内容回收站v1](https://github.com/raychi-space/wellspring/blob/main/docs/api/content-trash-v1.md)。
-
-## AIHOT 拾阅管理
-
-“拾阅管理”提供运行看板、RSS采集来源、模型与限额三个页签，使用本站会话/CSRF API；模型和内部管理密钥均不进入浏览器。手动刷新只查询状态，检查RSS与立即采集是明确操作，表单未保存/保存中均有离开保护。未配置管理接入时保留状态提示，legacy 后端继续兼容。页面与测试入口见[管理界面](docs/management-ui.md#拾阅管理)，字段由 [wellspring 契约](https://github.com/raychi-space/wellspring/blob/main/docs/api/reading-management-v1.md)维护；本仓无需增加环境密钥。
-
-
-## 个人设置、内容与目录管理
-
-侧栏顺序为概览、内容管理、访问统计、拾阅管理、网站管理、助手管理、回收站、个人设置。原草稿箱并入内容管理，默认全部内容，可按已发布/草稿筛选；行尾显示状态，已发布且工作稿有修改时另标记“有未发布修改”。
-
-个人设置在同一页纵向展示头像、用户名和密码，分别保存：PNG/JPEG 最大5 MiB，选择后本地预览，明确保存才上传并同步侧栏、写作对话和公开站。头像已从网站管理表单移除，旧安全URL仍兼容。登录用户名修改需当前密码，成功后所有旧会话失效；密码继续使用既有规则。离开页面有未保存保护，各区域取消只清除本区域输入，提交中阻止导航和重复提交；站点版本冲突可明确刷新后重新选择头像。
-
-内容管理内“分类”和“标签”页签支持搜索、新增、引用数量、关联内容与未引用项更名/删除；“未分类”及被工作稿、保存的发布版本、回收站或历史版本引用的项受保护。后端仍拥有最终引用检查；仅保存新标签工作稿不会创建目录。接口见 [个人设置与分类标签契约](https://github.com/raychi-space/wellspring/blob/main/docs/api/personal-taxonomy-v1.md)。
-
-助手管理内“写作助手”和“拾阅模型”集中配置入口；拾阅模型、限额及用量仍使用AIHOT既有接口。拾阅管理保留运行看板和采集来源，可跳至拾阅模型页，不复用写作助手的密钥或任务执行。
-
-`tests/browser/admin-personal-taxonomy.spec.ts` 验证界面及失败保护；`scripts/admin-personal-e2e.mjs` 用显式隔离本机真实PostgreSQL/API和生产构建管理台验证头像、冲突、目录引用、快照、用户名和改密。需 `RAYCHI_E2E_CONFIRM_ISOLATED=1`、`RAYCHI_ADMIN_E2E_CREDENTIALS`（含专用 `_test` 库标识及loopback API/studio/账号）、`RAYCHI_ADMIN_E2E_PNG`；可通过 `RAYCHI_ADMIN_E2E_OUTPUT` 保存脱敏步骤。脚本会修改隔离账号，并以0600写回凭据文件，不可指向现有内容库或真实账号。
-
-管理台生产页面的输入、多行输入、复选框、按钮和选择器统一使用 `shared/ui` 组件，主题与交互约定见[管理界面](docs/management-ui.md#基础控件)。
+第三方许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
