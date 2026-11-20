@@ -52,12 +52,13 @@ export default function App() {
     )
   return (
     <SessionBoundary>
-      {(session, onSessionEnd, checkSession) => (
+      {(session, onSessionEnd, checkSession, onNicknameSaved) => (
         <Studio
           key={session.username}
           session={session}
           onSessionEnd={onSessionEnd}
           checkSession={checkSession}
+          onNicknameSaved={onNicknameSaved}
         />
       )}
     </SessionBoundary>
@@ -68,11 +69,14 @@ function Studio({
   session,
   onSessionEnd,
   checkSession,
+  onNicknameSaved,
 }: {
   session: Session
   onSessionEnd: (notice?: string) => void
   checkSession: () => Promise<boolean>
+  onNicknameSaved: (value: Session) => void
 }) {
+  const displayName = session.nickname ?? session.username ?? '你'
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [siteName, setSiteName] = useState('')
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
@@ -501,7 +505,7 @@ function Studio({
       )}
       <ArticleSidebar
         active={view}
-        username={session.username ?? '你'}
+        username={displayName}
         siteName={siteName}
         avatarUrl={avatarUrl}
         collapsed={sidebarCollapsed}
@@ -543,8 +547,11 @@ function Studio({
       ) : view === 'personal' ? (
         <PersonalSettings
           username={session.username ?? ''}
+          nickname={displayName}
           initialValue={siteSettings}
           onSaved={rememberSettings}
+          onNicknameSaved={onNicknameSaved}
+          onRefreshSession={checkSession}
           onSessionEnd={onSessionEnd}
           onDirtyChange={setManagementDirty}
           onBusyChange={setManagementBusy}
@@ -812,7 +819,7 @@ function Studio({
                 aria-hidden={!assistantOpen}
               >
                 <WritingAssistant
-                  username={session.username ?? '你'}
+                  username={displayName}
                   userAvatar={avatarUrl}
                   key={current.id}
                   adapterRef={agentRef}

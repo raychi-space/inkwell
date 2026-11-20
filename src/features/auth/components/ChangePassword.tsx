@@ -23,25 +23,31 @@ export function ChangePassword({
   onDirtyChange?: (value: boolean) => void
   onBusyChange?: (value: boolean) => void
 }) {
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmation, setConfirmation] = useState('')
+  const [newPasswordEdited, setNewPasswordEdited] = useState(false)
+  const [confirmationEdited, setConfirmationEdited] = useState(false)
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const submitting = useRef(false)
 
   useEffect(() => {
-    onDirtyChange?.(!!(currentPassword || newPassword || confirmation))
+    onDirtyChange?.(newPasswordEdited || confirmationEdited)
     return () => onDirtyChange?.(false)
-  }, [currentPassword, newPassword, confirmation, onDirtyChange])
+  }, [newPasswordEdited, confirmationEdited, onDirtyChange])
   useEffect(() => {
     onBusyChange?.(busy)
     return () => onBusyChange?.(false)
   }, [busy, onBusyChange])
 
-  async function submit(event: FormEvent) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submitting.current || disabled) return
+    const data = new FormData(event.currentTarget)
+    const currentPassword = String(data.get('currentPassword') ?? '')
+    const newPassword = String(data.get('newPassword') ?? '')
+    const confirmation = String(data.get('confirmation') ?? '')
+    // Verification input, including autofill of the old password, is not a password change.
+    setNewPasswordEdited(Boolean(newPassword))
+    setConfirmationEdited(Boolean(confirmation))
     const validation = passwordValidation(currentPassword, newPassword, confirmation)
     if (validation) {
       setNotice(validation)
@@ -53,9 +59,8 @@ export function ChangePassword({
     setNotice('')
     try {
       await changePassword(currentPassword, newPassword)
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmation('')
+      setNewPasswordEdited(false)
+      setConfirmationEdited(false)
       onComplete()
     } catch (error) {
       setNotice(errorMessage(error))
@@ -80,8 +85,7 @@ export function ChangePassword({
               autoComplete="current-password"
               required
               maxLength={72}
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
+              name="currentPassword"
             />
           </label>
           <label>
@@ -92,8 +96,10 @@ export function ChangePassword({
               required
               maxLength={72}
               aria-describedby="password-rules"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
+              name="newPassword"
+              onChange={({ currentTarget: input }) =>
+                setNewPasswordEdited(Boolean(input.value) && !input.matches(':autofill'))
+              }
             />
           </label>
           <p id="password-rules" className="settings-help">
@@ -106,8 +112,10 @@ export function ChangePassword({
               autoComplete="new-password"
               required
               maxLength={72}
-              value={confirmation}
-              onChange={(event) => setConfirmation(event.target.value)}
+              name="confirmation"
+              onChange={({ currentTarget: input }) =>
+                setConfirmationEdited(Boolean(input.value) && !input.matches(':autofill'))
+              }
             />
           </label>
         </fieldset>

@@ -54,11 +54,21 @@ export function resetCsrf() {
   csrfToken = null
 }
 
+function requiresSession(path: string) {
+  return (
+    path.startsWith('/api/v1/admin/') ||
+    [
+      '/api/v1/auth/logout',
+      '/api/v1/auth/username',
+      '/api/v1/auth/password',
+      '/api/v1/auth/nickname',
+    ].includes(path)
+  )
+}
+
 export async function apiResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const version = sessionVersion
-  const protectedPath =
-    path.startsWith('/api/v1/admin/') ||
-    ['/api/v1/auth/logout', '/api/v1/auth/username', '/api/v1/auth/password'].includes(path)
+  const protectedPath = requiresSession(path)
   const signal = protectedPath
     ? options.signal
       ? AbortSignal.any([options.signal, protectedRequests.signal])
@@ -128,7 +138,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   const response = await apiResponse(path, options)
   if (response.status === 204) return undefined as T
   const data = (await response.json()) as T
-  if (path.startsWith('/api/v1/admin/') && version !== sessionVersion)
+  if (requiresSession(path) && version !== sessionVersion)
     throw new ApiError(401, 'AUTH_REQUIRED', '登录状态已改变。')
   return data
 }

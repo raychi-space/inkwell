@@ -20,6 +20,13 @@ export async function logout() {
   resetAuthSession()
 }
 
+export function saveNickname(nickname: string) {
+  return api<Session>('/api/v1/auth/nickname', {
+    method: 'PUT',
+    body: JSON.stringify({ nickname }),
+  })
+}
+
 export async function changeUsername(currentPassword: string, username: string) {
   await api<void>('/api/v1/auth/username', {
     method: 'POST',

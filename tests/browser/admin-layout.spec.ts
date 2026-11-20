@@ -26,6 +26,7 @@ test('password actions remain reachable by wheel on a short desktop viewport', a
   await fixture(page)
   await page.getByRole('button', { name: /，账户菜单$/ }).click()
   await page.locator('.account-popover').getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '编辑密码', exact: true }).click()
   await expect(page.getByLabel('确认新密码', { exact: true })).toBeAttached()
   const header = await page.locator('main .dashboard-head').boundingBox()
   await page.mouse.move(700, 320)

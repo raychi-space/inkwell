@@ -12,6 +12,7 @@ export function SessionBoundary({
     session: Session,
     onSessionEnd: (notice?: string) => void,
     checkSession: () => Promise<boolean>,
+    onNicknameSaved: (value: Session) => void,
   ) => ReactNode
 }) {
   const [session, setSession] = useState<Session | null>(null)
@@ -88,6 +89,17 @@ export function SessionBoundary({
     }
   }, [checkSession, endSession])
 
+  const onNicknameSaved = useCallback((value: Session) => {
+    const current = sessionRef.current
+    if (!current?.authenticated || !value.authenticated || current.username !== value.username)
+      return
+    // A focus check started before this write may still return the old nickname.
+    revision.current++
+    checking.current = null
+    sessionRef.current = value
+    setSession(value)
+  }, [])
+
   async function signIn(event: FormEvent) {
     event.preventDefault()
     const version = ++revision.current
@@ -125,5 +137,5 @@ export function SessionBoundary({
       />
     )
   // Session resets clear shared read data; unmounting discards pending editor state.
-  return children(session, (notice) => endSession(false, notice), checkSession)
+  return children(session, (notice) => endSession(false, notice), checkSession, onNicknameSaved)
 }
