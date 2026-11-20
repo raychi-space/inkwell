@@ -14,7 +14,7 @@ async function fixture(page: Page) {
     else if (path.endsWith('/auth/csrf')) body = { token: 'fixture', headerName: 'X-CSRF-TOKEN' }
     else if (path.endsWith('/analytics/settings')) body = { enabled: true, configured: true, version: 0 }
     else if (path.endsWith('/analytics/overview')) body = { summary: { pageViews: 20, visitors: 10, todayPageViews: 3, todayVisitors: 2 }, retention: { rawDays: 30, aggregateDays: 365, timeZone: 'Asia/Shanghai', geoConfigured: true, visitorTrackingSince: '2026-11-07T00:00:00Z' }, trend: [], countries: [], provinces: [], cities: [], sources: [] }
-    else if (path.endsWith('/analytics/events')) body = { items: [], page: Number(url.searchParams.get('page')), pageSize: 20, total: 0 }
+    else if (path.endsWith('/analytics/map')) body = { coverage: null, uniqueIps: 0, unlocatedIps: 0, detailLevel: 'city', points: [] }
     else if (path.endsWith('/reading/integration')) body = { mode: 'aihot', managementConfigured: true }
     else if (path.endsWith('/aihot/dashboard')) body = dashboard
     else if (path.endsWith('/aihot/sources')) body = sources

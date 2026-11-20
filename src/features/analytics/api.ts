@@ -48,22 +48,26 @@ export type AnalyticsOverview = {
   sources: { name: string; pageViews: number }[]
   retention: AnalyticsRetention
 }
-export type AnalyticsEvent = {
+type LocationLevel = 'city' | 'province' | 'country'
+export type AnalyticsMapPoint = {
   id: string
-  occurredAt: string
-  path: string
-  source: string
-  ip: string | null
+  level: LocationLevel
   country: string
-  province: string
-  city: string
+  province: string | null
+  city: string | null
+  latitude: number
+  longitude: number
+  uniqueIps: number
+  pageViews: number
 }
-export type AnalyticsEvents = {
-  items: AnalyticsEvent[]
-  total: number
-  page: number
-  pageSize: number
-  retention: AnalyticsRetention
+export type AnalyticsMapReport = {
+  from: string
+  to: string
+  coverage: { from: string; to: string } | null
+  uniqueIps: number
+  unlocatedIps: number
+  detailLevel: LocationLevel
+  points: AnalyticsMapPoint[]
 }
 function detailsQuery(filters: AnalyticsFilters) {
   const to = new Date(`${filters.until}T00:00:00Z`)
@@ -83,12 +87,8 @@ export const analyticsOverview = (filters: AnalyticsFilters, signal: AbortSignal
     signal,
     ttl: 30_000,
   })
-export const analyticsEvents = (filters: AnalyticsFilters, page: number, signal: AbortSignal) => {
-  const query = detailsQuery(filters)
-  query.set('page', String(page))
-  query.set('pageSize', '20')
-  return readApi<AnalyticsEvents>(`/api/v1/admin/analytics/events?${query}`, {
+export const analyticsMap = (filters: AnalyticsFilters, signal: AbortSignal) =>
+  readApi<AnalyticsMapReport>(`/api/v1/admin/analytics/map?${detailsQuery(filters)}`, {
     signal,
     ttl: 30_000,
   })
-}
