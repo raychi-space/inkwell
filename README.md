@@ -26,3 +26,7 @@ npm run build
 浏览器回归使用 `npm run test:writing`。macOS 使用 Chrome，Linux CI 安装 Playwright Chromium。
 
 第三方许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 个人设置
+
+头像、昵称和密码各自编辑、保存和取消。昵称保存后更新管理台显示名，沿用当前登录会话。修改密码需要当前密码和两次新密码，成功后使用新密码重新登录。页面会在离开实际有未保存修改的编辑时提醒。

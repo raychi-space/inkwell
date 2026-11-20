@@ -4566,7 +4566,21 @@ a {
   overflow: visible;
 }
 
+.profile-setting-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.personal-settings .profile-setting-heading h2 {
+  margin: 0;
+}
+.profile-nickname {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
 .profile-avatar-preview {
+  margin-top: 12px;
   width: 112px;
   height: 112px;
   border-radius: 50%;

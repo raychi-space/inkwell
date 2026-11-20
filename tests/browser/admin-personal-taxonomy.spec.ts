@@ -8,6 +8,8 @@ const draft = { ...article, id: 'draft', title: '未发布草稿', status: 'DRAF
 async function fixture(page: Page, options: { avatarConflict?: boolean } = {}) {
   const writes: { path: string; method: string; body: string | null }[] = []
   let loggedIn = true
+  let nickname: string | undefined
+  let currentSettings = settings as { version: number; siteName: string; avatarUrl: string | null }
   let catalog = [
     { name: 'unused', draftCount: 0, publicCount: 0, trashCount: 0, historyCount: 0, referenceCount: 0, protectedName: false },
     { name: 'used', draftCount: 1, publicCount: 1, trashCount: 0, historyCount: 1, referenceCount: 1, protectedName: false },
@@ -16,13 +18,20 @@ async function fixture(page: Page, options: { avatarConflict?: boolean } = {}) {
     const req = route.request(), url = new URL(req.url()), path = url.pathname, method = req.method()
     if (method !== 'GET') writes.push({ path, method, body: req.postData() })
     let body: unknown
-    if (path.endsWith('/auth/session')) body = { authenticated: loggedIn, username: loggedIn ? 'fixture' : null }
+    if (path.endsWith('/auth/session') || path.endsWith('/auth/login')) {
+      if (path.endsWith('/auth/login')) loggedIn = true
+      body = { authenticated: loggedIn, username: loggedIn ? 'fixture' : null, nickname: loggedIn ? nickname : null }
+    } else if (path.endsWith('/auth/nickname')) {
+      nickname = req.postDataJSON().nickname.trim()
+      body = { authenticated: true, username: 'fixture', nickname }
+    }
     else if (path.endsWith('/auth/csrf')) body = { token: 'fixture', headerName: 'X-CSRF-TOKEN' }
     else if (path.endsWith('/auth/username') || path.endsWith('/auth/password')) { loggedIn = false; return route.fulfill({ status: 204 }) }
     else if (path.endsWith('/profile/avatar')) {
       if (options.avatarConflict) return route.fulfill({ status: 409, json: { code: 'SETTINGS_VERSION_CONFLICT', message: '设置已被更新，请刷新后重试。' } })
-      body = { ...settings, version: 2, avatarUrl: 'data:image/png;base64,'+png.toString('base64') }
-    } else if (path.endsWith('/settings')) body = settings
+      currentSettings = { ...settings, version: 2, avatarUrl: 'data:image/png;base64,'+png.toString('base64') }
+      body = currentSettings
+    } else if (path.endsWith('/settings')) body = currentSettings
     else if (path.endsWith('/taxonomy/tags/references')) body = [{ id: 'published', title: '已发布文章', status: 'PUBLISHED' }]
     else if (path.endsWith('/taxonomy/tags')) {
       if (method === 'PUT') catalog = catalog.map(v => v.name === req.postDataJSON().name ? { ...v, name: req.postDataJSON().newName } : v)
@@ -45,6 +54,22 @@ async function fixture(page: Page, options: { avatarConflict?: boolean } = {}) {
   return writes
 }
 
+async function moveToContentWithoutPrompt(page: Page) {
+  const prompts: string[] = []
+  const onDialog = async (dialog: import('@playwright/test').Dialog) => {
+    prompts.push(dialog.message())
+    await dialog.dismiss()
+  }
+  page.on('dialog', onDialog)
+  try {
+    await page.getByRole('button', { name: '内容管理', exact: true }).click()
+    await expect(page.getByRole('heading', { name: '内容管理', exact: true })).toBeVisible()
+    expect(prompts).toEqual([])
+  } finally {
+    page.off('dialog', onDialog)
+  }
+}
+
 test('sidebar order and unified content states, drafts, and unpublished modifications', async ({ page }) => {
   await fixture(page)
   await expect(page.locator('.studio-nav button')).toHaveText(['概览','内容管理','访问统计','拾阅管理','网站管理','助手管理','回收站','个人设置'])
@@ -63,6 +88,7 @@ test('sidebar order and unified content states, drafts, and unpublished modifica
 test('avatar previews locally, protects unsaved selection and updates shared avatar only after save', async ({ page }) => {
   const writes = await fixture(page)
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '编辑头像', exact: true }).click()
   await page.getByLabel('选择头像').setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png })
   await expect(page.getByRole('img', { name: '头像预览' })).toHaveAttribute('src', /^blob:/)
   expect(writes).toHaveLength(0)
@@ -73,25 +99,39 @@ test('avatar previews locally, protects unsaved selection and updates shared ava
   await expect(page.getByText('头像已保存。', { exact: true })).toBeVisible()
   await expect(page.locator('.account-avatar img')).toHaveAttribute('src', /^data:image/)
   expect(writes.filter(v => v.path.endsWith('/profile/avatar'))).toHaveLength(1)
-  await expect(page.getByRole('button', { name: '保存头像', exact: true })).toBeDisabled()
+
+  await expect(page.getByRole('button', { name: '保存头像', exact: true })).toHaveCount(0)
+  await moveToContentWithoutPrompt(page)
+  await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await expect(page.getByRole('img', { name: '当前头像' })).toHaveAttribute('src', /^data:image/)
   await page.screenshot({ path: 'test-results/personal-avatar.png', fullPage: true })
 })
 
 test('avatar conflicts retain preview for retry and never update the displayed saved avatar', async ({ page }) => {
   await fixture(page, { avatarConflict: true })
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '编辑头像', exact: true }).click()
   await page.getByLabel('选择头像').setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png })
   await page.getByRole('button', { name: '保存头像', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('设置已被更新')
   await expect(page.getByRole('img', { name: '头像预览' })).toHaveAttribute('src', /^blob:/)
   await expect(page.locator('.account-avatar img')).toHaveCount(0)
+  const leave = page.waitForEvent('dialog').then(async dialog => {
+    expect(dialog.message()).toContain('尚未保存')
+    await dialog.dismiss()
+  })
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
+  await leave
+  await expect(page.getByRole('heading', { name: '个人设置', exact: true })).toBeVisible()
   await page.getByRole('form', { name: '头像设置' }).getByRole('button', { name: '取消', exact: true }).click()
   await expect(page.getByRole('img', { name: '头像预览' })).toHaveCount(0)
+  await moveToContentWithoutPrompt(page)
 })
 
 test('username change verifies password, submits only once and returns to login', async ({ page }) => {
   const writes = await fixture(page)
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '修改登录用户名', exact: true }).click()
   await page.getByLabel('用户名', { exact: true }).fill('new-admin')
   await page.getByRole('form', { name: '用户名设置' }).getByLabel('当前密码', { exact: true }).fill('current-password')
   await page.getByRole('button', { name: '修改用户名并退出', exact: true }).click()
@@ -104,6 +144,7 @@ test('username change verifies password, submits only once and returns to login'
 test('password settings retain matching validation and log out only after success', async ({ page }) => {
   const writes = await fixture(page)
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '编辑密码', exact: true }).click()
   await page.getByRole('form', { name: '密码设置' }).getByLabel('当前密码', { exact: true }).fill('current-password')
   await page.getByLabel('新密码', { exact: true }).fill('replacement-password')
   await page.getByLabel('确认新密码', { exact: true }).fill('different-password')
@@ -111,8 +152,17 @@ test('password settings retain matching validation and log out only after succes
   await expect(page.getByRole('alert')).toBeVisible()
   expect(writes).toHaveLength(0)
   await page.getByLabel('确认新密码', { exact: true }).fill('replacement-password')
+  const dialogs: string[] = []
+  page.on('dialog', async dialog => { dialogs.push(dialog.message()); await dialog.dismiss() })
   await page.getByRole('button', { name: '修改密码并退出', exact: true }).click()
   await expect(page.getByText('密码已修改，请使用新密码重新登录。')).toBeVisible()
+  await page.getByLabel('站长账号', { exact: true }).fill('fixture')
+  await page.getByLabel('密码', { exact: true }).fill('replacement-password')
+  await page.getByRole('button', { name: '登录', exact: true }).click()
+  await waitForOverview(page)
+  await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await moveToContentWithoutPrompt(page)
+  expect(dialogs).toEqual([])
 })
 
 test('catalog manages unused names, protects references, searches and opens associated content', async ({ page }) => {
@@ -147,7 +197,10 @@ for (const width of [1280,390,320]) test(`personal and catalog forms stay usable
   await page.setViewportSize({ width, height: 540 })
   await fixture(page)
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
-  for (const name of ['头像设置', '用户名设置', '密码设置']) {
+  await page.getByRole('button', { name: '编辑头像', exact: true }).click()
+  await page.getByRole('button', { name: '编辑昵称', exact: true }).click()
+  await page.getByRole('button', { name: '编辑密码', exact: true }).click()
+  for (const name of ['头像设置', '昵称设置', '密码设置']) {
     const form = page.getByRole('form', { name, exact: true })
     await expect.poll(() => form.evaluate(el => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(1)
   }
@@ -161,33 +214,59 @@ for (const width of [1280,390,320]) test(`personal and catalog forms stay usable
   await page.screenshot({ path: `test-results/taxonomy-${width}.png`, fullPage: true })
 })
 
-test('personal settings show three sections together and each cancel preserves other inputs', async ({ page }) => {
-  await fixture(page)
+test('profile edits open independently, protect drafts, and clear on revert or cancel', async ({ page }) => {
+  const writes = await fixture(page)
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
-  await expect(page.getByRole('navigation', { name: '个人设置页签' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: '昵称', exact: true })).toBeVisible()
+  await expect(page.locator('.personal-settings input')).toHaveCount(0)
+  await page.getByRole('button', { name: '编辑密码', exact: true }).click()
+  await page.getByLabel('当前密码', { exact: true }).fill('simulated-prefilled-password')
+  await page.getByRole('button', { name: '编辑昵称', exact: true }).click()
+  const nickname = page.getByRole('form', { name: '昵称设置' })
+  await expect(nickname.getByLabel('昵称', { exact: true })).toHaveValue('fixture')
+  await nickname.getByLabel('昵称', { exact: true }).fill('unsaved-name')
+  const leave = page.waitForEvent('dialog').then(async dialog => {
+    expect(dialog.message()).toContain('尚未保存')
+    await dialog.dismiss()
+  })
+  await page.getByRole('button', { name: '内容管理', exact: true }).click()
+  await leave
+  await expect(nickname.getByLabel('昵称', { exact: true })).toHaveValue('unsaved-name')
+  await page.getByRole('button', { name: '编辑头像', exact: true }).click()
   const avatar = page.getByRole('form', { name: '头像设置' })
-  const username = page.getByRole('form', { name: '用户名设置' })
-  const password = page.getByRole('form', { name: '密码设置' })
-  await expect(avatar).toBeAttached(); await expect(username).toBeAttached(); await expect(password).toBeAttached()
-  await username.getByLabel('用户名', { exact: true }).fill('unsaved-name')
-  await password.getByLabel('新密码', { exact: true }).fill('unsaved-password')
   await avatar.getByLabel('选择头像').setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png })
   await avatar.getByRole('button', { name: '取消', exact: true }).click()
-  await expect(page.getByRole('img', { name: '头像预览' })).toHaveCount(0)
-  await expect(username.getByLabel('用户名', { exact: true })).toHaveValue('unsaved-name')
-  await expect(password.getByLabel('新密码', { exact: true })).toHaveValue('unsaved-password')
-  await password.getByRole('button', { name: '取消', exact: true }).click()
-  await expect(password.getByLabel('新密码', { exact: true })).toHaveValue('')
-  await expect(username.getByLabel('用户名', { exact: true })).toHaveValue('unsaved-name')
-  await avatar.getByLabel('选择头像').setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png })
-  await username.getByRole('button', { name: '取消', exact: true }).click()
-  await expect(username.getByLabel('用户名', { exact: true })).toHaveValue('fixture')
-  await expect(page.getByRole('img', { name: '头像预览' })).toHaveAttribute('src', /^blob:/)
+  await expect(avatar.getByLabel('选择头像')).toHaveCount(0)
+  await expect(nickname.getByLabel('昵称', { exact: true })).toHaveValue('unsaved-name')
+  await nickname.getByLabel('昵称', { exact: true }).fill('fixture')
+  await moveToContentWithoutPrompt(page)
+  expect(writes).toEqual([])
+})
+
+test('nickname saves alone, updates the account display, and survives reload without a leave prompt', async ({ page }) => {
+  const writes = await fixture(page)
+  await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await moveToContentWithoutPrompt(page)
+  await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '编辑昵称', exact: true }).click()
+  const nickname = page.getByRole('form', { name: '昵称设置' })
+  await expect(nickname.locator('input[type=password]')).toHaveCount(0)
+  await nickname.getByLabel('昵称', { exact: true }).fill('Fixture 昵称')
+  await nickname.getByRole('button', { name: '保存昵称' }).click()
+  await expect(nickname.getByRole('status')).toHaveText('昵称已保存。')
+  await expect(page.getByRole('button', { name: 'Fixture 昵称，账户菜单', exact: true })).toBeVisible()
+  expect(writes).toEqual([{ path: '/api/v1/auth/nickname', method: 'PUT', body: JSON.stringify({ nickname: 'Fixture 昵称' }) }])
+  await moveToContentWithoutPrompt(page)
+  await page.reload()
+  await waitForOverview(page)
+  await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await expect(nickname.getByText('Fixture 昵称', { exact: true })).toBeVisible()
 })
 
 test('avatar accepts exactly 5 MiB and rejects one extra byte before uploading', async ({ page }) => {
   const writes = await fixture(page)
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '编辑头像', exact: true }).click()
   const avatar = page.getByRole('form', { name: '头像设置' })
   const maximum = Buffer.alloc(5 * 1024 * 1024); png.copy(maximum)
   await avatar.getByLabel('选择头像').setInputFiles({ name: 'large.png', mimeType: 'image/png', buffer: Buffer.alloc(maximum.length + 1) })
@@ -206,6 +285,9 @@ test('avatar accepts exactly 5 MiB and rejects one extra byte before uploading',
 test('credential changes protect other drafts; avatar save blocks other forms and preserves their drafts', async ({ page }) => {
   const writes = await fixture(page)
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '编辑头像', exact: true }).click()
+  await page.getByRole('button', { name: '修改登录用户名', exact: true }).click()
+  await page.getByRole('button', { name: '编辑密码', exact: true }).click()
   const avatar = page.getByRole('form', { name: '头像设置' })
   const username = page.getByRole('form', { name: '用户名设置' })
   const password = page.getByRole('form', { name: '密码设置' })
@@ -241,8 +323,11 @@ test('credential changes protect other drafts; avatar save blocks other forms an
 test('personal text inputs share themed focus and disabled states', async ({ page }) => {
   await fixture(page)
   await page.getByRole('button', { name: '个人设置', exact: true }).click()
+  await page.getByRole('button', { name: '编辑昵称', exact: true }).click()
+  await page.getByRole('button', { name: '修改登录用户名', exact: true }).click()
+  await page.getByRole('button', { name: '编辑密码', exact: true }).click()
   const username = page.getByRole('form', { name: '用户名设置' }).getByLabel('用户名', { exact: true })
-  await expect(page.locator('.personal-settings input.studio-input:not([type=file])')).toHaveCount(5)
+  await expect(page.locator('.personal-settings input.studio-input:not([type=file])')).toHaveCount(6)
   const unfocused = await username.evaluate(el => getComputedStyle(el).boxShadow)
   await username.focus()
   await expect(username).toBeFocused()

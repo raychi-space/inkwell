@@ -1,4 +1,4 @@
-export { getSession, login, logout, changeUsername } from './api'
+export { getSession, login, logout, changeUsername, saveNickname } from './api'
 export { LoginScreen } from './components/LoginScreen'
 export { SessionBoundary } from './components/SessionBoundary'
 export type { Session } from './types'
